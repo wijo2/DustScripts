@@ -169,7 +169,7 @@ void SetupChartData()
 
 		for (uint a = 0; a < len; a++)
 		{
-			if (d.startCp <= int(a) && d.deathCp >= int(a))
+			if (d.startCp < int(a) && d.deathCp >= int(a))
 			{
 				timesVisitedArr[a] += 1;
 			}
