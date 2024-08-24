@@ -1,4 +1,4 @@
-#include"../../lib/std.cpp";
+//#include"../../lib/std.cpp";
 class script
 {
 	[position,mode:world,y:jailY] float jailX;
