@@ -28,6 +28,8 @@ class AppleTrigger : trigger_base, callback_base
 	[text] bool capFallSpeed;
 	[text] float maxFallSpeed;
 
+	[text|label:"keep spawn visible"] bool keepVisible;
+
 	void init(script@ s, scripttrigger@ self)
 	{
 		@script = @s;
@@ -54,7 +56,7 @@ class AppleTrigger : trigger_base, callback_base
 
 	void editor_draw(float lolxd) { 
 		draw(lolxd);
-		if (self.editor_selected())
+		if (self.editor_selected() || keepVisible)
 		{
 			float w = 30;
 			scene@ s = get_scene();
