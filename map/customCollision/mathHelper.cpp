@@ -43,6 +43,11 @@ class Vector2
 	string opImplConv()
 	{
 		return "(" + formatFloat(x, "", 0, 3) + ", " + formatFloat(y, "", 0, 3) + ")";
+
+	}
+	bool opEquals(Vector2 o)
+	{
+		return x == o.x && y == o.y;
 	}
 }
 
