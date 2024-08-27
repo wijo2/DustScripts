@@ -5,7 +5,6 @@ class script
 	script()
 	{
 		puts("test works c:");
-
 	}
 }
 
@@ -22,13 +21,13 @@ class TestQuad : enemy_base
 
 	[text] bool update;
 
-	d2::CollisionManager manager;
-	d2::d2CQuad quad;
+	d2::CollisionManager@ manager;
+	d2::d2CQuad@ quad;
 
 	void init(script@ s, scriptenemy@ self)
 	{
-		manager = d2::CollisionManager(-1000, -1000, 2000, 2000);
-		quad = d2::d2CQuad(
+		@manager = @d2::CollisionManager(d2Math::IntRect(-1000, -1000, uint(2000), uint(2000)));
+		@quad = @d2::d2CQuad(
 		d2Math::Vector2(p1x, p1y),
 		d2Math::Vector2(p2x, p2y),
 		d2Math::Vector2(p3x, p3y),
@@ -40,7 +39,12 @@ class TestQuad : enemy_base
 	void editor_draw(float fuck)
 	{
 		quad.Draw(get_scene(), 22, 1);
-		manager.Draw(get_scene(), 22, 1);
+		//manager.Draw(get_scene(), 22, 1);
+	}
+
+	void draw(float doublefuck)
+	{
+		quad.Draw(get_scene(), 22, 1);
 	}
 
 	void editor_var_changed(var_info@ info)

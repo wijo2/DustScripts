@@ -57,24 +57,30 @@ class LineFunc
 	float b = 0;
 	bool upright = false;
 	float upx = 0;
+	bool nullLine = false;
 
 	LineFunc() { k = 1; b = 0; }
 	LineFunc(float k, float b) { this.k = k; this.b = b; }
 	LineFunc(Vector2 p1, Vector2 p2) 
 	{ 
-		if (p1.x - p2.x != 0)
+		if (p1 == p2)
 		{
-			k = (p1.y - p2.y)/(p1.x - p2.x); b = p1.y - k*p1.x; 
+			nullLine = true;
 		}
-		else
+		else if (p1.x - p2.x == 0)
 		{
 			upright = true;
 			upx = p1.x;
+		}
+		else
+		{
+			k = (p1.y - p2.y)/(p1.x - p2.x); b = p1.y - k*p1.x; 
 		}
 	}
 
 	float GetValue(float x) 
 	{ 
+		if (nullLine) { return 0; }
 		if (!upright) 
 		{
 			return this.k * x + b; 
@@ -84,6 +90,7 @@ class LineFunc
 
 	float GetRevValue(float y)
 	{
+		if (nullLine) { return 0; }
 		if (k == 0)
 		{
 			return b;
@@ -96,6 +103,7 @@ class LineFunc
 	array<Vector2> IterateOverLine(uint precision, Vector2 start, Vector2 end)
 	{
 		array<Vector2> result;
+		if (nullLine) { return result; }
 		uint increment = 2 ** precision;
 
 		//flat case
@@ -131,6 +139,159 @@ class LineFunc
 		}
 
 		return result;
+	}
+}
+
+class Rect
+{
+	float x1;
+	float y1;
+	float x2;
+	float y2;
+	Vector2 p1;
+	Vector2 p2;
+	float width;
+	float height;
+
+	Rect()
+	{
+		x1 = 0;
+		x2 = 0;
+		y1 = 0;
+		y2 = 0;
+		p1 = Vector2();
+		p2 = Vector2();
+		width = 0;
+		height = 0;
+	}
+	Rect(float x1, float y1, float x2, float y2)
+	{
+		this.x1 = x1;
+		this.y1 = y1;
+		this.x2 = x2;
+		this.y2 = y2;
+		this.p1 = Vector2(x1,y1);
+		this.p2 = Vector2(x2,y2);
+		this.width = abs(x1-x2);
+		this.height = abs(y1-y2);
+	}
+
+	Rect(float x1, float y1, float width, float height)
+	{
+		this.x1 = x1;
+		this.y1 = y1;
+		this.x2 = x1 + width;
+		this.y2 = y1 + height;
+		this.p1 = Vector2(x1,y1);
+		this.p2 = Vector2(x2,y2);
+		this.width = width;
+		this.height = height;
+	}
+
+	Rect(Vector2 p1, Vector2 p2)
+	{
+		this.x1 = p1.x;
+		this.y1 = p1.y;
+		this.x2 = p2.x;
+		this.y2 = p2.y;
+		this.p1 = p1;
+		this.p2 = p2;
+		this.width = abs(x1-x2);
+		this.height = abs(y1-y2);
+	}
+
+	bool CheckLineIntersection(LineFunc line)
+	{
+		float lx1 = line.GetValue(x1);	
+		float lx2 = line.GetValue(x2);	
+		float ly1 = line.GetRevValue(y1);	
+		float ly2 = line.GetRevValue(y2);	
+
+		return
+			y1 < lx1 && lx1 < y2 ||
+			y1 < lx2 && lx2 < y2 ||
+			x1 < ly1 && ly1 < x2 ||
+			x1 < ly2 && ly2 < x2;
+	}
+}
+
+class IntRect
+{
+	int x1;
+	int y1;
+	int x2;
+	int y2;
+	Vector2 p1;
+	Vector2 p2;
+	uint width;
+	uint height;
+
+	IntRect()
+	{
+		x1 = 0;
+		x2 = 0;
+		y1 = 0;
+		y2 = 0;
+		p1 = Vector2();
+		p2 = Vector2();
+		width = 0;
+		height = 0;
+	}
+	IntRect(int x1, int y1, int x2, int y2)
+	{
+		this.x1 = x1;
+		this.y1 = y1;
+		this.x2 = x2;
+		this.y2 = y2;
+		this.p1 = Vector2(x1,y1);
+		this.p2 = Vector2(x2,y2);
+		this.width = abs(x1-x2);
+		this.height = abs(y1-y2);
+	}
+
+	IntRect(int x1, int y1, uint width, uint height)
+	{
+		this.x1 = x1;
+		this.y1 = y1;
+		this.x2 = x1 + width;
+		this.y2 = y1 + height;
+		this.p1 = Vector2(x1,y1);
+		this.p2 = Vector2(x2,y2);
+		this.width = width;
+		this.height = height;
+	}
+
+	IntRect(Vector2 p1, Vector2 p2)
+	{
+		this.x1 = int(p1.x);
+		this.y1 = int(p1.y);
+		this.x2 = int(p2.x);
+		this.y2 = int(p2.y);
+		this.p1 = p1;
+		this.p2 = p2;
+		this.width = abs(x1-x2);
+		this.height = abs(y1-y2);
+	}
+
+	bool CheckLineIntersection(LineFunc line)
+	{
+		float lx1 = line.GetValue(x1);	
+		float lx2 = line.GetValue(x2);	
+		float ly1 = line.GetRevValue(y1);	
+		float ly2 = line.GetRevValue(y2);	
+
+		return
+			y1 < lx1 && lx1 < y2 ||
+			y1 < lx2 && lx2 < y2 ||
+			x1 < ly1 && ly1 < x2 ||
+			x1 < ly2 && ly2 < x2;
+	}
+
+	void Draw(scene@ s, int layer, int sub_layer)
+	{
+		s.draw_rectangle_world(layer, sub_layer, 
+						 x1,y1,x2,y2,0,0xFF00FF00);
+
 	}
 }
 
