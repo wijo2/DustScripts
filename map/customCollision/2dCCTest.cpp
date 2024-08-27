@@ -5,6 +5,7 @@ class script
 	script()
 	{
 		puts("test works c:");
+		puts("atan " + atan2(1, 1));
 	}
 }
 
@@ -26,7 +27,7 @@ class TestQuad : enemy_base
 
 	void init(script@ s, scriptenemy@ self)
 	{
-		@manager = @d2::CollisionManager(d2Math::IntRect(-1000, -1000, uint(2000), uint(2000)));
+		@manager = @d2::CollisionManager(d2Math::IntRect(-2000, -2000, uint(4000), uint(4000)));
 		@quad = @d2::d2CQuad(
 		d2Math::Vector2(p1x, p1y),
 		d2Math::Vector2(p2x, p2y),

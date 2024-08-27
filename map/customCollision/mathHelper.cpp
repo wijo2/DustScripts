@@ -59,6 +59,9 @@ class LineFunc
 	float upx = 0;
 	bool nullLine = false;
 
+	Vector2 bound1 = Vector2();
+	Vector2 bound2 = Vector2();
+
 	LineFunc() { k = 1; b = 0; }
 	LineFunc(float k, float b) { this.k = k; this.b = b; }
 	LineFunc(Vector2 p1, Vector2 p2) 
@@ -140,6 +143,48 @@ class LineFunc
 
 		return result;
 	}
+
+	void SetBounds(Vector2 b1, Vector2 b2)
+	{
+		if (abs(k) > 1)
+		{
+			if (b2.y > b1.y)
+			{
+				bound1 = b1;
+				bound2 = b2;
+			}
+			else
+			{
+				bound1 = b2;
+				bound2 = b1;
+			}
+		}
+		else
+		{
+			if (b2.x > b1.x)
+			{
+				bound1 = b1;
+				bound2 = b2;
+			}
+			else
+			{
+				bound1 = b2;
+				bound2 = b1;
+			}
+		}
+	}
+
+	bool IsWithinBounds(Vector2 pos)
+	{
+		if (abs(k) > 1)
+		{
+			return pos.y > bound1.y && pos.y < bound2.y;
+		}
+		else
+		{
+			return pos.x > bound1.x && pos.x < bound2.x;
+		}
+	}
 }
 
 class Rect
@@ -213,6 +258,19 @@ class Rect
 			x1 < ly1 && ly1 < x2 ||
 			x1 < ly2 && ly2 < x2;
 	}
+
+	Vector2 LineIntersectionPosition(LineFunc line)
+	{
+		float lx1 = line.GetValue(x1);	
+		if (y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
+		float lx2 = line.GetValue(x2);	
+		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
+		float ly1 = line.GetRevValue(y1);	
+		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, x1); }
+		float ly2 = line.GetRevValue(y2);	
+		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, x2); }
+		return Vector2();
+	}
 }
 
 class IntRect
@@ -285,6 +343,19 @@ class IntRect
 			y1 < lx2 && lx2 < y2 ||
 			x1 < ly1 && ly1 < x2 ||
 			x1 < ly2 && ly2 < x2;
+	}
+
+	Vector2 LineIntersectionPosition(LineFunc line)
+	{
+		float lx1 = line.GetValue(x1);	
+		if (y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
+		float lx2 = line.GetValue(x2);	
+		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
+		float ly1 = line.GetRevValue(y1);	
+		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, x1); }
+		float ly2 = line.GetRevValue(y2);	
+		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, x2); }
+		return Vector2();
 	}
 
 	void Draw(scene@ s, int layer, int sub_layer)

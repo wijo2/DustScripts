@@ -126,47 +126,54 @@ class d2CQuad
 
 	d2Math::LineFunc GetLineFunc(int l)
 	{
-		return d2Math::LineFunc(PointByNumber(l), PointByNumber(l+1));
+		d2Math::LineFunc r = d2Math::LineFunc(PointByNumber(l), PointByNumber(l+1));
+		r.SetBounds(PointByNumber(l), PointByNumber(l+1));
+		return r;
 	}
 
-	array<d2Math::LineFunc> GetSideEdges(int side)
+array<d2Math::LineFunc> GetSideEdges(int side)
+{
+	array<d2Math::LineFunc> result;
+	d2Math::Vector2 centre = FindCentre();
+	for (int l = 1; l <= 4; l++)
 	{
-		array<d2Math::LineFunc> result;
-		d2Math::Vector2 centre = FindCentre();
-		for (int l = 1; l <= 4; l++)
+		d2Math::LineFunc f = GetLineFunc(l);
+		if (f.nullLine || activeLines.find(l) < 0) { continue; }
+		switch (side)
 		{
-			d2Math::LineFunc f = GetLineFunc(l);
-			if (f.nullLine || activeLines.find(l) < 0) { continue; }
-			switch (side)
-			{
-				case 0:
-				if (centre.x < f.GetRevValue(centre.y)) { result.insertLast(f); }
-				break;
-				case 1:
-				if (centre.x > f.GetRevValue(centre.y)) { result.insertLast(f); }
-				break;
-				case 2:
-				if (centre.y < f.GetValue(centre.x)) { result.insertLast(f); }
-				break;
-				case 3:
-				if (centre.y > f.GetValue(centre.x)) { result.insertLast(f); }
-				break;
-			}
+			case 0:
+			if (centre.x < f.GetRevValue(centre.y)) { result.insertLast(f); }
+			break;
+			case 1:
+			if (centre.x > f.GetRevValue(centre.y)) { result.insertLast(f); }
+			break;
+			case 2:
+			if (centre.y < f.GetValue(centre.x)) { result.insertLast(f); }
+			break;
+			case 3:
+			if (centre.y > f.GetValue(centre.x)) { result.insertLast(f); }
+			break;
 		}
-		return result;
 	}
+	return result;
+}
 
-	void Draw(scene@ s, uint layer, uint sub_layer)
-	{
-		base.Draw(s, layer, sub_layer);
-		array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
-			.IterateOverLine(4, base.p1, base.p2);
-		array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
-			.IterateOverLine(4, base.p2, base.p3);
-		arr = AddArrays(arr, arr1);
-		arr1 = d2Math::LineFunc(base.p3, base.p4)
-			.IterateOverLine(4, base.p3, base.p4);
-		arr = AddArrays(arr, arr1);
+void Draw(scene@ s, uint layer, uint sub_layer)
+{
+	base.Draw(s, layer, sub_layer);
+	// DrawDebug(s, layer, sub_layer);
+}
+
+void DrawDebug(scene@ s, uint layer, uint sub_layer)
+{
+	array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
+		.IterateOverLine(4, base.p1, base.p2);
+	array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
+		.IterateOverLine(4, base.p2, base.p3);
+	arr = AddArrays(arr, arr1);
+	arr1 = d2Math::LineFunc(base.p3, base.p4)
+		.IterateOverLine(4, base.p3, base.p4);
+	arr = AddArrays(arr, arr1);
 		arr1 = d2Math::LineFunc(base.p4, base.p1)
 			.IterateOverLine(4, base.p4, base.p1);
 		arr = AddArrays(arr, arr1);
@@ -260,7 +267,6 @@ class CollisionManager
 			{
 				for (uint i = 0; i < collisionGrid[x][y].length(); i++)
 				{
-					puts("colliders are searching");
 					if (result.findByRef(collisionGrid[x][y][i]) < 0)
 					{
 						result.insertLast(collisionGrid[x][y][i]);
