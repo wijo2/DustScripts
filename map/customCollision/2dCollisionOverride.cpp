@@ -12,7 +12,20 @@ CollisionOverride(d2::CollisionManager@ manager)
 void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool moving, float snap_offset, int arg)
 {
 	rectangle@ colRect = ec.collision_rect();
-	d2Math::IntRect CIR = d2Math::IntRect(int(colRect.left() + ec.x()), int(colRect.top() + ec.y()), int(colRect.right() + ec.x()), int(colRect.bottom() + ec.y()));
+	d2Math::IntRect CIR;
+	puts(colRect.bottom() + ", " + colRect.top());
+	switch (side)
+	{
+		case 0:
+		case 1:
+		CIR	= d2Math::IntRect(int(colRect.left() + ec.x()), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x()), int(colRect.top()*3/8 + ec.y()));	
+		break;
+
+		case 2:
+		case 3:
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y()), int(colRect.right()/2 + ec.x()), int(ec.y()));
+		break;
+	}
 	// CIR.Draw(get_scene(), 22, 1);
 	array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
 	for (uint i = 0; i < colliders.length(); i++)
