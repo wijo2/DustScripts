@@ -74,6 +74,7 @@ class LineFunc
 		{
 			upright = true;
 			upx = p1.x;
+			k = 99999;
 		}
 		else
 		{
@@ -94,6 +95,7 @@ class LineFunc
 	float GetRevValue(float y)
 	{
 		if (nullLine) { return 0; }
+		if (upright) { return upx; }
 		if (k == 0)
 		{
 			return b;
@@ -178,6 +180,7 @@ class LineFunc
 	{
 		if (abs(k) > 1)
 		{
+			puts(pos.y + ", " + bound1.y + ", " + bound2.y);
 			return pos.y > bound1.y && pos.y < bound2.y;
 		}
 		else
