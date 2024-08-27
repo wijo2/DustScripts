@@ -13,7 +13,6 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 {
 	rectangle@ colRect = ec.collision_rect();
 	d2Math::IntRect CIR;
-	puts(colRect.bottom() + ", " + colRect.top());
 	switch (side)
 	{
 		case 0:
@@ -49,7 +48,7 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				case 1:
 				angle = int(57.29578 * atan2(edges[li].k, 1));
 				if (angle > 0) { angle -= 180; }
-				puts("angle " + angle);
+				// puts("angle " + angle);
 				break;
 				case 2:
 				angle = int(57.29578 * atan2(-edges[li].k, -1));
@@ -59,7 +58,7 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				break;
 	   		}
 			if (!IsSuitableAngle(side, angle)) { continue; }
-			puts("suitable!");
+			// puts("suitable!");
 
 			// puts("hit! " + side);
 			tc.hit(true);
@@ -91,7 +90,7 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 
 	bool IsSuitableAngle(int side, int angle)
 	{
-		puts("side " + side + " angle " + angle);
+		// puts("side " + side + " angle " + angle);
 		switch (side)
 		{
 			case 0:
