@@ -17,12 +17,12 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 	{
 		case 0:
 		case 1:
-		CIR	= d2Math::IntRect(int(colRect.left() + ec.x()), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x()), int(colRect.top()*3/8 + ec.y()));	
+		CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
 		break;
 
 		case 2:
 		case 3:
-		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y()), int(colRect.right()/2 + ec.x()), int(ec.y()));
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
 		break;
 	}
 	// CIR.Draw(get_scene(), 22, 1);
@@ -33,12 +33,10 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 		for (uint li = 0; li < edges.length(); li++)
 		{
 			if (!CIR.CheckLineIntersection(edges[li])) { continue; }
-			puts("1");
 
 			//vertical walls fail because lineIntersectionPosition doesn't account for top + bottom penetration!!!!
 			d2Math::Vector2 hitPos = CIR.LineIntersectionPosition(edges[li]);
 			if (!edges[li].IsWithinBounds(hitPos)) { continue; }
-			puts("2");
 
 			//fuck angles they never work like you want them to >:c
 			int angle;
@@ -47,7 +45,6 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				case 0:
 				angle = int(57.29578 * atan2(edges[li].k, 1));
 				if (angle < 0) { angle += 180; }
-				puts("angle " + angle);
 				break;
 				case 1:
 				angle = int(57.29578 * atan2(edges[li].k, 1));
@@ -61,8 +58,28 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				break;
 	   		}
 			if (!IsSuitableAngle(side, angle)) { continue; }
-			// puts("suitable!");
-			puts("3");
+			puts("suitable! side: " + side);
+
+			//angle fix bc df is literally racist wtf
+			switch (side) 
+			{
+				case 0:
+				if (angle > 112) { angle = 112; }
+				if (angle < 67) { angle = 67; }
+				break;
+				case 1:
+				if (angle < -112) { angle = -112; }
+				if (angle > -67) { angle = -67; }
+				break;
+				case 2:
+				if (angle > 0 && angle < 135) { angle = 135; }
+				if (angle < 0 && angle > -135) { angle = -135; }
+				break;
+				case 3:
+				if (angle > 45) { angle = 45; }
+				if (angle < -45) { angle = -45; }
+				break;
+			}
 
 			// puts("hit! " + side);
 			tc.hit(true);
@@ -70,11 +87,11 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 			switch (side)
 			{
 				case 0:
-				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2));
+				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) - 8);
 				tc.hit_y((CIR.y1 + CIR.y2) / 2);
 				break;
 				case 1:
-				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2));
+				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) + 8);
 				tc.hit_y((CIR.y1 + CIR.y2) / 2);
 				break;
 				case 2:

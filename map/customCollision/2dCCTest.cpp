@@ -5,7 +5,6 @@ class script
 	script()
 	{
 		puts("test works c:");
-		puts("atan " + atan2(1, 1));
 	}
 }
 

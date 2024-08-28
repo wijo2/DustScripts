@@ -180,7 +180,6 @@ class LineFunc
 	{
 		if (abs(k) > 1)
 		{
-			puts(pos.y + ", " + bound1.y + ", " + bound2.y);
 			return pos.y > bound1.y && pos.y < bound2.y;
 		}
 		else
@@ -224,10 +223,10 @@ class Rect
 		this.height = abs(y1-y2);
 	}
 
-	Rect(float x1, float y1, float width, float height)
+	Rect(Vector2 pos, float width, float height)
 	{
-		this.x1 = x1;
-		this.y1 = y1;
+		this.x1 = pos.x;
+		this.y1 = pos.y;
 		this.x2 = x1 + width;
 		this.y2 = y1 + height;
 		this.p1 = Vector2(x1,y1);
@@ -269,10 +268,16 @@ class Rect
 		float lx2 = line.GetValue(x2);	
 		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
 		float ly1 = line.GetRevValue(y1);	
-		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, x1); }
+		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, y1); }
 		float ly2 = line.GetRevValue(y2);	
-		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, x2); }
+		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, y2); }
 		return Vector2();
+	}
+
+	void Draw(scene@ s, int layer, int sub_layer)
+	{
+		s.draw_rectangle_world(layer, sub_layer, 
+						 x1,y1,x2,y2,0,0xFF00FF00);
 	}
 }
 
@@ -355,9 +360,9 @@ class IntRect
 		float lx2 = line.GetValue(x2);	
 		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
 		float ly1 = line.GetRevValue(y1);	
-		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, x1); }
+		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, y1); }
 		float ly2 = line.GetRevValue(y2);	
-		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, x2); }
+		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, y2); }
 		return Vector2();
 	}
 
@@ -365,7 +370,6 @@ class IntRect
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
 						 x1,y1,x2,y2,0,0xFF00FF00);
-
 	}
 }
 
