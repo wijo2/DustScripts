@@ -39,7 +39,7 @@ class TestQuad : enemy_base
 	void editor_draw(float fuck)
 	{
 		quad.Draw(get_scene(), 22, 1);
-		//manager.Draw(get_scene(), 22, 1);
+		// manager.Draw(get_scene(), 22, 1);
 	}
 
 	void draw(float doublefuck)
