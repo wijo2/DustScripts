@@ -1,8 +1,10 @@
 #include "2dCC.cpp";
 
-class script 
+class script
 {
-	[label:"manager"] QuadManager@ quadManager;
+	QuadManager@ quadManager;
+	input_api@ input;
+	editor_api@ editor;
 
 	script() 
 	{
@@ -11,22 +13,44 @@ class script
 		{
 			@quadManager = @QuadManager(d2Math::IntRect(-1000, -1000, uint(1000), uint(1000)));
 		}
+		@input = @get_input_api();
+		@editor = @get_editor_api();
 	}
 
-	void draw(float sub_frame)
+	void on_level_start()
 	{
-		puts("why tho?");
-		for (uint i = 0; i < quadManager.quads.length(); i++)
+		quadManager.manager.PlayInit();
+	}
+
+	void editor_step()
+	{
+		if (input.mouse_state() & 0x20 != 0 
+			&& editor.editor_tab() == "Triggers" 
+		 	&& @editor.get_selected_entity == null)
 		{
-			quadManager.quads[i].draw(sub_frame);
+			d2Math::Vector2 mousePos = d2Math::Vector2();
+			mousePos.x = input.mouse_x_world(21);
+			mousePos.y = input.mouse_y_world(21);
+			puts(mousePos);
+			for (uint i = 0; i < quadManager.quads.length(); i++)
+			{
+				puts("looping!");
+				if (quadManager.quads[i].quad.base.IsInside(mousePos))
+				{
+					editor.set_selected_trigger(
+						quadManager.quads[i].self.as_entity()
+					);
+					break;
+				}
+			}
 		}
 	}
 }
 
 class QuadManager 
 {
-	[label:"manager"] d2::CollisionManager@ manager;
-	[label:"quads"] array<QuadEntity> quads;
+	d2::CollisionManager@ manager;
+	array<QuadEntity> quads;
 
 	QuadManager() { @manager = @d2::CollisionManager(d2Math::IntRect()); }
 	QuadManager(d2Math::IntRect field) 
@@ -50,12 +74,18 @@ class QuadEntity : trigger_base
 	[text] int sub_layer;
 
 	[hidden] QuadManager@ quadManager;
-	[text] d2::d2CQuad@ quad;
+	[hidden] d2::d2CQuad@ quad;
+
+	[colour,alpha] uint colour;
 
 	scripttrigger@ self;
 
 	void init(script@ s, scripttrigger@ self)
 	{
+		if (colour == 0x00000000)
+		{
+			colour = 0xFFFFFFFF;
+		}
 		@this.self = @self;
 		@this.quadManager = @s.quadManager; 
 		@quad = @d2::d2CQuad(
@@ -63,8 +93,12 @@ class QuadEntity : trigger_base
 		d2Math::Vector2(p2x, p2y),
 		d2Math::Vector2(p3x, p3y),
 		d2Math::Vector2(p4x, p4y),
-		0xFFFFFFFF,
+		colour,
 		quadManager.manager);
+		if (quadManager.quads.findByRef(this) < 0)
+		{
+			quadManager.quads.insertLast(this);
+		}
 		if (layer == 0)
 		{
 			layer = 21;
@@ -88,12 +122,12 @@ class QuadEntity : trigger_base
 
 	void draw(float doublefuck)
 	{
-		puts("draw?");
 		quad.Draw(get_scene(), layer, sub_layer);
 	}
 
 	void UpdateSelf()
 	{
+		quad.base.colour = colour; 
 		quad.base.p1 = d2Math::Vector2(p1x, p1y);
 		quad.base.p2 = d2Math::Vector2(p2x, p2y);
 		quad.base.p3 = d2Math::Vector2(p3x, p3y);

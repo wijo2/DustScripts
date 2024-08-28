@@ -16,13 +16,17 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 	switch (side)
 	{
 		case 0:
+		CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(ec.x()), int(colRect.top()*3/8 + ec.y()));	
+		break;
 		case 1:
-		CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
+		CIR	= d2Math::IntRect(int(ec.x()), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
 		break;
 
 		case 2:
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + colRect.top()/2 + snap_offset));
+		break;
 		case 3:
-		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top()/2 + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
 		break;
 	}
 	// CIR.Draw(get_scene(), 22, 1);
@@ -96,11 +100,11 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				break;
 				case 2:
 				tc.hit_x((CIR.x1 + CIR.x2) / 2);
-				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - 16);
+				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - 8);
 				break;
 				case 3:
 				tc.hit_x((CIR.x1 + CIR.x2) / 2);
-				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + 16);
+				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + 8);
 				break;
 			}
 			return;

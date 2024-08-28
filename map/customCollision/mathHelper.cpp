@@ -187,6 +187,26 @@ class LineFunc
 			return pos.x > bound1.x && pos.x < bound2.x;
 		}
 	}
+
+	//does not work me dumb this doesn't even make sense
+	bool IsBetweenLines(LineFunc other, Vector2@ p)
+	{
+		if (nullLine || other.nullLine) { return true; }
+		if (k == 0)
+		{
+			//no sensible conclusion can be reached
+			if (other.upright) { return true; }
+			float y1 = GetValue(p.x);
+			float y2 = other.GetValue(p.x);
+			float yp = p.y;
+			return (y1 - yp)*(y2 - yp) < 0;
+		}
+		float x1, x2;
+		x1 = GetRevValue(p.y);
+		x2 = other.GetRevValue(p.y);
+		float xp = p.x;
+		return (x1 - xp)*(x2 - xp) < 0;
+	}
 }
 
 class Rect

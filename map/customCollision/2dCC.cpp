@@ -34,6 +34,17 @@ class d2Quad
 	{
 		s.draw_quad_world(layer, sub_layer, false, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, colour, colour, colour, colour);
 	}
+
+	//does not work me dumb
+	bool IsInside(d2Math::Vector2 pos)
+	{
+		d2Math::LineFunc l1 = d2Math::LineFunc(p1, p2);
+		d2Math::LineFunc l2 = d2Math::LineFunc(p2, p3);
+		d2Math::LineFunc l3 = d2Math::LineFunc(p3, p4);
+		d2Math::LineFunc l4 = d2Math::LineFunc(p4, p1);
+		puts(l1.IsBetweenLines(l3, pos) + ", " + l2.IsBetweenLines(l4, pos)); 
+		return l1.IsBetweenLines(l3, pos) && l2.IsBetweenLines(l4, pos);
+	}
 }
 
 class d2CQuad
@@ -216,11 +227,14 @@ class CollisionManager
 		for (uint i = 0; i < w; i++) {
 			collisionGrid[i].resize(h);
 		}
-		if (is_playing())
-		{
-			controller_controllable(uint(get_active_player())).
-				set_collision_handler(CollisionOverride(this), "CollisionCallback", 0);
-		}
+	}
+
+	void PlayInit()
+	{
+		CollisionOverride@ c = CollisionOverride(this);
+		controllable@ player = controller_controllable(uint(get_active_player()));
+		puts((@player == null) + "");
+		player.set_collision_handler(c, "CollisionCallback", 0);
 	}
 
 	//takes in real world coords
