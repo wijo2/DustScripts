@@ -97,7 +97,7 @@ class d2CQuad
 		{
 			int x = int(arr[i].x);
 			int y = int(arr[i].y);
-			oldCollision.insertLast(array<int> = {x, y});
+	   		oldCollision.insertLast(array<int> = {x, y});
 			manager.AddToCG(x, y, this);
 		}
 	}
@@ -131,49 +131,49 @@ class d2CQuad
 		return r;
 	}
 
-array<d2Math::LineFunc> GetSideEdges(int side)
-{
-	array<d2Math::LineFunc> result;
-	d2Math::Vector2 centre = FindCentre();
-	for (int l = 1; l <= 4; l++)
+	array<d2Math::LineFunc> GetSideEdges(int side)
 	{
-		d2Math::LineFunc f = GetLineFunc(l);
-		if (f.nullLine || activeLines.find(l) < 0) { continue; }
-		switch (side)
+		array<d2Math::LineFunc> result;
+		d2Math::Vector2 centre = FindCentre();
+		for (int l = 1; l <= 4; l++)
 		{
-			case 0:
-			if (centre.x < f.GetRevValue(centre.y)) { result.insertLast(f); }
-			break;
-			case 1:
-			if (centre.x > f.GetRevValue(centre.y)) { result.insertLast(f); }
-			break;
-			case 2:
-			if (centre.y < f.GetValue(centre.x)) { result.insertLast(f); }
-			break;
-			case 3:
-			if (centre.y > f.GetValue(centre.x)) { result.insertLast(f); }
-			break;
+			d2Math::LineFunc f = GetLineFunc(l);
+			if (f.nullLine || activeLines.find(l) < 0) { continue; }
+			switch (side)
+			{
+				case 0:
+					if (centre.x < f.GetRevValue(centre.y)) { result.insertLast(f); }
+				break;
+				case 1:
+					if (centre.x > f.GetRevValue(centre.y)) { result.insertLast(f); }
+				break;
+				case 2:
+					if (centre.y < f.GetValue(centre.x)) { result.insertLast(f); }
+				break;
+				case 3:
+					if (centre.y > f.GetValue(centre.x)) { result.insertLast(f); }
+				break;
+			}
 		}
+		return result;
 	}
-	return result;
-}
 
-void Draw(scene@ s, uint layer, uint sub_layer)
-{
-	base.Draw(s, layer, sub_layer);
-	// DrawDebug(s, layer, sub_layer);
-}
+	void Draw(scene@ s, uint layer, uint sub_layer)
+	{
+		base.Draw(s, layer, sub_layer);
+		// DrawDebug(s, layer, sub_layer);
+	}
 
-void DrawDebug(scene@ s, uint layer, uint sub_layer)
-{
-	array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
-		.IterateOverLine(4, base.p1, base.p2);
-	array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
-		.IterateOverLine(4, base.p2, base.p3);
-	arr = AddArrays(arr, arr1);
-	arr1 = d2Math::LineFunc(base.p3, base.p4)
-		.IterateOverLine(4, base.p3, base.p4);
-	arr = AddArrays(arr, arr1);
+	void DrawDebug(scene@ s, uint layer, uint sub_layer)
+	{
+		array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
+			.IterateOverLine(4, base.p1, base.p2);
+		array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
+			.IterateOverLine(4, base.p2, base.p3);
+		arr = AddArrays(arr, arr1);
+		arr1 = d2Math::LineFunc(base.p3, base.p4)
+			.IterateOverLine(4, base.p3, base.p4);
+		arr = AddArrays(arr, arr1);
 		arr1 = d2Math::LineFunc(base.p4, base.p1)
 			.IterateOverLine(4, base.p4, base.p1);
 		arr = AddArrays(arr, arr1);
@@ -182,12 +182,13 @@ void DrawDebug(scene@ s, uint layer, uint sub_layer)
 			int x = int(arr[i].x);
 			int y = int(arr[i].y);
 			s.draw_rectangle_world(
-			layer,
-			sub_layer,
-			x,y,
-			x+16,y+16,
-			0,
-			0x80FF0000);
+				layer,
+				sub_layer,
+				x,y,
+				x+16,y+16,
+				0,
+				0x80FF0000
+			);
 		}
 	}
 }
@@ -218,7 +219,7 @@ class CollisionManager
 		if (is_playing())
 		{
 			controller_controllable(uint(get_active_player())).
-			set_collision_handler(CollisionOverride(this), "CollisionCallback", 0);
+				set_collision_handler(CollisionOverride(this), "CollisionCallback", 0);
 		}
 	}
 
@@ -289,15 +290,15 @@ class CollisionManager
 				int dx = (x << 4) + playArea.x1;
 				int dy = (y << 4) + playArea.y1;
 				s.draw_rectangle_world(
-				layer,
-				sub_layer,
-				dx,dy,
-				dx+16,dy+16,
-				0,
-				0x8000FF00);
+					layer,
+					sub_layer,
+					dx,dy,
+					dx+16,dy+16,
+					0,
+					0x8000FF00
+				);
 			}
 		}
-		
 	}
 }
 
