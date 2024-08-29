@@ -38,12 +38,22 @@ class d2Quad
 	//does not work me dumb
 	bool IsInside(d2Math::Vector2 pos)
 	{
+		array<float> intersections;
+
 		d2Math::LineFunc l1 = d2Math::LineFunc(p1, p2);
+		l1.SetBounds(p1, p2);
+		if (l1.IsWithinBounds(d2Math::Vector2(l1.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l1.GetRevValue(pos.y)); }
 		d2Math::LineFunc l2 = d2Math::LineFunc(p2, p3);
+		l2.SetBounds(p2, p3);
+		if (l2.IsWithinBounds(d2Math::Vector2(l2.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l2.GetRevValue(pos.y)); }
 		d2Math::LineFunc l3 = d2Math::LineFunc(p3, p4);
+		l3.SetBounds(p3, p4);
+		if (l3.IsWithinBounds(d2Math::Vector2(l3.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l3.GetRevValue(pos.y)); }
 		d2Math::LineFunc l4 = d2Math::LineFunc(p4, p1);
-		puts(l1.IsBetweenLines(l3, pos) + ", " + l2.IsBetweenLines(l4, pos)); 
-		return l1.IsBetweenLines(l3, pos) && l2.IsBetweenLines(l4, pos);
+		l4.SetBounds(p4, p1);
+		if (l4.IsWithinBounds(d2Math::Vector2(l4.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l4.GetRevValue(pos.y)); }
+		if (intersections.length() < 2) { return false; }
+		return (intersections[0] - pos.x) * (intersections[1] - pos.x) < 0;
 	}
 }
 
@@ -233,7 +243,6 @@ class CollisionManager
 	{
 		CollisionOverride@ c = CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
-		puts((@player == null) + "");
 		player.set_collision_handler(c, "CollisionCallback", 0);
 	}
 

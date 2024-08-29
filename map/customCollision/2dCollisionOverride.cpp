@@ -38,7 +38,6 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 		{
 			if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 
-			//vertical walls fail because lineIntersectionPosition doesn't account for top + bottom penetration!!!!
 			d2Math::Vector2 hitPos = CIR.LineIntersectionPosition(edges[li]);
 			if (!edges[li].IsWithinBounds(hitPos)) { continue; }
 
@@ -62,7 +61,7 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				break;
 	   		}
 			if (!IsSuitableAngle(side, angle)) { continue; }
-			puts("suitable! side: " + side);
+			// puts("suitable! side: " + side);
 
 			//angle fix bc df is literally racist wtf
 			switch (side) 

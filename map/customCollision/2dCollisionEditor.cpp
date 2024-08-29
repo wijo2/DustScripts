@@ -11,7 +11,7 @@ class script
 		puts("2dCollisionEditor working c:");
 		if (@quadManager == null) 
 		{
-			@quadManager = @QuadManager(d2Math::IntRect(-1000, -1000, uint(1000), uint(1000)));
+			@quadManager = @QuadManager(d2Math::IntRect(-2000, -2000, uint(2000), uint(2000)));
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
@@ -25,16 +25,14 @@ class script
 	void editor_step()
 	{
 		if (input.mouse_state() & 0x20 != 0 
-			&& editor.editor_tab() == "Triggers" 
-		 	&& @editor.get_selected_entity == null)
+			&& editor.editor_tab() == "Triggers"
+			&& @editor.get_selected_trigger() == null)
 		{
 			d2Math::Vector2 mousePos = d2Math::Vector2();
 			mousePos.x = input.mouse_x_world(21);
 			mousePos.y = input.mouse_y_world(21);
-			puts(mousePos);
 			for (uint i = 0; i < quadManager.quads.length(); i++)
 			{
-				puts("looping!");
 				if (quadManager.quads[i].quad.base.IsInside(mousePos))
 				{
 					editor.set_selected_trigger(
@@ -85,6 +83,20 @@ class QuadEntity : trigger_base
 		if (colour == 0x00000000)
 		{
 			colour = 0xFFFFFFFF;
+		}
+		if (p1x == 0 && p1y == 0 &&
+			p2x == 0 && p2y == 0&&
+			p3x == 0 && p3y == 0&&
+			p4x == 0 && p4y == 0) 
+		{
+			p1x = self.x() - 48;
+			p1y = self.y() - 48;
+			p2x = self.x() + 48;
+			p2y = self.y() - 48;
+			p3x = self.x() + 48;
+			p3y = self.y() + 48;
+			p4x = self.x() - 48;
+			p4y = self.y() + 48;
 		}
 		@this.self = @self;
 		@this.quadManager = @s.quadManager; 
