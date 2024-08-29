@@ -109,13 +109,13 @@ class LineFunc
 	{
 		array<Vector2> result;
 		if (nullLine) { return result; }
-		uint increment = 2 ** precision;
+		uint increment = 2 << precision;
 
 		//flat case
 		if (abs(k) < 1)
 		{
 			int dir = start.x < end.x ? 1 : -1;
-			for (float x = start.x; dir * x - 2 ** precision <= dir * end.x; x += dir * 2 ** precision)
+			for (float x = start.x; dir * x - increment <= dir * end.x; x += dir * increment)
 			{
 				float y = GetValue(x);
 				int rx = int(x);
@@ -131,7 +131,7 @@ class LineFunc
 		else
 		{
 			int dir = start.y < end.y ? 1 : -1;
-			for (float y = start.y; dir * y - 2 ** precision <= dir * end.y; y += dir * 2 ** precision)
+			for (float y = start.y; dir * y - increment <= dir * end.y; y += dir * increment)
 			{
 				float x = GetRevValue(y);
 				int rx = int(x);
@@ -264,9 +264,9 @@ class Rect
 	Vector2 LineIntersectionPosition(LineFunc line)
 	{
 		float lx1 = line.GetValue(x1);	
-		if (y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
+		if (!line.upright && y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
 		float lx2 = line.GetValue(x2);	
-		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
+		if (!line.upright && y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
 		float ly1 = line.GetRevValue(y1);	
 		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, y1); }
 		float ly2 = line.GetRevValue(y2);	
@@ -356,9 +356,9 @@ class IntRect
 	Vector2 LineIntersectionPosition(LineFunc line)
 	{
 		float lx1 = line.GetValue(x1);	
-		if (y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
+		if (!line.upright && y1 < lx1 && lx1 < y2) { return Vector2(x1, lx1); }
 		float lx2 = line.GetValue(x2);	
-		if (y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
+		if (!line.upright && y1 < lx2 && lx2 < y2) { return Vector2(x2, lx2); }
 		float ly1 = line.GetRevValue(y1);	
 		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, y1); }
 		float ly2 = line.GetRevValue(y2);	

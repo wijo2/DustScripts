@@ -97,20 +97,14 @@ class d2CQuad
 	void UpdateCollision()
 	{
 		if (@manager == null) { return; }
-		for (uint i = 0; i < oldCollision.length(); i++)
-		{
-			int x = oldCollision[i][0];
-			int y = oldCollision[i][1];
-			manager.RemoveFromCG(x, y, this);
-		}
-
-		oldCollision = array<array<int>>(0);
+		
+		ClearOldCache();
 
 		array<d2Math::Vector2> arr;
 		for (uint i = 0; i < activeLines.length(); i++)
 		{
 			array<d2Math::Vector2> arr1 = d2Math::LineFunc(PointByNumber(i), PointByNumber(i+1))
-				.IterateOverLine(4, PointByNumber(i), PointByNumber(i+1));
+				.IterateOverLine(manager.collisionOrder, PointByNumber(i), PointByNumber(i+1));
 			arr = AddArrays(arr, arr1);
 		}
 
@@ -121,6 +115,18 @@ class d2CQuad
 	   		oldCollision.insertLast(array<int> = {x, y});
 			manager.AddToCG(x, y, this);
 		}
+	}
+
+	void ClearOldCache() 
+	{
+		for (uint i = 0; i < oldCollision.length(); i++)
+		{
+			int x = oldCollision[i][0];
+			int y = oldCollision[i][1];
+			manager.RemoveFromCG(x, y, this);
+		}
+
+		oldCollision = array<array<int>>(0);
 	}
 
 	array<d2Math::Vector2> AddArrays(array<d2Math::Vector2> a1, array<d2Math::Vector2> a2)
@@ -223,6 +229,12 @@ class CollisionManager
 	array<array<array<d2CQuad@>>> collisionGrid;
 
 	d2Math::IntRect playArea;
+	//changes the size of collision cache squares.
+	//smaller = better performance up untill like 3 with very diminishing returns but bigger lagspike at load
+	//bigger = worse performance but smaller lagspike at load
+	int collisionOrder = 4;
+	
+	script@ s;
 
 	CollisionManager()
 	{
@@ -230,17 +242,18 @@ class CollisionManager
 	}
 	CollisionManager(d2Math::IntRect playArea)
 	{
-		this.playArea = d2Math::IntRect(playArea.x1 - playArea.x1 % 16, playArea.y1 - playArea.y1 % 16, playArea.width, playArea.height);
-		uint w = this.playArea.width >> 4;
-		uint h = this.playArea.height >> 4;
+		this.playArea = d2Math::IntRect(playArea.x1 - playArea.x1 % (2 << collisionOrder), playArea.y1 - playArea.y1 % (2 << collisionOrder), playArea.width, playArea.height);
+		uint w = this.playArea.width >> collisionOrder;
+		uint h = this.playArea.height >> collisionOrder;
 		collisionGrid.resize(w);
 		for (uint i = 0; i < w; i++) {
 			collisionGrid[i].resize(h);
 		}
 	}
 
-	void PlayInit()
+	void PlayInit(script@ s)
 	{
+		@this.s = @s;
 		CollisionOverride@ c = CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
 		player.set_collision_handler(c, "CollisionCallback", 0);
@@ -249,9 +262,9 @@ class CollisionManager
 	//takes in real world coords
 	void AddToCG(int x, int y, d2CQuad@ quad)
 	{
-		uint nx = (x - playArea.x1) >> 4;
-		uint ny = (y - playArea.y1) >> 4;
-		if (nx < 0 || ny < 0 || nx >= playArea.width >> 4 || ny >= playArea.height >> 4)
+		uint nx = (x - playArea.x1) >> collisionOrder;
+		uint ny = (y - playArea.y1) >> collisionOrder;
+		if (nx < 0 || ny < 0 || nx >= playArea.width >> collisionOrder || ny >= playArea.height >> collisionOrder)
 		{
 			return;
 		}
@@ -263,9 +276,9 @@ class CollisionManager
 
 	void RemoveFromCG(int x, int y, d2CQuad@ quad)
 	{
-		uint nx = (x - playArea.x1) >> 4;
-		uint ny = (y - playArea.y1) >> 4;
-		if (nx < 0 || ny < 0 || nx >= playArea.width >> 4 || ny >= playArea.height >> 4)
+		uint nx = (x - playArea.x1) >> collisionOrder;
+		uint ny = (y - playArea.y1) >> collisionOrder;
+		if (nx < 0 || ny < 0 || nx >= playArea.width >> collisionOrder || ny >= playArea.height >> collisionOrder)
 		{
 			return;
 		}
@@ -276,19 +289,24 @@ class CollisionManager
 		}
 	}
 
-	array<d2CQuad@> GetCollidersInArea(d2Math::IntRect rect)
+	array<d2CQuad@> GetCollidersInArea(d2Math::IntRect rect, bool debug = false)
 	{
 		array<d2CQuad@> result;
 
-		uint x1 = (rect.x1 - playArea.x1) >> 4;
-		uint y1 = (rect.y1 - playArea.y1) >> 4;
-		uint x2 = (rect.x2 - playArea.x1) >> 4;
-		uint y2 = (rect.y2 - playArea.y1) >> 4;
+		uint x1 = (rect.x1 - playArea.x1) >> collisionOrder;
+		uint y1 = (rect.y1 - playArea.y1) >> collisionOrder;
+		uint x2 = (rect.x2 - playArea.x1) >> collisionOrder;
+		uint y2 = (rect.y2 - playArea.y1) >> collisionOrder;
 
 		for (uint x = x1; x <= x2; x++)
 		{
 			for (uint y = y1; y <= y2; y++)
 			{
+					if (debug) 
+					{
+						int w = 2 << collisionOrder;
+						s.debugDraw.insertLast(d2Math::Rect((x << collisionOrder) + playArea.x1, (y << collisionOrder) + playArea.y1, (x << collisionOrder) + playArea.x1 + w, (y << collisionOrder) + playArea.y1 + w));
+					}
 				for (uint i = 0; i < collisionGrid[x][y].length(); i++)
 				{
 					if (result.findByRef(collisionGrid[x][y][i]) < 0)
@@ -310,13 +328,13 @@ class CollisionManager
 			for (uint y = 0; y < collisionGrid.length(); y++)
 			{
 				if (collisionGrid[x][y].length() == 0) { continue; }
-				int dx = (x << 4) + playArea.x1;
-				int dy = (y << 4) + playArea.y1;
+				int dx = (x << collisionOrder) + playArea.x1;
+				int dy = (y << collisionOrder) + playArea.y1;
 				s.draw_rectangle_world(
 					layer,
 					sub_layer,
 					dx,dy,
-					dx+16,dy+16,
+					dx+(2 << collisionOrder),dy+(2 << collisionOrder),
 					0,
 					0x8000FF00
 				);

@@ -16,27 +16,28 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 	switch (side)
 	{
 		case 0:
-		CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(ec.x()), int(colRect.top()*3/8 + ec.y()));	
+		CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(ec.x() + colRect.right()/4), int(colRect.top()*3/8 + ec.y()));	
 		break;
 		case 1:
-		CIR	= d2Math::IntRect(int(ec.x()), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
+		CIR	= d2Math::IntRect(int(ec.x() + colRect.left()/4), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
 		break;
 
 		case 2:
-		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + colRect.top()/2 + snap_offset));
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + colRect.top()*5/8 + snap_offset));
 		break;
 		case 3:
-		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top()/2 + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
+		CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top()*5/8 + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
 		break;
 	}
 	// CIR.Draw(get_scene(), 22, 1);
-	array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
+	array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR, side == 0);
 	for (uint i = 0; i < colliders.length(); i++)
 	{
 		array<d2Math::LineFunc> edges = colliders[i].GetSideEdges(side);
 		for (uint li = 0; li < edges.length(); li++)
 		{
 			if (!CIR.CheckLineIntersection(edges[li])) { continue; }
+			puts("suitable side! side: " + side);
 
 			d2Math::Vector2 hitPos = CIR.LineIntersectionPosition(edges[li]);
 			if (!edges[li].IsWithinBounds(hitPos)) { continue; }
@@ -61,7 +62,7 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 				break;
 	   		}
 			if (!IsSuitableAngle(side, angle)) { continue; }
-			// puts("suitable! side: " + side);
+			puts("suitable angle! side: " + side);
 
 			//angle fix bc df is literally racist wtf
 			switch (side) 
@@ -87,23 +88,24 @@ void CollisionCallback(controllable@ ec, tilecollision@ tc, int side, bool movin
 			// puts("hit! " + side);
 			tc.hit(true);
 			tc.type(angle);
+			int offset = 8;
 			switch (side)
 			{
 				case 0:
-				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) - 8);
+				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) - offset);
 				tc.hit_y((CIR.y1 + CIR.y2) / 2);
 				break;
 				case 1:
-				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) + 8);
+				tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) + offset);
 				tc.hit_y((CIR.y1 + CIR.y2) / 2);
 				break;
 				case 2:
 				tc.hit_x((CIR.x1 + CIR.x2) / 2);
-				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - 8);
+				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - offset);
 				break;
 				case 3:
 				tc.hit_x((CIR.x1 + CIR.x2) / 2);
-				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + 8);
+				tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + offset);
 				break;
 			}
 			return;

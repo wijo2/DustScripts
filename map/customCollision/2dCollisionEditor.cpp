@@ -1,25 +1,36 @@
 #include "2dCC.cpp";
 
-class script
+class script : script_base
 {
 	QuadManager@ quadManager;
 	input_api@ input;
 	editor_api@ editor;
+	[text] int collisionOrder;
+	[text] bool showPlayArea;
+	[text] bool showCacheDebug;
+	
+	array<d2Math::Rect> debugDraw;
 
 	script() 
 	{
 		puts("2dCollisionEditor working c:");
 		if (@quadManager == null) 
 		{
-			@quadManager = @QuadManager(d2Math::IntRect(-2000, -2000, uint(2000), uint(2000)));
+			@quadManager = @QuadManager(this, d2Math::IntRect(-2000, -2000, uint(2000), uint(2000)));
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
 	}
+	
+	void on_editor_start() 
+	{
+		quadManager.manager.collisionOrder = collisionOrder;
+	}
 
 	void on_level_start()
 	{
-		quadManager.manager.PlayInit();
+		quadManager.manager.collisionOrder = collisionOrder;
+		quadManager.manager.PlayInit(this);
 	}
 
 	void editor_step()
@@ -43,17 +54,52 @@ class script
 			}
 		}
 	}
+	
+	void step(int idc) 
+	{
+		debugDraw = array<d2Math::Rect>(0);
+	}
+	
+	void editor_draw(float lolxd) 
+	{
+		if (showPlayArea) 
+		{
+			quadManager.manager.playArea.Draw(get_scene(), 22, 1);
+		}
+		if (showCacheDebug) 
+		{
+			quadManager.manager.Draw(get_scene(), 22, 1);
+		}
+	}
+	
+	void draw(float idkAnymore) 
+	{
+		for (uint i = 0; i < debugDraw.length(); i++) 
+		{
+			debugDraw[i].Draw(get_scene(), 22, 1);
+		}
+		if (showPlayArea) 
+		{
+			quadManager.manager.playArea.Draw(get_scene(), 22, 1);
+		}
+		if (showCacheDebug) 
+		{
+			quadManager.manager.Draw(get_scene(), 22, 1);
+		}
+	}
 }
 
 class QuadManager 
 {
 	d2::CollisionManager@ manager;
 	array<QuadEntity> quads;
+	script@ s;
 
 	QuadManager() { @manager = @d2::CollisionManager(d2Math::IntRect()); }
-	QuadManager(d2Math::IntRect field) 
+	QuadManager(script@ s, d2Math::IntRect field) 
 	{
 		@manager = @d2::CollisionManager(field);
+		@this.s = @s;
 	}
 }
 
@@ -128,12 +174,13 @@ class QuadEntity : trigger_base
 
 	void editor_draw(float fuck)
 	{
+		if (@quad == null) { return; }
 		quad.Draw(get_scene(), layer, sub_layer);
-		// manager.Draw(get_scene(), 22, 1);
 	}
 
 	void draw(float doublefuck)
 	{
+		if (@quad == null) { return; }
 		quad.Draw(get_scene(), layer, sub_layer);
 	}
 
