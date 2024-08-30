@@ -19,6 +19,12 @@ class Vector2
 		this.y = y;
 	}
 
+
+	float Distance(Vector2 o)
+	{
+		return sqrt((x-o.x)**2 + (y-o.y)**2);
+	}
+
 	Vector2 opNeg()
 	{
 		return Vector2(-x, -y);

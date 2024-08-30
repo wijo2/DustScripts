@@ -15,6 +15,11 @@ class script : script_base
 	[text] int playAreaWidth;
 	[text] int playAreaHeight;
 
+	[colour,alpha] uint spikeColour;
+	[colour,alpha] uint dustColour;
+
+	[text] array<ControllableHolder> extraGuys;
+
 	//debug
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugY] int debugX;
@@ -40,6 +45,14 @@ class script : script_base
 	void on_level_start()
 	{
 		quadManager.manager.collisionOrder = collisionOrder;
+		for (uint i = 0; i < extraGuys.length(); i++)
+		{
+			entity@ e = entity_by_id(extraGuys[i].entity);
+			if (@e == null) { continue; }
+			controllable@ c = e.as_controllable();
+			if (@c == null) { continue; }
+			quadManager.manager.additionalControllables.insertLast(c);
+		}
 		quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
 	}
 
@@ -84,19 +97,25 @@ class script : script_base
 
 	void draw(float idkAnymore) 
 	{
+		scene@ sc = get_scene();
 		for (uint i = 0; i < debugDraw.length(); i++) 
 		{
-			debugDraw[i].Draw(get_scene(), 22, 1);
+			debugDraw[i].Draw(sc, 22, 1);
 		}
 		if (showPlayArea) 
 		{
-			quadManager.manager.playArea.Draw(get_scene(), 22, 1);
+			quadManager.manager.playArea.Draw(sc, 22, 1);
 		}
 		if (showCacheDebug) 
 		{
-			quadManager.manager.Draw(get_scene(), 22, 1);
+			quadManager.manager.Draw(sc, 22, 1);
 		}
 	}
+};
+
+class ControllableHolder
+{
+	[entity] int entity;
 };
 
 class QuadManager 
@@ -126,11 +145,24 @@ class QuadEntity : trigger_base
 
 	[text] int layer;
 	[text] int sub_layer;
+	[colour,alpha] uint colour;
+
+	[text] bool side1active;
+	[text] bool side2active;
+	[text] bool side3active;
+	[text] bool side4active;
+	[text] bool side1dust;
+	[text] bool side2dust;
+	[text] bool side3dust;
+	[text] bool side4dust;
+	[text] bool side1spikes;
+	[text] bool side2spikes;
+	[text] bool side3spikes;
+	[text] bool side4spikes;
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
 
-	[colour,alpha] uint colour;
 
 	scripttrigger@ self;
 
@@ -163,6 +195,7 @@ class QuadEntity : trigger_base
 			d2Math::Vector2(p4x, p4y),
 			colour,
 			quadManager.manager);
+		@quad.script = @quadManager.s;
 		if (quadManager.quads.findByRef(this) < 0)
 		{
 			quadManager.quads.insertLast(this);
@@ -175,11 +208,16 @@ class QuadEntity : trigger_base
 		{
 			sub_layer = 1;
 		}
+		UpdateSelf();
+		UpdateSides();
+		quad.UpdateCollision();
 	}
 
 	void editor_var_changed(var_info@ info)
 	{
 		UpdateSelf();
+		UpdateSides();
+		quad.UpdateCollision();
 	}
 
 	void editor_draw(float fuck)
@@ -202,8 +240,25 @@ class QuadEntity : trigger_base
 		quad.base.p3 = d2Math::Vector2(p3x, p3y);
 		quad.base.p4 = d2Math::Vector2(p4x, p4y);
 		quad.UpdateCollision();
-		d2Math::Vector2 centre = quad.FindCentre();
+		d2Math::Vector2 centre = quad.base.FindCentre();
 		self.set_centre(centre.x, centre.y);
+	}
+
+	//seperating since this should only happen at start of level
+	void UpdateSides()
+	{
+		quad.activeLines[0] = side1active;
+		quad.activeLines[1] = side2active;
+		quad.activeLines[2] = side3active;
+		quad.activeLines[3] = side4active;
+		quad.dustLines[0] = side1dust;
+		quad.dustLines[1] = side2dust;
+		quad.dustLines[2] = side3dust;
+		quad.dustLines[3] = side4dust;
+		quad.spikeLines[0] = side1spikes;
+		quad.spikeLines[1] = side2spikes;
+		quad.spikeLines[2] = side3spikes;
+		quad.spikeLines[3] = side4spikes;
 	}
 
 	void on_remove()

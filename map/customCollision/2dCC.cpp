@@ -55,27 +55,6 @@ class d2Quad
 		if (intersections.length() < 2) { return false; }
 		return (intersections[0] - pos.x) * (intersections[1] - pos.x) < 0;
 	}
-}
-
-class d2CQuad
-{
-	d2Quad@ base;
-	CollisionManager@ manager;
-	array<array<int>> oldCollision;
-
-	array<int> activeLines = {1,2,3,4};
-
-	//to be implemented
-	array<int> spikeLines;
-	array<int> dustLines;
-
-	d2CQuad() { @base = @d2Quad(); @manager = null; }
-	d2CQuad(d2Math::Vector2 p1, d2Math::Vector2 p2, d2Math::Vector2 p3, d2Math::Vector2 p4, uint colour, CollisionManager@ manager)
-	{
-		@base = @d2Quad(p1, p2, p3, p4, colour);
-		@this.manager = @manager;
-		UpdateCollision();
-	}
 
 	d2Math::Vector2@ PointByNumber(int n)
 	{
@@ -85,15 +64,71 @@ class d2CQuad
 		switch (n2)
 		{
 			case 1:
-				return @base.p1;
+				return @p1;
 			case 2:
-				return @base.p2;
+				return @p2;
 			case 3:
-				return @base.p3;
+				return @p3;
 			case 4:
-				return @base.p4;
+				return @p4;
 		}
 		return d2Math::Vector2();
+	}
+
+	d2Math::Vector2 FindCentre()
+	{
+		return d2Math::Vector2(
+			(p1.x + p2.x + p3.x + p4.x) / 4,
+			(p1.y + p2.y + p3.y + p4.y) / 4);
+	}
+
+	d2Math::LineFunc GetLineFunc(int l)
+	{
+		d2Math::LineFunc r = d2Math::LineFunc(PointByNumber(l), PointByNumber(l+1));
+		r.SetBounds(PointByNumber(l), PointByNumber(l+1));
+		return r;
+	}
+	
+	int GetNodeFromPoint(d2Math::Vector2 pos)
+	{
+		if (pos == p1) { return 1; }
+		if (pos == p2) { return 2; }
+		if (pos == p3) { return 3; }
+		if (pos == p4) { return 4; }
+		return -1;
+	}
+
+	int GetSideFromNodes(int n1, int n2)
+	{
+		int o1 = int(min(n1, n2));
+		int o2 = int(max(n1, n2));
+		if (o1 == 1 && o2 == 2) { return 1; }
+		if (o1 == 2 && o2 == 3) { return 2; }
+		if (o1 == 3 && o2 == 4) { return 3; }
+		if (o2 == 4 && o1 == 1) { return 4; }
+		return -1;
+	}
+}
+
+class d2CQuad
+{
+	d2Quad@ base;
+	CollisionManager@ manager;
+	array<array<int>> oldCollision;
+
+	array<bool> activeLines(4);
+
+	array<bool> spikeLines(4);
+	array<bool> dustLines(4);
+
+	script@ script;
+
+	d2CQuad() { @base = @d2Quad(); @manager = null; }
+	d2CQuad(d2Math::Vector2 p1, d2Math::Vector2 p2, d2Math::Vector2 p3, d2Math::Vector2 p4, uint colour, CollisionManager@ manager)
+	{
+		@base = @d2Quad(p1, p2, p3, p4, colour);
+		@this.manager = @manager;
+		UpdateCollision();
 	}
 
 	void UpdateCollision()
@@ -103,10 +138,11 @@ class d2CQuad
 		ClearOldCache();
 
 		array<d2Math::Vector2> arr;
-		for (uint i = 0; i < activeLines.length(); i++)
+		for (uint i = 0; i < 4; i++)
 		{
-			array<d2Math::Vector2> arr1 = d2Math::LineFunc(PointByNumber(i), PointByNumber(i+1))
-				.IterateOverLine(manager.collisionOrder, PointByNumber(i), PointByNumber(i+1));
+			if (!activeLines[i]) { continue; }
+			array<d2Math::Vector2> arr1 = base.GetLineFunc(i+1)
+				.IterateOverLine(manager.collisionOrder, base.PointByNumber(i+1), base.PointByNumber(i+2));
 			arr = AddArrays(arr, arr1);
 		}
 
@@ -145,29 +181,14 @@ class d2CQuad
 		return ret;
 	}
 
-	d2Math::Vector2 FindCentre()
-	{
-		return d2Math::Vector2(
-			(base.p1.x + base.p2.x + base.p3.x + base.p4.x) / 4,
-			(base.p1.y + base.p2.y + base.p3.y + base.p4.y) / 4);
-
-	}
-
-	d2Math::LineFunc GetLineFunc(int l)
-	{
-		d2Math::LineFunc r = d2Math::LineFunc(PointByNumber(l), PointByNumber(l+1));
-		r.SetBounds(PointByNumber(l), PointByNumber(l+1));
-		return r;
-	}
-
 	array<d2Math::LineFunc> GetSideEdges(int side)
 	{
 		array<d2Math::LineFunc> result;
-		d2Math::Vector2 centre = FindCentre();
+		d2Math::Vector2 centre = base.FindCentre();
 		for (int l = 1; l <= 4; l++)
 		{
-			d2Math::LineFunc f = GetLineFunc(l);
-			if (f.nullLine || activeLines.find(l) < 0) { continue; }
+			d2Math::LineFunc f = base.GetLineFunc(l);
+			if (f.nullLine || !activeLines[l-1]) { continue; }
 			switch (side)
 			{
 				case 0:
@@ -187,10 +208,56 @@ class d2CQuad
 		return result;
 	}
 
+	void SideTouched(int side)
+	{
+		puts("touchy! " + side + ", " + spikeLines[side-1]);
+		controllable@ c = controller_controllable(uint(get_active_player()));
+		dustman@ d = c.as_dustman();
+		int state = d.state();
+		if (state != 5 && state != 7 && state != 8 && state != 19 && dustLines[side-1])
+		{
+			dustLines[side-1] = false;
+			d.combo_count(d.combo_count() + 1);
+			d.combo_timer(5);
+		}
+		if (spikeLines[side-1])
+		{
+			puts("die!");
+			if (!d.dead())
+			{
+				d.kill(true);
+			}
+		}
+	}
+
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
 		base.Draw(s, layer, sub_layer);
 		// DrawDebug(s, layer, sub_layer);
+	   	float hw = 3;
+		for (int side = 0; side < 4; side++)
+		{
+			d2Math::Vector2 p1 = base.PointByNumber(side + 1);
+			d2Math::Vector2 p2 = base.PointByNumber(side + 2);
+	   		d2Math::Vector2 centre = d2Math::Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+			float hl = p1.Distance(p2)/2;
+			if (dustLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.dustColour
+				);
+			}
+			if (spikeLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.spikeColour
+				);
+			}
+		}
 	}
 
 	void DrawDebug(scene@ s, uint layer, uint sub_layer)
@@ -236,6 +303,7 @@ class CollisionManager
 	int collisionOrder = 4;
 	
 	script@ s;
+	array<controllable@> additionalControllables;
 
 	CollisionManager()
 	{
@@ -266,6 +334,10 @@ class CollisionManager
 		CollisionOverride@ c = CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
 		player.set_collision_handler(c, "CollisionCallback", 0);
+		for (uint i = 0; i < additionalControllables.length(); i++)
+		{
+			additionalControllables[i].set_collision_handler(c, "CollisionCallback", 0);
+		}
 	}
 
 	//takes in real world coords

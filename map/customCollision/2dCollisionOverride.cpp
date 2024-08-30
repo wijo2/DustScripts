@@ -59,7 +59,7 @@ class CollisionOverride : callback_base
 			for (uint li = 0; li < edges.length(); li++)
 			{
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
-				puts("suitable side! side: " + side);
+				// puts("suitable side! side: " + side);
 
 				d2Math::Vector2 hitPos;
 				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos)) { continue; }
@@ -130,6 +130,16 @@ class CollisionOverride : callback_base
 						tc.hit_x((CIR.x1 + CIR.x2) / 2);
 						tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + offset);
 					break;
+				}
+				if (@ec.as_dustman() != null)
+				{
+					int n1 = colliders[i].base.GetNodeFromPoint(edges[li].bound1);
+					int n2 = colliders[i].base.GetNodeFromPoint(edges[li].bound2);
+					int s = colliders[i].base.GetSideFromNodes(n1, n2);
+					if (s != -1)
+					{
+						colliders[i].SideTouched(s);
+					}
 				}
 				return;
 			}
