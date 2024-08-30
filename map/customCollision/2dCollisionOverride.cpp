@@ -61,8 +61,9 @@ class CollisionOverride : callback_base
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 				puts("suitable side! side: " + side);
 
-				d2Math::Vector2 hitPos = CIR.BoundedIntersectionPosition(edges[li]);
-				if (!edges[li].IsWithinBounds(hitPos)) { continue; }
+				d2Math::Vector2 hitPos;
+				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos)) { continue; }
+				// d2Math::Rect(hitPos, 20, 20).Draw(get_scene(), 22, 1);
 
 				//fuck angles they never work like you want them to >:c
 				int angle;
@@ -84,7 +85,7 @@ class CollisionOverride : callback_base
 					break;
 				}
 				if (!IsSuitableAngle(side, angle)) { continue; }
-				puts("suitable angle! side: " + side);
+				// puts("suitable angle! side: " + side);
 
 				//angle fix bc df is literally racist wtf
 				switch (side) 
