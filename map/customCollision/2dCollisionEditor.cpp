@@ -126,8 +126,8 @@ class QuadEntity : trigger_base
 	[text] int layer;
 	[text] int sub_layer;
 
-	[hidden] QuadManager@ quadManager;
-	[hidden] d2::d2CQuad@ quad;
+	QuadManager@ quadManager;
+	d2::d2CQuad@ quad;
 
 	[colour,alpha] uint colour;
 
@@ -203,5 +203,20 @@ class QuadEntity : trigger_base
 		quad.UpdateCollision();
 		d2Math::Vector2 centre = quad.FindCentre();
 		self.set_centre(centre.x, centre.y);
+	}
+
+	void on_remove()
+	{
+		puts("hello?");
+		quad.ClearOldCache();
+		int i = quadManager.quads.findByRef(this);
+		if (i >= 0)
+		{
+			quadManager.quads.removeAt(i);
+		}
+		else
+		{
+			puts("omegafuck");
+		}
 	}
 }
