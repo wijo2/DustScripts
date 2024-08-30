@@ -109,20 +109,32 @@ class LineFunc
 	{
 		array<Vector2> result;
 		if (nullLine) { return result; }
-		uint increment = 2 << precision;
+		uint increment = 1 << precision;
 
+		bool firstLoop = true;
 		//flat case
 		if (abs(k) < 1)
 		{
 			int dir = start.x < end.x ? 1 : -1;
+			int lry = 0;
 			for (float x = start.x; dir * x - increment <= dir * end.x; x += dir * increment)
 			{
 				float y = GetValue(x);
 				int rx = int(x);
 				int ry = int(y);
 				//rounding magic
-				rx = (rx >> precision) << precision;
-				ry = (ry >> precision) << precision;
+				rx = (rx >> (precision-1)) << (precision-1);
+				ry = (ry >> (precision-1)) << (precision-1);
+				if (firstLoop) 
+				{
+					firstLoop = false;
+					lry = ry;
+				}
+				if (ry != lry) 
+				{
+					lry = ry;
+					result.insertLast(Vector2(rx + dir * increment, ry));
+				}
 				result.insertLast(Vector2(rx, ry));
 			}
 		}
@@ -131,14 +143,25 @@ class LineFunc
 		else
 		{
 			int dir = start.y < end.y ? 1 : -1;
+			int lrx = 0;
 			for (float y = start.y; dir * y - increment <= dir * end.y; y += dir * increment)
 			{
 				float x = GetRevValue(y);
 				int rx = int(x);
 				int ry = int(y);
 				//rounding magic
-				rx = (rx >> precision) << precision;
-				ry = (ry >> precision) << precision;
+				rx = (rx >> (precision-1)) << (precision-1);
+				ry = (ry >> (precision-1)) << (precision-1);
+				if (firstLoop) 
+				{
+					firstLoop = false;
+					lrx = rx;
+				}
+				if (rx != lrx) 
+				{
+					lrx = rx;
+					result.insertLast(Vector2(rx, ry + dir*increment));
+				}
 				result.insertLast(Vector2(rx, ry));
 			}
 		}

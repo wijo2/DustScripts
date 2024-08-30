@@ -242,7 +242,7 @@ class CollisionManager
 	}
 	CollisionManager(d2Math::IntRect playArea)
 	{
-		this.playArea = d2Math::IntRect(playArea.x1 - playArea.x1 % (2 << collisionOrder), playArea.y1 - playArea.y1 % (2 << collisionOrder), playArea.width, playArea.height);
+		this.playArea = d2Math::IntRect(playArea.x1 - playArea.x1 % (1 << collisionOrder), playArea.y1 - playArea.y1 % (1 << collisionOrder), playArea.width, playArea.height);
 		uint w = this.playArea.width >> collisionOrder;
 		uint h = this.playArea.height >> collisionOrder;
 		collisionGrid.resize(w);
@@ -304,7 +304,7 @@ class CollisionManager
 			{
 					if (debug) 
 					{
-						int w = 2 << collisionOrder;
+						int w = 1 << collisionOrder;
 						s.debugDraw.insertLast(d2Math::Rect((x << collisionOrder) + playArea.x1, (y << collisionOrder) + playArea.y1, (x << collisionOrder) + playArea.x1 + w, (y << collisionOrder) + playArea.y1 + w));
 					}
 				for (uint i = 0; i < collisionGrid[x][y].length(); i++)
@@ -334,7 +334,7 @@ class CollisionManager
 					layer,
 					sub_layer,
 					dx,dy,
-					dx+(2 << collisionOrder),dy+(2 << collisionOrder),
+					dx+(1 << collisionOrder),dy+(1 << collisionOrder),
 					0,
 					0x8000FF00
 				);
