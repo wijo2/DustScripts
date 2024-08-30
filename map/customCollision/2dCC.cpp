@@ -238,11 +238,18 @@ class CollisionManager
 
 	CollisionManager()
 	{
+		//idk why but using collisionOrder here doesn't work, so I have to do this shit instead
 		playArea = d2Math::IntRect();
 	}
-	CollisionManager(d2Math::IntRect playArea)
+
+	void Init(d2Math::IntRect playArea)
 	{
-		this.playArea = d2Math::IntRect(playArea.x1 - playArea.x1 % (1 << collisionOrder), playArea.y1 - playArea.y1 % (1 << collisionOrder), playArea.width, playArea.height);
+		this.playArea = d2Math::IntRect(
+			d2Math::RoundToOrder(playArea.x1, collisionOrder), 
+			d2Math::RoundToOrder(playArea.y1, collisionOrder), 
+			d2Math::RoundToOrder(playArea.x2, collisionOrder), 
+			d2Math::RoundToOrder(playArea.y2, collisionOrder)
+		);
 		uint w = this.playArea.width >> collisionOrder;
 		uint h = this.playArea.height >> collisionOrder;
 		collisionGrid.resize(w);
@@ -251,8 +258,9 @@ class CollisionManager
 		}
 	}
 
-	void PlayInit(script@ s)
+	void PlayInit(script@ s, d2Math::IntRect playArea)
 	{
+		Init(playArea);
 		@this.s = @s;
 		CollisionOverride@ c = CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
@@ -302,11 +310,11 @@ class CollisionManager
 		{
 			for (uint y = y1; y <= y2; y++)
 			{
-					if (debug) 
-					{
-						int w = 1 << collisionOrder;
-						s.debugDraw.insertLast(d2Math::Rect((x << collisionOrder) + playArea.x1, (y << collisionOrder) + playArea.y1, (x << collisionOrder) + playArea.x1 + w, (y << collisionOrder) + playArea.y1 + w));
-					}
+				if (debug) 
+				{
+					int w = 1 << collisionOrder;
+					s.debugDraw.insertLast(d2Math::Rect((x << collisionOrder) + playArea.x1, (y << collisionOrder) + playArea.y1, (x << collisionOrder) + playArea.x1 + w, (y << collisionOrder) + playArea.y1 + w));
+				}
 				for (uint i = 0; i < collisionGrid[x][y].length(); i++)
 				{
 					if (result.findByRef(collisionGrid[x][y][i]) < 0)
@@ -329,6 +337,7 @@ class CollisionManager
 			{
 				if (collisionGrid[x][y].length() == 0) { continue; }
 				int dx = (x << collisionOrder) + playArea.x1;
+				// puts(playArea.x1 + "");
 				int dy = (y << collisionOrder) + playArea.y1;
 				s.draw_rectangle_world(
 					layer,

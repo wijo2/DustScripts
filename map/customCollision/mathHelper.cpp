@@ -112,19 +112,22 @@ class LineFunc
 		uint increment = 1 << precision;
 
 		bool firstLoop = true;
+		int lrx = 0;
+		int lry = 0;
 		//flat case
 		if (abs(k) < 1)
 		{
 			int dir = start.x < end.x ? 1 : -1;
-			int lry = 0;
-			for (float x = start.x; dir * x - increment <= dir * end.x; x += dir * increment)
+			for (float x = start.x - dir*increment; dir * x - increment <= dir * end.x; x += dir * increment)
 			{
 				float y = GetValue(x);
 				int rx = int(x);
 				int ry = int(y);
-				//rounding magic
-				rx = (rx >> (precision-1)) << (precision-1);
-				ry = (ry >> (precision-1)) << (precision-1);
+				//this is a bunch of rounding bs compensation, if you're reading this and this works
+				//don't bother trying to make it better it's way spaghettier than you think
+				rx = RoundToOrder(rx, precision) - increment;
+				ry = RoundToOrder(ry, precision) - increment;
+
 				if (firstLoop) 
 				{
 					firstLoop = false;
@@ -132,9 +135,11 @@ class LineFunc
 				}
 				if (ry != lry) 
 				{
+					result.insertLast(Vector2(rx, lry));
+					result.insertLast(Vector2(lrx, ry));
 					lry = ry;
-					result.insertLast(Vector2(rx + dir * increment, ry));
 				}
+				lrx = rx;
 				result.insertLast(Vector2(rx, ry));
 			}
 		}
@@ -143,15 +148,16 @@ class LineFunc
 		else
 		{
 			int dir = start.y < end.y ? 1 : -1;
-			int lrx = 0;
-			for (float y = start.y; dir * y - increment <= dir * end.y; y += dir * increment)
+			for (float y = start.y - dir*increment; dir * y - increment <= dir * end.y; y += dir * increment)
 			{
 				float x = GetRevValue(y);
 				int rx = int(x);
 				int ry = int(y);
-				//rounding magic
-				rx = (rx >> (precision-1)) << (precision-1);
-				ry = (ry >> (precision-1)) << (precision-1);
+				//this is a bunch of rounding bs compensation, if you're reading this and this works
+				//don't bother trying to make it better it's way spaghettier than you think
+				rx = RoundToOrder(rx, precision) - increment;
+				ry = RoundToOrder(ry, precision) - increment;
+
 				if (firstLoop) 
 				{
 					firstLoop = false;
@@ -159,9 +165,11 @@ class LineFunc
 				}
 				if (rx != lrx) 
 				{
+					result.insertLast(Vector2(rx, lry));
+					result.insertLast(Vector2(lrx, ry));
 					lrx = rx;
-					result.insertLast(Vector2(rx, ry + dir*increment));
 				}
+				lry = ry;
 				result.insertLast(Vector2(rx, ry));
 			}
 		}
@@ -300,7 +308,7 @@ class Rect
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
-						 x1,y1,x2,y2,0,0xFF00FF00);
+						 x1,y1,x2,y2,0,0xFF3333FF);
 	}
 }
 
@@ -338,10 +346,10 @@ class IntRect
 		this.height = abs(y1-y2);
 	}
 
-	IntRect(int x1, int y1, uint width, uint height)
+	IntRect(Vector2 pos, uint width, uint height)
 	{
-		this.x1 = x1;
-		this.y1 = y1;
+		this.x1 = int(pos.x);
+		this.y1 = int(pos.y);
 		this.x2 = x1 + width;
 		this.y2 = y1 + height;
 		this.p1 = Vector2(x1,y1);
@@ -392,7 +400,7 @@ class IntRect
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
-						 x1,y1,x2,y2,0,0xFF00FF00);
+						 x1,y1,x2,y2,0,0xFF3333FF);
 	}
 }
 
@@ -407,6 +415,37 @@ uint abs(uint a)
 float abs(float a)
 {
 	return a < 0 ? -a : a;
+}
+
+int sign(uint a)
+{
+	return a < 0 ? -1 : 1;
+}
+int sign(int a)
+{
+	return a < 0 ? -1 : 1;
+}
+int sign(float a)
+{
+	return a < 0 ? -1 : 1;
+}
+
+//ughhhhh
+// int RoundToOrder(int a, uint o)
+// {
+// 	return sign(a) * ((abs(a) >> o) << o);
+// }
+// int RoundToOrder(int a, uint o)
+// {
+// 	return -sign(a) * ((-abs(a) >> o) << o);
+// }
+// int RoundToOrder(int a, uint o)
+// {
+// 	return (a >> o) << o;
+// }
+int RoundToOrder(int a, uint o)
+{
+	return -((-a >> o) << o);
 }
 
 }

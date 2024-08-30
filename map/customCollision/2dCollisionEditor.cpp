@@ -2,36 +2,45 @@
 
 class script : script_base
 {
-	QuadManager@ quadManager;
-	input_api@ input;
-	editor_api@ editor;
-	[text] int collisionOrder;
-	[text] bool showPlayArea;
-	[text] bool showCacheDebug;
-	
-	array<d2Math::Rect> debugDraw;
+QuadManager@ quadManager;
+input_api@ input;
+editor_api@ editor;
+[text] int collisionOrder;
+[text] bool showPlayArea;
+[text] bool showCacheDebug;
 
-	script() 
-	{
-		puts("2dCollisionEditor working c:");
-		if (@quadManager == null) 
-		{
-			@quadManager = @QuadManager(this, d2Math::IntRect(-2000, -2000, uint(2000), uint(2000)));
-		}
-		@input = @get_input_api();
-		@editor = @get_editor_api();
-	}
-	
-	void on_editor_start() 
-	{
-		quadManager.manager.collisionOrder = collisionOrder;
-	}
+[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
+[hidden] int playAreaCornerY;
+[text] int playAreaWidth;
+[text] int playAreaHeight;
 
-	void on_level_start()
+array<d2Math::Rect> debugDraw;
+
+//debug
+[position,mode:world,layer:19,y:debugY] int debugX;
+[hidden] int debugY;
+
+script() 
+{
+	puts("2dCollisionEditor working c:");
+	if (@quadManager == null) 
 	{
-		quadManager.manager.collisionOrder = collisionOrder;
-		quadManager.manager.PlayInit(this);
+		@quadManager = @QuadManager(this);
 	}
+	@input = @get_input_api();
+	@editor = @get_editor_api();
+}
+
+void on_editor_start() 
+{
+	quadManager.manager.collisionOrder = collisionOrder;
+	quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+}
+
+void on_level_start()
+{
+	quadManager.manager.collisionOrder = collisionOrder;
+	quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	}
 
 	void editor_step()
 	{
@@ -95,10 +104,10 @@ class QuadManager
 	array<QuadEntity> quads;
 	script@ s;
 
-	QuadManager() { @manager = @d2::CollisionManager(d2Math::IntRect()); }
-	QuadManager(script@ s, d2Math::IntRect field) 
+	QuadManager() { @manager = @d2::CollisionManager(); }
+	QuadManager(script@ s) 
 	{
-		@manager = @d2::CollisionManager(field);
+		@manager = @d2::CollisionManager();
 		@this.s = @s;
 	}
 }
