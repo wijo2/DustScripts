@@ -2,45 +2,46 @@
 
 class script : script_base
 {
-QuadManager@ quadManager;
-input_api@ input;
-editor_api@ editor;
-[text] int collisionOrder;
-[text] bool showPlayArea;
-[text] bool showCacheDebug;
+	QuadManager@ quadManager;
+	input_api@ input;
+	editor_api@ editor;
 
-[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
-[hidden] int playAreaCornerY;
-[text] int playAreaWidth;
-[text] int playAreaHeight;
+	[text] int collisionOrder;
+	[text] bool showPlayArea;
+	[text] bool showCacheDebug;
 
-array<d2Math::Rect> debugDraw;
+	[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
+	[hidden] int playAreaCornerY;
+	[text] int playAreaWidth;
+	[text] int playAreaHeight;
 
-//debug
-[position,mode:world,layer:19,y:debugY] int debugX;
-[hidden] int debugY;
+	//debug
+	array<d2Math::Rect> debugDraw;
+	[position,mode:world,layer:19,y:debugY] int debugX;
+	[hidden] int debugY;
 
-script() 
-{
-	puts("2dCollisionEditor working c:");
-	if (@quadManager == null) 
+	script() 
 	{
-		@quadManager = @QuadManager(this);
+		puts("2dCollisionEditor working c:");
+		if (@quadManager == null) 
+		{
+			@quadManager = @QuadManager(this);
+		}
+		@input = @get_input_api();
+		@editor = @get_editor_api();
 	}
-	@input = @get_input_api();
-	@editor = @get_editor_api();
-}
 
-void on_editor_start() 
-{
-	quadManager.manager.collisionOrder = collisionOrder;
-	quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
-}
+	void on_editor_start() 
+	{
+		quadManager.manager.collisionOrder = collisionOrder;
+		quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+	}
 
-void on_level_start()
-{
-	quadManager.manager.collisionOrder = collisionOrder;
-	quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	}
+	void on_level_start()
+	{
+		quadManager.manager.collisionOrder = collisionOrder;
+		quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+	}
 
 	void editor_step()
 	{
@@ -63,12 +64,12 @@ void on_level_start()
 			}
 		}
 	}
-	
+
 	void step(int idc) 
 	{
 		debugDraw = array<d2Math::Rect>(0);
 	}
-	
+
 	void editor_draw(float lolxd) 
 	{
 		if (showPlayArea) 
@@ -80,7 +81,7 @@ void on_level_start()
 			quadManager.manager.Draw(get_scene(), 22, 1);
 		}
 	}
-	
+
 	void draw(float idkAnymore) 
 	{
 		for (uint i = 0; i < debugDraw.length(); i++) 
@@ -96,12 +97,12 @@ void on_level_start()
 			quadManager.manager.Draw(get_scene(), 22, 1);
 		}
 	}
-}
+};
 
 class QuadManager 
 {
 	d2::CollisionManager@ manager;
-	array<QuadEntity> quads;
+	array<QuadEntity@> quads;
 	script@ s;
 
 	QuadManager() { @manager = @d2::CollisionManager(); }
@@ -110,7 +111,7 @@ class QuadManager
 		@manager = @d2::CollisionManager();
 		@this.s = @s;
 	}
-}
+};
 
 class QuadEntity : trigger_base 
 {
@@ -156,12 +157,12 @@ class QuadEntity : trigger_base
 		@this.self = @self;
 		@this.quadManager = @s.quadManager; 
 		@quad = @d2::d2CQuad(
-		d2Math::Vector2(p1x, p1y),
-		d2Math::Vector2(p2x, p2y),
-		d2Math::Vector2(p3x, p3y),
-		d2Math::Vector2(p4x, p4y),
-		colour,
-		quadManager.manager);
+			d2Math::Vector2(p1x, p1y),
+			d2Math::Vector2(p2x, p2y),
+			d2Math::Vector2(p3x, p3y),
+			d2Math::Vector2(p4x, p4y),
+			colour,
+			quadManager.manager);
 		if (quadManager.quads.findByRef(this) < 0)
 		{
 			quadManager.quads.insertLast(this);
@@ -207,16 +208,11 @@ class QuadEntity : trigger_base
 
 	void on_remove()
 	{
-		puts("hello?");
 		quad.ClearOldCache();
 		int i = quadManager.quads.findByRef(this);
 		if (i >= 0)
 		{
 			quadManager.quads.removeAt(i);
 		}
-		else
-		{
-			puts("omegafuck");
-		}
 	}
-}
+};

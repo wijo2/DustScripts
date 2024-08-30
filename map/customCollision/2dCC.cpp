@@ -59,18 +59,20 @@ class d2Quad
 
 class d2CQuad
 {
-	d2Quad base;
+	d2Quad@ base;
 	CollisionManager@ manager;
 	array<array<int>> oldCollision;
 
 	array<int> activeLines = {1,2,3,4};
+
+	//to be implemented
 	array<int> spikeLines;
 	array<int> dustLines;
 
-	d2CQuad() { base = d2Quad(); @manager = null; }
+	d2CQuad() { @base = @d2Quad(); @manager = null; }
 	d2CQuad(d2Math::Vector2 p1, d2Math::Vector2 p2, d2Math::Vector2 p3, d2Math::Vector2 p4, uint colour, CollisionManager@ manager)
 	{
-		base = d2Quad(p1, p2, p3, p4, colour);
+		@base = @d2Quad(p1, p2, p3, p4, colour);
 		@this.manager = @manager;
 		UpdateCollision();
 	}
@@ -222,15 +224,14 @@ class d2CQuad
 
 class CollisionManager
 {
-	array<d2CQuad@> collisions;
-	//divide map into 16x16 tiles, this is a grid of every seperate 
+	//divide map into x*x tiles, this is a grid of every seperate 
 	//collider inside every tile. 
 	//starting from topleft of selected play-area.
 	array<array<array<d2CQuad@>>> collisionGrid;
 
 	d2Math::IntRect playArea;
 	//changes the size of collision cache squares.
-	//smaller = better performance up untill like 3 with very diminishing returns but bigger lagspike at load
+	//smaller = better performance up untill like 3-5 with very diminishing returns but bigger lagspike at load
 	//bigger = worse performance but smaller lagspike at load
 	int collisionOrder = 4;
 	
@@ -328,7 +329,7 @@ class CollisionManager
 		return result;
 	}
 
-	//I'll leave this here for debugging purposes. warning: extremely laggy with big play area, recommend 4k*4k max
+	//debug
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
 		for (uint x = 0; x < collisionGrid.length(); x++)

@@ -30,7 +30,7 @@ class CollisionOverride : callback_base
 				CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top()*5/8 + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
 			break;
 		}
-		CIR.Draw(get_scene(), 22, 1);
+		// CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
 		for (uint i = 0; i < colliders.length(); i++)
 		{
