@@ -305,6 +305,24 @@ class Rect
 		return Vector2();
 	}
 
+	Vector2 BoundedIntersectionPosition(LineFunc line)
+	{
+		array<Vector2> touches;
+		float lx1 = line.GetValue(x1);	
+		if (!line.upright && y1 < lx1 && lx1 < y2) { touches.insertLast(Vector2(x1, lx1)); }
+		float lx2 = line.GetValue(x2);	
+		if (!line.upright && y1 < lx2 && lx2 < y2) { touches.insertLast(Vector2(x2, lx2)); }
+		float ly1 = line.GetRevValue(y1);	
+		if (x1 < ly1 && ly1 < x2) { touches.insertLast(Vector2(ly1, y1)); }
+		float ly2 = line.GetRevValue(y2);	
+		if (x1 < ly2 && ly2 < x2) { touches.insertLast(Vector2(ly2, y2)); }
+		for (uint i = 0; i < touches.length(); i++)
+		{
+			if (line.IsWithinBounds(touches[i])) { return touches[i]; }
+		}
+		return Vector2();
+	}
+
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
@@ -394,6 +412,24 @@ class IntRect
 		if (x1 < ly1 && ly1 < x2) { return Vector2(ly1, y1); }
 		float ly2 = line.GetRevValue(y2);	
 		if (x1 < ly2 && ly2 < x2) { return Vector2(ly2, y2); }
+		return Vector2();
+	}
+
+	Vector2 BoundedIntersectionPosition(LineFunc line)
+	{
+		array<Vector2> touches;
+		float lx1 = line.GetValue(x1);	
+		if (!line.upright && y1 < lx1 && lx1 < y2) { touches.insertLast(Vector2(x1, lx1)); }
+		float lx2 = line.GetValue(x2);	
+		if (!line.upright && y1 < lx2 && lx2 < y2) { touches.insertLast(Vector2(x2, lx2)); }
+		float ly1 = line.GetRevValue(y1);	
+		if (x1 < ly1 && ly1 < x2) { touches.insertLast(Vector2(ly1, y1)); }
+		float ly2 = line.GetRevValue(y2);	
+		if (x1 < ly2 && ly2 < x2) { touches.insertLast(Vector2(ly2, y2)); }
+		for (uint i = 0; i < touches.length(); i++)
+		{
+			if (line.IsWithinBounds(touches[i])) { return touches[i]; }
+		}
 		return Vector2();
 	}
 

@@ -51,7 +51,7 @@ class CollisionOverride : callback_base
 				);
 			break;
 		}
-		CIR.Draw(get_scene(), 22, 1);
+		// CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
 		for (uint i = 0; i < colliders.length(); i++)
 		{
@@ -61,7 +61,7 @@ class CollisionOverride : callback_base
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 				puts("suitable side! side: " + side);
 
-				d2Math::Vector2 hitPos = CIR.LineIntersectionPosition(edges[li]);
+				d2Math::Vector2 hitPos = CIR.BoundedIntersectionPosition(edges[li]);
 				if (!edges[li].IsWithinBounds(hitPos)) { continue; }
 
 				//fuck angles they never work like you want them to >:c
