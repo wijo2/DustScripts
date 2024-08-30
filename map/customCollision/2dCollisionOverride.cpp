@@ -14,23 +14,44 @@ class CollisionOverride : callback_base
 	{
 		rectangle@ colRect = ec.collision_rect();
 		d2Math::IntRect CIR;
+		//this is mimicing the ray based collision
 		switch (side)
 		{
 			case 0:
-				CIR	= d2Math::IntRect(int(colRect.left() + ec.x() + snap_offset), int(colRect.top()*5/8 + ec.y()), int(ec.x() + colRect.right()/4), int(colRect.top()*3/8 + ec.y()));	
+				CIR	= d2Math::IntRect(
+					int(colRect.left() + ec.x() - snap_offset), 
+					int(colRect.top()*5/8 + ec.y()), 
+					int(ec.x() + colRect.right()/4), 
+					int(colRect.top()*3/8 + ec.y())
+				);	
 			break;
 			case 1:
-				CIR	= d2Math::IntRect(int(ec.x() + colRect.left()/4), int(colRect.top()*5/8 + ec.y()), int(colRect.right() + ec.x() - snap_offset), int(colRect.top()*3/8 + ec.y()));	
+				CIR	= d2Math::IntRect(
+					int(ec.x() + colRect.left()/4), 
+					int(colRect.top()*5/8 + ec.y()), 
+					int(colRect.right() + ec.x() + snap_offset), 
+					int(colRect.top()*3/8 + ec.y())
+				);	
 			break;
 
 			case 2:
-				CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top() + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + colRect.top()*5/8 + snap_offset));
+				CIR = d2Math::IntRect(
+					int(colRect.left()/2 + ec.x()), 
+					int(colRect.top() + ec.y() - snap_offset), 
+					int(colRect.right()/2 + ec.x()), 
+					int(ec.y() + colRect.top()*3/8)
+				);
 			break;
 			case 3:
-				CIR = d2Math::IntRect(int(colRect.left()/2 + ec.x()), int(colRect.top()*5/8 + ec.y() - snap_offset), int(colRect.right()/2 + ec.x()), int(ec.y() + snap_offset));
+				CIR = d2Math::IntRect(
+					int(colRect.left()/2 + ec.x()), 
+					int(colRect.top()*5/8 + ec.y()), 
+					int(colRect.right()/2 + ec.x()), 
+					int(ec.y() + snap_offset)
+				);
 			break;
 		}
-		// CIR.Draw(get_scene(), 22, 1);
+		CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
 		for (uint i = 0; i < colliders.length(); i++)
 		{
