@@ -156,10 +156,10 @@ class QuadEntity : trigger_base
 	[text] int sub_layer;
 	[colour,alpha] uint colour;
 
-	[text] bool side1active;
-	[text] bool side2active;
-	[text] bool side3active;
-	[text] bool side4active;
+	[text] bool side1active = true;
+	[text] bool side2active = true;
+	[text] bool side3active = true;
+	[text] bool side4active = true;
 	[text] bool side1dust;
 	[text] bool side2dust;
 	[text] bool side3dust;
@@ -171,7 +171,6 @@ class QuadEntity : trigger_base
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
-
 
 	scripttrigger@ self;
 
@@ -268,6 +267,16 @@ class QuadEntity : trigger_base
 		quad.spikeLines[1] = side2spikes;
 		quad.spikeLines[2] = side3spikes;
 		quad.spikeLines[3] = side4spikes;
+	}
+
+	//corner drag
+	void editor_step()
+	{
+		array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
+		for (uint i = 0; i < corners; i++)
+		{
+			
+		}
 	}
 
 	void on_remove()
