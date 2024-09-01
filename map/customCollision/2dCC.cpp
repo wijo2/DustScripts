@@ -210,7 +210,6 @@ class d2CQuad
 
 	void SideTouched(int side)
 	{
-		puts("touchy! " + side + ", " + spikeLines[side-1]);
 		controllable@ c = controller_controllable(uint(get_active_player()));
 		dustman@ d = c.as_dustman();
 		int state = d.state();
@@ -227,6 +226,16 @@ class d2CQuad
 			{
 				d.kill(true);
 			}
+		}
+	}
+
+	void SideAttacked(int side, dustman@ d)
+	{
+		if (dustLines[side-1])
+		{
+			dustLines[side-1] = false;
+			d.combo_count(d.combo_count() + 1);
+			d.combo_timer(5);
 		}
 	}
 
@@ -304,6 +313,7 @@ class CollisionManager
 	
 	script@ s;
 	array<controllable@> additionalControllables;
+	CollisionOverride@ collisionOverride;
 
 	CollisionManager()
 	{
@@ -331,12 +341,12 @@ class CollisionManager
 	{
 		Init(playArea);
 		@this.s = @s;
-		CollisionOverride@ c = CollisionOverride(this);
+		@collisionOverride = @CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
-		player.set_collision_handler(c, "CollisionCallback", 0);
+		player.set_collision_handler(collisionOverride, "CollisionCallback", 0);
 		for (uint i = 0; i < additionalControllables.length(); i++)
 		{
-			additionalControllables[i].set_collision_handler(c, "CollisionCallback", 0);
+			additionalControllables[i].set_collision_handler(collisionOverride, "CollisionCallback", 0);
 		}
 	}
 
@@ -399,6 +409,12 @@ class CollisionManager
 		}
 
 		return result;
+	}
+
+	void step()
+	{
+		if (@collisionOverride == null) { return; }
+		collisionOverride.step();
 	}
 
 	//debug

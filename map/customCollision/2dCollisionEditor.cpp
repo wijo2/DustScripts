@@ -42,7 +42,7 @@ class script : script_base
 		quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 	}
 
-	void on_level_start()
+	void PlayInit()
 	{
 		quadManager.manager.collisionOrder = collisionOrder;
 		for (uint i = 0; i < extraGuys.length(); i++)
@@ -55,6 +55,9 @@ class script : script_base
 		}
 		quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
 	}
+
+	void on_level_start() { PlayInit(); }
+	void checkpoint_load() { PlayInit(); }
 
 	void editor_step()
 	{
@@ -81,6 +84,7 @@ class script : script_base
 	void step(int idc) 
 	{
 		debugDraw = array<d2Math::Rect>(0);
+		quadManager.step();
 	}
 
 	void editor_draw(float lolxd) 
@@ -129,6 +133,11 @@ class QuadManager
 	{
 		@manager = @d2::CollisionManager();
 		@this.s = @s;
+	}
+
+	void step()
+	{
+		manager.step();
 	}
 };
 
