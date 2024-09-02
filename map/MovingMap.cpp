@@ -40,7 +40,6 @@ class script : script_base
 
 	void on_editor_start() 
 	{
-		puts("idk");
 		quadManager.manager.collisionOrder = collisionOrder;
 		quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 	}
@@ -174,6 +173,9 @@ class QuadEntity : trigger_base
 	[text] bool side3spikes;
 	[text] bool side4spikes;
 	
+	[text] float speed = 1;
+	[text] float transMult = 0;
+
 	int selectedCorner = 0;
 
 	d2Math::Vector2 oldCentre;
@@ -254,16 +256,20 @@ class QuadEntity : trigger_base
 		quad.Draw(get_scene(), layer, sub_layer);
 	}
 
-	void UpdateSelf()
+	void UpdateSelf(bool skipBaseSet = false)
 	{
 		quad.base.colour = colour; 
-		quad.base.p1 = d2Math::Vector2(p1x, p1y);
-		quad.base.p2 = d2Math::Vector2(p2x, p2y);
-		quad.base.p3 = d2Math::Vector2(p3x, p3y);
-		quad.base.p4 = d2Math::Vector2(p4x, p4y);
+		if (!skipBaseSet)
+		{
+			quad.base.p1 = d2Math::Vector2(p1x, p1y);
+			quad.base.p2 = d2Math::Vector2(p2x, p2y);
+			quad.base.p3 = d2Math::Vector2(p3x, p3y);
+			quad.base.p4 = d2Math::Vector2(p4x, p4y);
+			d2Math::Vector2 centre = quad.base.FindCentre();
+			self.set_centre(centre.x, centre.y);
+			oldCentre = centre;
+		}
 		quad.UpdateCollision();
-		d2Math::Vector2 centre = quad.base.FindCentre();
-		self.set_centre(centre.x, centre.y);
 	}
 
 	//seperating since this should only happen at start of level
@@ -367,7 +373,7 @@ class QuadEntity : trigger_base
 
 		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = oldCentre - curCen;
-		if (dif.Magnitude() > 0.1)
+		if (dif.Magnitude() > 0.1 && selectedCorner == 0)
 		{
 			p1x -= dif.x;
 			p1y -= dif.y;
@@ -384,7 +390,47 @@ class QuadEntity : trigger_base
 
 	void step()
 	{
-		d2Math::Vector2 translation = d2Math::Vector2(100, 100);
+		if (speed == 0) { return; }
+		cycleTimer += 1;
+		if (cycleTimer > speed*60) { cycleTimer -= speed*60; }
+
+		d2Math::Vector2 op1 = d2Math::Vector2(p1x,p1y);
+		d2Math::Vector2 op2 = d2Math::Vector2(p2x,p2y);
+		d2Math::Vector2 op3 = d2Math::Vector2(p3x,p3y);
+		d2Math::Vector2 op4 = d2Math::Vector2(p4x,p4y);
+
+
+		float rotation = cycleTimer * 3.14 / (30 * speed);
+
+		d2Math::Vector2 centre = d2Math::Vector2(self.x(), self.y());
+
+		d2Math::Vector2 d1 = op1 - centre;
+		d2Math::Vector2 d2 = op2 - centre;
+		d2Math::Vector2 d3 = op3 - centre;
+		d2Math::Vector2 d4 = op4 - centre;
+
+		float m1 = d1.Magnitude();
+		float m2 = d2.Magnitude();
+		float m3 = d3.Magnitude();
+		float m4 = d4.Magnitude();
+
+		float a1 = atan2(d1.y,d1.x);
+		float a2 = atan2(d2.y,d2.x);
+		float a3 = atan2(d3.y,d3.x);
+		float a4 = atan2(d4.y,d4.x);
+
+		op1 = centre + m1 * d2Math::Vector2(cos(a1 + rotation), sin(a1 + rotation));
+		op2 = centre + m2 * d2Math::Vector2(cos(a2 + rotation), sin(a2 + rotation));
+		op3 = centre + m3 * d2Math::Vector2(cos(a3 + rotation), sin(a3 + rotation));
+		op4 = centre + m4 * d2Math::Vector2(cos(a4 + rotation), sin(a4 + rotation));
+
+		d2Math::Vector2 translation = transMult * d2Math::Vector2(cos(rotation*2), sin(rotation*2));
+
+		quad.base.p1 = op1 + translation;
+		quad.base.p2 = op2 + translation;
+		quad.base.p3 = op3 + translation;
+		quad.base.p4 = op4 + translation;
+		UpdateSelf(true);
 	}
 
 	void on_remove()

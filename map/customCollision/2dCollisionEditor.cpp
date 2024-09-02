@@ -260,6 +260,7 @@ class QuadEntity : trigger_base
 		quad.base.p4 = d2Math::Vector2(p4x, p4y);
 		quad.UpdateCollision();
 		d2Math::Vector2 centre = quad.base.FindCentre();
+		oldCentre = centre;
 		self.set_centre(centre.x, centre.y);
 	}
 
@@ -364,7 +365,7 @@ class QuadEntity : trigger_base
 
 		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = oldCentre - curCen;
-		if (dif.Magnitude() > 0.1)
+		if (dif.Magnitude() > 0.1 && selectedCorner == 0)
 		{
 			p1x -= dif.x;
 			p1y -= dif.y;
