@@ -47,3 +47,6 @@ building:
 * layer and sub_layer are the drawing layer, they don't affect collision. so if you make something a bg layer object the visuals will be misaligned from collsion.
 * concave collision won't work!!!!!!
 
+extending:
+* For extending this I recommend taking a pretty good look at how it's structured to avoid weird behaviour, and make sure to call d2CQuad.UpdateCollision() whenever you change a quad's corners.
+
