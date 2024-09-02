@@ -48,5 +48,5 @@ building:
 * concave collision won't work!!!!!!
 
 extending:
-For extending this I recommend taking a pretty good look at how it's structured to avoid weird behaviour, and make sure to call d2CQuad.UpdateCollision() whenever you change a quad's corners.
+* For extending this I recommend taking a pretty good look at how it's structured to avoid weird behaviour, and make sure to call d2CQuad.UpdateCollision() whenever you change a quad's corners.
 
