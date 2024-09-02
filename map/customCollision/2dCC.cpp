@@ -422,7 +422,7 @@ class CollisionManager
 	{
 		for (uint x = 0; x < collisionGrid.length(); x++)
 		{
-			for (uint y = 0; y < collisionGrid.length(); y++)
+			for (uint y = 0; y < collisionGrid[x].length(); y++)
 			{
 				if (collisionGrid[x][y].length() == 0) { continue; }
 				int dx = (x << collisionOrder) + playArea.x1;

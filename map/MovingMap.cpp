@@ -173,7 +173,7 @@ class QuadEntity : trigger_base
 	[text] bool side3spikes;
 	[text] bool side4spikes;
 	
-	[text] float speed = 1;
+	[text] float speed = 0;
 	[text] float transMult = 0;
 
 	int selectedCorner = 0;
