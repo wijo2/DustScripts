@@ -24,6 +24,10 @@ class Vector2
 	{
 		return sqrt((x-o.x)**2 + (y-o.y)**2);
 	}
+	float Magnitude()
+	{
+		return sqrt(x**2 + y**2);
+	}
 
 	Vector2 opNeg()
 	{
