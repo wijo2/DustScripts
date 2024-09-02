@@ -6,7 +6,7 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
-	[text] int collisionOrder;
+	[text] int collisionOrder = 6;
 	[text] bool showPlayArea;
 	[text] bool showCacheDebug;
 
@@ -40,6 +40,7 @@ class script : script_base
 
 	void on_editor_start() 
 	{
+		puts("idk");
 		quadManager.manager.collisionOrder = collisionOrder;
 		quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 	}
@@ -175,7 +176,9 @@ class QuadEntity : trigger_base
 	
 	int selectedCorner = 0;
 
-	float cycleTimer;
+	d2Math::Vector2 oldCentre;
+
+	float cycleTimer = 0;
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
@@ -204,6 +207,7 @@ class QuadEntity : trigger_base
 			p4x = self.x() - 48;
 			p4y = self.y() + 48;
 		}
+		oldCentre = d2Math::Vector2(self.x(), self.y());
 		@this.self = @self;
 		@this.quadManager = @s.quadManager; 
 		@quad = @d2::d2CQuad(
@@ -361,7 +365,26 @@ class QuadEntity : trigger_base
 			UpdateSelf();
 		}
 
+		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
+		d2Math::Vector2 dif = oldCentre - curCen;
+		if (dif.Magnitude() > 0.1)
+		{
+			p1x -= dif.x;
+			p1y -= dif.y;
+			p2x -= dif.x;
+			p2y -= dif.y;
+			p3x -= dif.x;
+			p3y -= dif.y;
+			p4x -= dif.x;
+			p4y -= dif.y;
+			UpdateSelf();
+			oldCentre = quad.base.FindCentre();
+		}
+	}
 
+	void step()
+	{
+		d2Math::Vector2 translation = d2Math::Vector2(100, 100);
 	}
 
 	void on_remove()

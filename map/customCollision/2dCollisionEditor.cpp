@@ -6,7 +6,7 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
-	[text] int collisionOrder;
+	[text] int collisionOrder = 7;
 	[text] bool showPlayArea;
 	[text] bool showCacheDebug;
 
