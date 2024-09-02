@@ -217,7 +217,7 @@ class d2CQuad
 		{
 			dustLines[side-1] = false;
 			d.combo_count(d.combo_count() + 1);
-			d.combo_timer(5);
+			d.combo_timer(1);
 		}
 		if (spikeLines[side-1])
 		{

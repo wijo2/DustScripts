@@ -175,6 +175,8 @@ class QuadEntity : trigger_base
 	
 	[text] float speed = 0;
 	[text] float transMult = 0;
+	[text] float xTrans = 1;
+	[text] float yTrans = 1;
 
 	int selectedCorner = 0;
 
@@ -391,8 +393,8 @@ class QuadEntity : trigger_base
 	void step()
 	{
 		if (speed == 0) { return; }
-		cycleTimer += 1;
-		if (cycleTimer > speed*60) { cycleTimer -= speed*60; }
+		cycleTimer += speed/4;
+		if (abs(cycleTimer) > 60) { cycleTimer = 0; }
 
 		d2Math::Vector2 op1 = d2Math::Vector2(p1x,p1y);
 		d2Math::Vector2 op2 = d2Math::Vector2(p2x,p2y);
@@ -400,7 +402,7 @@ class QuadEntity : trigger_base
 		d2Math::Vector2 op4 = d2Math::Vector2(p4x,p4y);
 
 
-		float rotation = cycleTimer * 3.14 / (30 * speed);
+		float rotation = cycleTimer * 3.14 / (30);
 
 		d2Math::Vector2 centre = d2Math::Vector2(self.x(), self.y());
 
@@ -424,7 +426,7 @@ class QuadEntity : trigger_base
 		op3 = centre + m3 * d2Math::Vector2(cos(a3 + rotation), sin(a3 + rotation));
 		op4 = centre + m4 * d2Math::Vector2(cos(a4 + rotation), sin(a4 + rotation));
 
-		d2Math::Vector2 translation = transMult * d2Math::Vector2(cos(rotation*2), sin(rotation*2));
+		d2Math::Vector2 translation = transMult * d2Math::Vector2(cos(rotation * xTrans), sin(rotation * yTrans));
 
 		quad.base.p1 = op1 + translation;
 		quad.base.p2 = op2 + translation;
