@@ -502,4 +502,14 @@ int RoundToOrder(int a, uint o)
 	return -((-a >> o) << o);
 }
 
+Vector2 WorldToScreenPos(Vector2 pos) 
+{
+	camera@ cam = get_active_camera();
+	Vector2 camPos = Vector2(cam.x(), cam.y());
+	Vector2 result = pos - camPos;
+	result.x *= cam.editor_zoom();
+	result.y *= cam.editor_zoom();
+	return result;
+}
+
 }

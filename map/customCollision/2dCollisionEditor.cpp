@@ -273,10 +273,13 @@ class QuadEntity : trigger_base
 	void editor_step()
 	{
 		array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
-		for (uint i = 0; i < corners; i++)
-		{
-			
-		}
+		// for (uint i = 0; i < corners; i++)
+		// {
+		// 	
+		// }
+		d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(get_scene().mouse_x_world(0,18), get_scene().mouse_y_world(0,20)));
+		puts(pos);
+		get_scene().draw_rectangle_hud(22, 1, pos.x,pos.y, pos.x+50,pos.y+50, 0,0xFFFFFFFF);
 	}
 
 	void on_remove()
