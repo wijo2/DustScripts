@@ -183,6 +183,7 @@ class QuadEntity : trigger_base
 	d2Math::Vector2 oldCentre;
 
 	float cycleTimer = 0;
+	bool firstCycle = true;
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
@@ -258,7 +259,7 @@ class QuadEntity : trigger_base
 		quad.Draw(get_scene(), layer, sub_layer);
 	}
 
-	void UpdateSelf(bool skipBaseSet = false)
+	void UpdateSelf(bool skipBaseSet = false, bool clearCache = true)
 	{
 		quad.base.colour = colour; 
 		if (!skipBaseSet)
@@ -271,7 +272,7 @@ class QuadEntity : trigger_base
 			self.set_centre(centre.x, centre.y);
 			oldCentre = centre;
 		}
-		quad.UpdateCollision();
+		quad.UpdateCollision(clearCache);
 	}
 
 	//seperating since this should only happen at start of level
@@ -394,7 +395,7 @@ class QuadEntity : trigger_base
 	{
 		if (speed == 0) { return; }
 		cycleTimer += speed/4;
-		if (abs(cycleTimer) > 60) { cycleTimer = 0; }
+		if (abs(cycleTimer) > 60) { cycleTimer = 0; firstCycle = false; }
 
 		d2Math::Vector2 op1 = d2Math::Vector2(p1x,p1y);
 		d2Math::Vector2 op2 = d2Math::Vector2(p2x,p2y);
@@ -432,7 +433,10 @@ class QuadEntity : trigger_base
 		quad.base.p2 = op2 + translation;
 		quad.base.p3 = op3 + translation;
 		quad.base.p4 = op4 + translation;
-		UpdateSelf(true);
+		if (firstCycle)
+		{
+			UpdateSelf(true, false);
+		}
 	}
 
 	void on_remove()

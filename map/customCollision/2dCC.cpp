@@ -131,11 +131,14 @@ class d2CQuad
 		UpdateCollision();
 	}
 
-	void UpdateCollision()
+	void UpdateCollision(bool clearCache = true)
 	{
 		if (@manager == null) { return; }
 		
-		ClearOldCache();
+		if (clearCache)
+		{
+			ClearOldCache();
+		}
 
 		array<d2Math::Vector2> arr;
 		for (uint i = 0; i < 4; i++)
