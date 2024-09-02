@@ -168,14 +168,18 @@ class QuadEntity : trigger_base
 	[text] bool side2spikes;
 	[text] bool side3spikes;
 	[text] bool side4spikes;
+	
+	int selectedCorner = 0;
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
 
 	scripttrigger@ self;
+	script@ script;
 
 	void init(script@ s, scripttrigger@ self)
 	{
+		@script = @s;
 		if (colour == 0x00000000)
 		{
 			colour = 0xFFFFFFFF;
@@ -272,14 +276,86 @@ class QuadEntity : trigger_base
 	//corner drag
 	void editor_step()
 	{
-		array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
-		// for (uint i = 0; i < corners; i++)
-		// {
-		// 	
-		// }
-		d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(get_scene().mouse_x_world(0,18), get_scene().mouse_y_world(0,20)));
-		puts(pos);
-		get_scene().draw_rectangle_hud(22, 1, pos.x,pos.y, pos.x+50,pos.y+50, 0,0xFFFFFFFF);
+		scene@ s = get_scene();
+
+		d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
+		d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
+
+		if (script.input.mouse_state() & 0x20 != 0 
+			&& script.editor.editor_tab() == "Triggers"
+			&& @script.editor.get_selected_trigger() != null
+			&& script.editor.get_selected_trigger().is_same(self.as_entity())) 
+		{
+
+			if (selectedCorner == 0) 
+			{
+				array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
+				for (uint i = 0; i < corners.length(); i++)
+				{
+					d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(corners[i].x, corners[i].y));
+					if (pos.Distance(mousePosHud) < 50) 
+					{
+						selectedCorner = i + 1;
+						return;
+					}
+				}
+			}
+			else 
+			{
+				switch(selectedCorner) 
+				{
+					case 1:
+						p1x = mousePosWorld.x;
+						p1y = mousePosWorld.y;
+					break;
+					case 2:
+						p2x = mousePosWorld.x;
+						p2y = mousePosWorld.y;
+					break;
+					case 3:
+						p3x = mousePosWorld.x;
+						p3y = mousePosWorld.y;
+					break;
+					case 4:
+						p4x = mousePosWorld.x;
+						p4y = mousePosWorld.y;
+					break;
+				}
+				selectedCorner = 0;
+				UpdateSelf();
+			}
+			return;
+		}
+
+		if (script.editor.editor_tab() == "Triggers"
+			&& @script.editor.get_selected_trigger() != null
+			&& script.editor.get_selected_trigger().is_same(self.as_entity())
+			&& selectedCorner != 0)
+		{
+			puts("yes");
+			switch(selectedCorner) 
+			{
+				case 1:
+					p1x = mousePosWorld.x;
+					p1y = mousePosWorld.y;
+				break;
+				case 2:
+					p2x = mousePosWorld.x;
+					p2y = mousePosWorld.y;
+				break;
+				case 3:
+					p3x = mousePosWorld.x;
+					p3y = mousePosWorld.y;
+				break;
+				case 4:
+					p4x = mousePosWorld.x;
+					p4y = mousePosWorld.y;
+				break;
+			}
+			UpdateSelf();
+		}
+
+
 	}
 
 	void on_remove()

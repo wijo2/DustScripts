@@ -20,7 +20,7 @@ class Vector2
 	}
 
 
-	float Distance(Vector2 o)
+	float Distance(Vector2@ o)
 	{
 		return sqrt((x-o.x)**2 + (y-o.y)**2);
 	}
@@ -45,6 +45,24 @@ class Vector2
 	Vector2 opDiv(float o)
 	{
 		return Vector2(x/o, y/o);
+	}
+	Vector2 opAddAssign(Vector2 o) 
+	{
+		x += o.x;
+		y += o.y;
+		return this;
+	}
+	Vector2 opSubAssign(Vector2 o) 
+	{
+		x -= o.x;
+		y -= o.y;
+		return this;
+	}
+	Vector2 opMulAssign(float o) 
+	{
+		x *= o;
+		y *= o;
+		return this;
 	}
 	string opImplConv()
 	{
@@ -507,8 +525,17 @@ Vector2 WorldToScreenPos(Vector2 pos)
 	camera@ cam = get_active_camera();
 	Vector2 camPos = Vector2(cam.x(), cam.y());
 	Vector2 result = pos - camPos;
-	result.x *= cam.editor_zoom();
-	result.y *= cam.editor_zoom();
+	result *= cam.editor_zoom();
+
+	//correction
+	scene@ s = get_scene();
+	Vector2 hudMouse = Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
+	Vector2 worldMouse = Vector2(s.mouse_x_world(0, 20), s.mouse_y_world(0, 20));
+	worldMouse -= camPos;
+	worldMouse *= cam.editor_zoom();
+
+	result *= hudMouse.x/worldMouse.x;
+
 	return result;
 }
 
