@@ -32,6 +32,7 @@ class d2Quad
 
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
+		if (colour == 0x00000000) { return; }
 		s.draw_quad_world(layer, sub_layer, false, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, colour, colour, colour, colour);
 	}
 
@@ -121,6 +122,8 @@ class d2CQuad
 	array<bool> spikeLines(4);
 	array<bool> dustLines(4);
 
+	float maxDist = 0;
+
 	script@ script;
 
 	d2CQuad() { @base = @d2Quad(); @manager = null; }
@@ -139,6 +142,9 @@ class d2CQuad
 		{
 			ClearOldCache();
 		}
+
+		d2Math::Vector2 c = base.FindCentre();
+		maxDist = max(max((base.p1 - c).Magnitude(), (base.p2 - c).Magnitude()), max((base.p3 - c).Magnitude(), (base.p4 - c).Magnitude()));
 
 		array<d2Math::Vector2> arr;
 		for (uint i = 0; i < 4; i++)

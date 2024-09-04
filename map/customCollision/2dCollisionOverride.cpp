@@ -63,11 +63,13 @@ class CollisionOverride : callback_base
 				int(colRect.bottom() + ec.y())
 			);
 		}
+		d2Math::Vector2 pos = d2Math::Vector2(ec.x(), ec.y());
 
 		// CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
 		for (uint i = 0; i < colliders.length(); i++)
 		{
+			if (colliders[i].maxDist + 100 < (colliders[i].base.FindCentre() - pos).Magnitude()) { continue; }
 			array<d2Math::LineFunc> edges = colliders[i].GetSideEdges(side);
 			for (uint li = 0; li < edges.length(); li++)
 			{
