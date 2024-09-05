@@ -20,6 +20,9 @@ class script : script_base
 
 	[text] array<ControllableHolder> extraGuys;
 
+	[text] array<ControllableHolder> spinnyGuys;
+	[text] float speed;
+
 	bool dontGrabCorner = false;
 
 	[position,mode:world,layer:19,y:rotY] float rotX;
@@ -59,6 +62,12 @@ class script : script_base
 			quadManager.manager.additionalControllables.insertLast(c);
 		}
 		quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+		for (uint i = 0; i < spinnyGuys.length(); i++)
+		{
+			entity@ e = entity_by_id(spinnyGuys[i].entity);
+			if (@e == null) { continue; }
+			spinnyGuys[i].initDist = d2Math::Vector2(e.x() - rotX, e.y() - rotY).Magnitude();
+		}
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -92,6 +101,32 @@ class script : script_base
 	{
 		debugDraw = array<d2Math::Rect>(0);
 		quadManager.step();
+
+
+		d2Math::Vector2 centre = d2Math::Vector2(rotX, rotY);
+		for (uint i = 0; i < spinnyGuys.length(); i++)
+		{
+			entity@ e = entity_by_id(spinnyGuys[i].entity);
+			if (@e == null) { continue; }
+			d2Math::Vector2 op = d2Math::Vector2(e.x(),e.y());
+
+			float rotation = speed * (3.14/120);
+
+			d2Math::Vector2 d = op - centre;
+
+			float m = d.Magnitude();
+
+			float a = atan2(d.y,d.x);
+
+			op = centre + m * d2Math::Vector2(cos(a + rotation), sin(a + rotation));
+
+			d2Math::Vector2 cop = op - centre;
+			cop = cop * (spinnyGuys[i].initDist / cop.Magnitude());
+			op = cop + centre;
+
+			e.x(op.x);
+			e.y(op.y);
+		}
 	}
 
 	void editor_draw(float lolxd) 
@@ -127,6 +162,7 @@ class script : script_base
 class ControllableHolder
 {
 	[entity] int entity;
+	float initDist;
 };
 
 class QuadManager 
@@ -176,7 +212,6 @@ class QuadEntity : trigger_base
 	[text] bool side3spikes;
 	[text] bool side4spikes;
 	
-	[text] float speed = 0;
 	[text] float transMult = 0;
 	[text] float xTrans = 1;
 	[text] float yTrans = 1;
@@ -396,8 +431,8 @@ class QuadEntity : trigger_base
 
 	void step()
 	{
-		if (speed == 0) { return; }
-		cycleTimer += speed/4;
+		if (script.speed == 0) { return; }
+		cycleTimer += script.speed/4;
 		if (abs(cycleTimer) > 60) { cycleTimer = 0; firstCycle = false; }
 
 		d2Math::Vector2 op1 = d2Math::Vector2(p1x,p1y);
