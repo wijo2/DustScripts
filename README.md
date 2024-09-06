@@ -37,6 +37,7 @@ setup:
 * to set it up, choose playAreaCorner as the topleft corner of playArea, and choose width and height. (10kx10k is fine to start with).
 * you can see it's size with the showPlayArea toggle, though for this and showCacheDebug you need to save and reload script for the visualisation to be correct. (sry I'm lazy xD)
 * choose a colour for custom spikes and or dust if you want to use them (make sure to set the alpha)
+* set dustPos, which is the place where dustblocks spawn for every missed custom dust after you end the level, would recommend out of sight.
 * this is better to do later when you can see the impact but I'll just explain what it means here since it's the last thing in this menu:
 collisionOrder determines the grid size that is used for optimizing collision. without going into too much detail, lower means less lag during gameplay (caps at like 4 or so) but a bigger lagspike at load (exponential) and vice versa.
 you can see the size of the grid with showCacheDebug though if you don't fully understand what it means then good luck :p
@@ -46,6 +47,7 @@ building:
 * you can set settings in the left menu, and you can move the corners by clicking on them in the world view, no need to use the variables c:
 * layer and sub_layer are the drawing layer, they don't affect collision. so if you make something a bg layer object the visuals will be misaligned from collsion.
 * concave collision won't work!!!!!!
+* add eny entites you want to be able to interract with the collision to the extraGuys array in script settings
 
 extending:
 * For extending this I recommend taking a pretty good look at how it's structured to avoid weird behaviour, and make sure to call d2CQuad.UpdateCollision() whenever you change a quad's corners.

@@ -18,6 +18,9 @@ class script : script_base
 	[colour,alpha] uint spikeColour;
 	[colour,alpha] uint dustColour;
 
+	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
+	[hidden] int dustPosY;
+
 	[text] array<ControllableHolder> extraGuys;
 
 	bool dontGrabCorner = false;
@@ -49,9 +52,9 @@ class script : script_base
 		quadManager.manager.collisionOrder = collisionOrder;
 		for (uint i = 0; i < extraGuys.length(); i++)
 		{
-			entity@ e = entity_by_id(extraGuys[i].entity);
+	entity@ e = entity_by_id(extraGuys[i].entity);
 			if (@e == null) { continue; }
-			controllable@ c = e.as_controllable();
+	controllable@ c = e.as_controllable();
 			if (@c == null) { continue; }
 			quadManager.manager.additionalControllables.insertLast(c);
 		}
@@ -119,6 +122,47 @@ class script : script_base
 			quadManager.manager.Draw(sc, 22, 1);
 		}
 	}
+
+	void on_level_end() 
+	{
+		int count = 0;
+		for (uint i = 0; i < quadManager.quads.length(); i++) 
+		{
+			count += quadManager.quads[i].quad.GetDustCount();
+		}
+		MakeDust(count);
+	}
+
+	void MakeDust(int n) 
+	{
+		d2Math::Vector2 pos = d2Math::Vector2(dustPosX, dustPosY);
+		int width = int(sqrt(n));
+		if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
+		int height = n/width;
+		int lastRow = n - width*height;
+		puts(width+ ", " + height + ", " + lastRow);
+
+		tileinfo@ t = create_tileinfo();
+		t.solid(true);
+		t.sprite_set(2);
+		t.sprite_tile(13);
+		t.sprite_palette(1);
+		t.set_dustblock(2);
+
+		scene@ s = get_scene();
+
+		for (int x = floor(-width/2.0); x < width/2; x += 1)
+		{
+			for (int y = floor(-height/2.0); y < height/2; y += 1) //stops 1 short 
+			{
+				s.set_tile(int(pos.x/48+x), int(pos.y/48+y), 19, t, false);
+			}
+		}
+		for (int x = floor(-width/2.0); x < floor(-width/2.0) + lastRow; x += 1) 
+		{
+			s.set_tile(int(pos.x/48)+x, int(pos.y/48)+int(height/2), 19, t, false);
+		}
+	}
 };
 
 class ControllableHolder
@@ -172,7 +216,7 @@ class QuadEntity : trigger_base
 	[text] bool side2spikes;
 	[text] bool side3spikes;
 	[text] bool side4spikes;
-	
+
 	int selectedCorner = 0;
 
 	d2Math::Vector2 oldCentre;
@@ -292,7 +336,7 @@ class QuadEntity : trigger_base
 		if (script.input.mouse_state() & 0x20 != 0 
 			&& script.editor.editor_tab() == "Triggers"
 			&& @script.editor.get_selected_trigger() != null
-			&& script.editor.get_selected_trigger().is_same(self.as_entity())
+   && script.editor.get_selected_trigger().is_same(self.as_entity())
 			&& !script.dontGrabCorner) 
 		{
 
@@ -338,7 +382,7 @@ class QuadEntity : trigger_base
 
 		if (script.editor.editor_tab() == "Triggers"
 			&& @script.editor.get_selected_trigger() != null
-			&& script.editor.get_selected_trigger().is_same(self.as_entity())
+   && script.editor.get_selected_trigger().is_same(self.as_entity())
 			&& selectedCorner != 0)
 		{
 			switch(selectedCorner) 

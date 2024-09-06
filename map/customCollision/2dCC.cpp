@@ -278,6 +278,16 @@ class d2CQuad
 		}
 	}
 
+	int GetDustCount() 
+	{
+		int r = 0;
+		if (dustLines[0]) { r+= 1; }
+		if (dustLines[1]) { r+= 1; }
+		if (dustLines[2]) { r+= 1; }
+		if (dustLines[3]) { r+= 1; }
+		return r;
+	}
+
 	void DrawDebug(scene@ s, uint layer, uint sub_layer)
 	{
 		array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
