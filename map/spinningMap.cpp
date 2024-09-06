@@ -193,12 +193,12 @@ class script : script_base
 		{
 			for (int y = floor(-height/2.0); y < height/2; y += 1) //stops 1 short 
 			{
-				s.set_tile(int(pos.x/48+x), int(pos.y/48+y), 19, t, false);
+				s.set_tile(floor(pos.x/48+x), floor(pos.y/48+y), 19, t, false);
 			}
 		}
 		for (int x = floor(-width/2.0); x < floor(-width/2.0) + lastRow; x += 1) 
 		{
-			s.set_tile(int(pos.x/48)+x, int(pos.y/48)+int(height/2), 19, t, false);
+			s.set_tile(floor(pos.x/48)+x, floor(pos.y/48)+int(height/2), 19, t, false);
 		}
 	}
 };
