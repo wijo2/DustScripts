@@ -78,7 +78,7 @@ class Vector2
 		return x == o.x && y == o.y;
 	}
 }
-
+	
 class LineFunc
 {
 	float k = 0;
@@ -541,6 +541,94 @@ Vector2 WorldToScreenPos(Vector2 pos)
 	result *= hudMouse.x/worldMouse.x;
 
 	return result;
+}
+
+}
+
+namespace d3Math
+{
+
+class Vector3
+{
+	float x;
+	float y;
+	float z;
+
+	Vector3()
+	{
+		x = 0;
+		y = 0;
+		z = 0;
+	}
+
+	Vector3(float x, float y, float z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+
+	float Distance(Vector3@ o)
+	{
+		return sqrt((x-o.x)**2 + (y-o.y)**2 + (z-0.z)**2);
+	}
+	float Magnitude()
+	{
+		return sqrt(x**2 + y**2 + z**2);
+	}
+
+	Vector3 opNeg()
+	{
+		return Vector3(-x, -y, -z);
+	}
+	Vector3 opAdd(Vector3 o)
+	{
+		return Vector3(x + o.x, y + o.y, z + o.z);
+	}
+	Vector3 opSub(Vector3 o)
+	{
+		return Vector3(x - o.x, y - o.y, z - o.z);
+	}
+	Vector3 opMul(float o)
+	{
+		return Vector3(o*x, o*y, o*z);
+	}
+	Vector3 opMul_r(float o) { return opMul(o); }
+	Vector3 opDiv(float o)
+	{
+		return Vector3(x/o, y/o, z/o);
+	}
+	Vector3 opAddAssign(Vector3 o) 
+	{
+		x += o.x;
+		y += o.y;
+		z += o.z;
+		return this;
+	}
+	Vector3 opSubAssign(Vector3 o) 
+	{
+		x -= o.x;
+		y -= o.y;
+		z -= o.z;
+		return this;
+	}
+	Vector3 opMulAssign(float o) 
+	{
+		x *= o;
+		y *= o;
+		z *= o;
+		return this;
+	}
+	string opImplConv()
+	{
+		return "(" + formatFloat(x, "", 0, 3) + ", " + formatFloat(y, "", 0, 3) + ", " + formatFloat(z, "", 0, 3) + ")";
+
+	}
+	bool opEquals(Vector3 o)
+	{
+		return x == o.x && y == o.y && z == o.z;
+	}
 }
 
 }

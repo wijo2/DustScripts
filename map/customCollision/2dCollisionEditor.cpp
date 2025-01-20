@@ -273,14 +273,14 @@ class QuadEntity : trigger_base
 		}
 		UpdateSelf();
 		UpdateSides();
-		quad.UpdateCollision();
+		// quad.UpdateCollision();
 	}
 
 	void editor_var_changed(var_info@ info)
 	{
 		UpdateSelf();
 		UpdateSides();
-		quad.UpdateCollision();
+		// quad.UpdateCollision();
 	}
 
 	void editor_draw(float fuck)
