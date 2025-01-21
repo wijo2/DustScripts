@@ -103,6 +103,18 @@ class d3Quad
 		intersectionType = behind == 2;
 	}
 
+	//cam coords
+	d2Math::Vector3 CPointByNumber(int n)
+	{
+		switch (n)
+		{
+			case 1: return csp1;
+			case 2: return csp2;
+			case 3: return csp3;
+			case 4: return csp4;
+		}
+	}
+
 	//sides:
 	//1: 1, 2, 3
 	//2: 1, 2, 4
@@ -138,6 +150,16 @@ class d3Quad
 		}
 	}
 
+	//gets where line between points 0 and 1 in pair crosses cam plane
+	//input is pair for convenience
+	d3Math::Vector2 GetIntersection(array<int> pair)
+	{
+		d3Math::Vector3 first = CPointByNumber(pair[1]); 
+		d3Math::Vector3 second = CPointByNumber(pair[0]);
+		d3Math::Vector3 dir = first - second;
+		dir = dir/abs(first.z - second.z) * first.z;
+		return d2Math::Vector2(dir.x, dir.y);
+	}
 }
 
 class nothing3{} //this tricks my lsp to obey
@@ -166,17 +188,70 @@ class d3CQuad
 		{{2,3}, {2,4}, {3,4}, {}}
 	};
 
+	d3CQuad()
+	{
+		base = d3Quad();
+		collisionBase = d2::d2CQuad();
+	}
+
 	//doesn't update collision
 	void UpdateIntersectQuad(d3Cam@ cam)
 	{
+		//it's a mess yeah tell me something I don't already know,
+		//to my credit it's actually quite a tough problem
 		if (!base.intersecting) { return; }
-		int currentSide = 1;
-		if (!base.intersectionType && !base.IsIntersected(1)) { currentSide = 2; }
-		int lastSide = 0;
+		int side1 = 1;
+		if (!base.intersectionType && !base.IsIntersected(1)) { side1 = 2; }
 		//3-1 = triangle
-		if (base.intersectionType)
+		if (!base.intersectionType)
 		{
-			lastSide = GetNextSide(currentSide, lastSide);
+			int side2 = GetNextSide(side1, 0);
+			int side3 = GetNextSide(side2, side1);
+			collisionBase.quad.p1 = base.GetIntersection(sideLookup[side1][side3]);
+			collisionBase.quad.p2 = base.GetIntersection(sideLookup[side1][side2]);
+			collisionBase.quad.p3 = base.GetIntersection(sideLookup[side2][side3]);
+			collisionBase.quad.p4 = collisionBase.quad.p3;
+			collisionBase.activeLines[0] = activeSides[side1-1];
+			collisionBase.spikeLines[0] = spikeSides[side1-1];
+			collisionBase.dustLines[0] = dustSides[side1-1];
+			collisionBase.activeLines[1] = activeSides[side2-1];
+			collisionBase.spikeLines[1] = spikeSides[side2-1];
+			collisionBase.dustLines[1] = dustSides[side2-1];
+			collisionBase.activeLines[2] = activeSides[side3-1];
+			collisionBase.spikeLines[2] = spikeSides[side3-1];
+			collisionBase.dustLines[2] = dustSides[side3-1];
+			collisionBase.activeLines[3] = false;
+			collisionBase.spikeLines[3] = false;
+			collisionBase.dustLines[3] = false;
+		}
+		//2-2 = quad
+		else
+		{
+			int side2 = GetNextSide(side1, 0);
+			int side3 = GetNextSide(side2, side1);
+			int side4 = GetNextSide(side3, side2);
+			collisionBase.quad.p1 = base.GetIntersection(sideLookup[side1][side3]);
+			collisionBase.quad.p2 = base.GetIntersection(sideLookup[side1][side2]);
+			collisionBase.quad.p3 = base.GetIntersection(sideLookup[side2][side3]);
+			collisionBase.quad.p4 = base.GetIntersection(sideLookup[side3][side4]);
+			collisionBase.activeLines[0] = activeSides[side1-1];
+			collisionBase.spikeLines[0] = spikeSides[side1-1];
+			collisionBase.dustLines[0] = dustSides[side1-1];
+			collisionBase.activeLines[1] = activeSides[side2-1];
+			collisionBase.spikeLines[1] = spikeSides[side2-1];
+			collisionBase.dustLines[1] = dustSides[side2-1];
+			collisionBase.activeLines[2] = activeSides[side3-1];
+			collisionBase.spikeLines[2] = spikeSides[side3-1];
+			collisionBase.dustLines[2] = dustSides[side3-1];
+			collisionBase.activeLines[3] = activeSides[side4-1];
+			collisionBase.spikeLines[3] = spikeSides[side4-1];
+			collisionBase.dustLines[3] = dustSides[side4-1];
+		}
+
+		void Draw(scene@ s, uint layer, uint sub_layer)
+		{
+			base.Draw(s, layer, sub_layer);
+			collisionBase.Draw(s, layer, sub_layer);
 		}
 	}
 
@@ -201,11 +276,29 @@ class d3CQuad
 			(!base.intersectionType && base.IsIntersected(4)))) { return 4; }
 		return 0;
 	}
+
+
 }	
 
 class d3Manager
 {
+	array<d3CQuad@> allQuads;
+	d2::CollisionManager@ manager;
+	d3Cam@ cam;
+	
+	d3Manager()
+	{
+		manager = d2::CollisionManager();
+		cam = d3Cam();
+	}
 
+	void UpdateLooks()
+	{
+		for (uint i = 0; i < allQuads.lenght(); i++)
+		{
+			allQuads[i].UpdateIntersectQuad(cam);
+		}
+	}
 }
 
 }
