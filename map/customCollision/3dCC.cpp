@@ -158,7 +158,7 @@ class d3Quad
 		d3Math::Vector3 second = CPointByNumber(pair[0]);
 		d3Math::Vector3 dir = first - second;
 		dir = dir/abs(first.z - second.z) * first.z;
-		return d2Math::Vector2(dir.x, dir.y);
+		return d2Math::Vector2(dir.x + first.x, dir.y + first.y);
 	}
 }
 
