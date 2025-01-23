@@ -10,6 +10,8 @@ class d3Cam
 	d3Math::Vector3 centre;
 	float rotation; //0 = normal xy, z away from cam, upwards = angle in radians topdown clockwise
 
+	d3Cam() {}
+
 	d3Math::Vector3 WorldToCamPos(d3Math::Vector3 vec)
 	{
 		vec -= centre;
@@ -88,23 +90,23 @@ class d3Quad
 		csp3 = cam.WorldToCamPos(p3);
 		csp4 = cam.WorldToCamPos(p4);
 
-		pp1 = d2Math::Vector2(csp1.x, cps1.y);
-		pp2 = d2Math::Vector2(csp2.x, cps2.y);
-		pp3 = d2Math::Vector2(csp3.x, cps3.y);
-		pp4 = d2Math::Vector2(csp4.x, cps4.y);
+		pp1 = d2Math::Vector2(csp1.x, csp1.y);
+		pp2 = d2Math::Vector2(csp2.x, csp2.y);
+		pp3 = d2Math::Vector2(csp3.x, csp3.y);
+		pp4 = d2Math::Vector2(csp4.x, csp4.y);
 
-		int behind = 0;
-		if (csp1.z <= 0) { behind += 1; sides[0] = 0; } else { sides[0] = 1; }
-		if (csp2.z <= 0) { behind += 1; sides[1] = 0; } else { sides[1] = 1; }
-		if (csp3.z <= 0) { behind += 1; sides[2] = 0; } else { sides[2] = 1; }
-		if (csp4.z <= 0) { behind += 1; sides[3] = 0; } else { sides[3] = 1; }
-		this.behind = behind == 4;
-		this.intersecting = !this.behind && behind > 0;
-		intersectionType = behind == 2;
+		int behindc = 0;
+		if (csp1.z <= 0) { behindc += 1; sides[0] = false; } else { sides[0] = true; }
+		if (csp2.z <= 0) { behindc += 1; sides[1] = false; } else { sides[1] = true; }
+		if (csp3.z <= 0) { behindc += 1; sides[2] = false; } else { sides[2] = true; }
+		if (csp4.z <= 0) { behindc += 1; sides[3] = false; } else { sides[3] = true; }
+		behind = behindc == 4;
+		intersecting = !behind && behindc > 0;
+		intersectionType = behindc == 2;
 	}
 
 	//cam coords
-	d2Math::Vector3 CPointByNumber(int n)
+	d3Math::Vector3 CPointByNumber(int n)
 	{
 		switch (n)
 		{
@@ -113,6 +115,7 @@ class d3Quad
 			case 3: return csp3;
 			case 4: return csp4;
 		}
+		return d3Math::Vector3();
 	}
 
 	//sides:
@@ -137,6 +140,7 @@ class d3Quad
 			case 3: return csp3.z > 0;
 			case 4: return csp4.z > 0;
 		}
+		return false;
 	}
 
 	bool IsIntersected(int side)
@@ -148,11 +152,12 @@ class d3Quad
 			case 3: return GetSide(1) == GetSide(3) && GetSide(3) == GetSide(4);
 			case 4: return GetSide(2) == GetSide(3) && GetSide(3) == GetSide(4);
 		}
+		return false;
 	}
 
 	//gets where line between points 0 and 1 in pair crosses cam plane
 	//input is pair for convenience
-	d3Math::Vector2 GetIntersection(array<int> pair)
+	d2Math::Vector2 GetIntersection(array<int> pair)
 	{
 		d3Math::Vector3 first = CPointByNumber(pair[1]); 
 		d3Math::Vector3 second = CPointByNumber(pair[0]);
@@ -207,10 +212,10 @@ class d3CQuad
 		{
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
-			collisionBase.quad.p1 = base.GetIntersection(sideLookup[side1][side3]);
-			collisionBase.quad.p2 = base.GetIntersection(sideLookup[side1][side2]);
-			collisionBase.quad.p3 = base.GetIntersection(sideLookup[side2][side3]);
-			collisionBase.quad.p4 = collisionBase.quad.p3;
+			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1][side3]);
+			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1][side2]);
+			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2][side3]);
+			collisionBase.base.p4 = collisionBase.base.p3;
 			collisionBase.activeLines[0] = activeSides[side1-1];
 			collisionBase.spikeLines[0] = spikeSides[side1-1];
 			collisionBase.dustLines[0] = dustSides[side1-1];
@@ -230,10 +235,10 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			int side4 = GetNextSide(side3, side2);
-			collisionBase.quad.p1 = base.GetIntersection(sideLookup[side1][side3]);
-			collisionBase.quad.p2 = base.GetIntersection(sideLookup[side1][side2]);
-			collisionBase.quad.p3 = base.GetIntersection(sideLookup[side2][side3]);
-			collisionBase.quad.p4 = base.GetIntersection(sideLookup[side3][side4]);
+			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1][side3]);
+			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1][side2]);
+			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2][side3]);
+			collisionBase.base.p4 = base.GetIntersection(sideLookup[side3][side4]);
 			collisionBase.activeLines[0] = activeSides[side1-1];
 			collisionBase.spikeLines[0] = spikeSides[side1-1];
 			collisionBase.dustLines[0] = dustSides[side1-1];
@@ -247,12 +252,12 @@ class d3CQuad
 			collisionBase.spikeLines[3] = spikeSides[side4-1];
 			collisionBase.dustLines[3] = dustSides[side4-1];
 		}
+	}
 
-		void Draw(scene@ s, uint layer, uint sub_layer)
-		{
-			base.Draw(s, layer, sub_layer);
-			collisionBase.Draw(s, layer, sub_layer);
-		}
+	void Draw(scene@ s, uint layer, uint sub_layer)
+	{
+		base.Draw(s, layer, sub_layer);
+		collisionBase.Draw(s, layer, sub_layer);
 	}
 
 	//next side for loop around intersection that is not side2
@@ -276,8 +281,6 @@ class d3CQuad
 			(!base.intersectionType && base.IsIntersected(4)))) { return 4; }
 		return 0;
 	}
-
-
 }	
 
 class d3Manager
@@ -294,7 +297,7 @@ class d3Manager
 
 	void UpdateLooks()
 	{
-		for (uint i = 0; i < allQuads.lenght(); i++)
+		for (uint i = 0; i < allQuads.length(); i++)
 		{
 			allQuads[i].UpdateIntersectQuad(cam);
 		}

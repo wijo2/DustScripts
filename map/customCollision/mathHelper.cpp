@@ -568,10 +568,9 @@ class Vector3
 		this.z = z;
 	}
 
-
 	float Distance(Vector3@ o)
 	{
-		return sqrt((x-o.x)**2 + (y-o.y)**2 + (z-0.z)**2);
+		return sqrt((x-o.x)**2 + (y-o.y)**2 + (z-o.z)**2);
 	}
 	float Magnitude()
 	{

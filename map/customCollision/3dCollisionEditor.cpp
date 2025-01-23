@@ -24,6 +24,7 @@ class script : script_base
 	[slider,min:0,max:3] float rotation;
 
 	bool dontGrabCorner = false;
+	d3::d3Cam@ cam;
 
 	//debug
 	array<d2Math::Rect> debugDraw;
@@ -39,6 +40,7 @@ class script : script_base
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
+		@cam = @d3::d3Cam();
 	}
 
 	void on_editor_start() 
@@ -156,23 +158,13 @@ class script : script_base
 		// 	s.set_tile(floor(pos.x/48)+x, floor(pos.y/48)+int(height/2), 19, t, false);
 		// }
 	}
-};
-
+}
 
 class d3QuadEntity : trigger_base 
 {
-	// [position,mode:world,layer:19,y:p1y] float p1x;
-	// [hidden] float p1y;
-	// [position,mode:world,layer:19,y:p2y] float p2x;
-	// [hidden] float p2y;
-	// [position,mode:world,layer:19,y:p3y] float p3x;
-	// [hidden] float p3y;
-	// [position,mode:world,layer:19,y:p4y] float p4x;
-	// [hidden] float p4y;
-	//
-	// [text] int layer;
-	// [text] int sub_layer;
-	// [colour,alpha] uint colour;
+	[text] int layer;
+	[text] int sub_layer;
+	[colour,alpha] uint colour;
 	//
 	// [text] bool side1active = true;
 	// [text] bool side2active = true;
@@ -191,12 +183,12 @@ class d3QuadEntity : trigger_base
 	//
 	// d2Math::Vector2 oldCentre;
 	//
-	// QuadManager@ quadManager;
-	// d2::d2CQuad@ quad;
-	//
-	// scripttrigger@ self;
-	// script@ script;
-	//
+	d3::d3Manager@ manager;
+	d3::d3CQuad@ quad;
+
+	scripttrigger@ self;
+	script@ script;
+
 	void init(script@ s, scripttrigger@ self)
 	{
 		@script = @s;
@@ -204,34 +196,19 @@ class d3QuadEntity : trigger_base
 		{
 			colour = 0xFFFFFFFF;
 		}
-		if (p1x == 0 && p1y == 0 &&
-			p2x == 0 && p2y == 0 &&
-			p3x == 0 && p3y == 0 &&
-			p4x == 0 && p4y == 0) 
-		{
-			p1x = self.x() - 48;
-			p1y = self.y() - 48;
-			p2x = self.x() + 48;
-			p2y = self.y() - 48;
-			p3x = self.x() + 48;
-			p3y = self.y() + 48;
-			p4x = self.x() - 48;
-			p4y = self.y() + 48;
-		}
-		oldCentre = d2Math::Vector2(self.x(), self.y());
+		// oldCentre = d2Math::Vector2(self.x(), self.y());
 		@this.self = @self;
-		@this.quadManager = @s.quadManager; 
-		@quad = @d2::d2CQuad(
-			d2Math::Vector2(p1x, p1y),
-			d2Math::Vector2(p2x, p2y),
-			d2Math::Vector2(p3x, p3y),
-			d2Math::Vector2(p4x, p4y),
-			colour,
-			quadManager.manager);
-		@quad.script = @quadManager.s;
-		if (quadManager.quads.findByRef(this) < 0)
+		@this.manager = @s.manager; 
+		@quad = @d3::d3CQuad();
+		@quad.base = @d3::d3Quad(
+			d3Math::Vector3(self.x()-48, self.y()-48, 0),
+			d3Math::Vector3(self.x()+48, self.y()-48, 0),
+			d3Math::Vector3(self.x(), self.y()+48, 0),
+			d3Math::Vector3(self.x(), self.y(), 48),
+			colour);
+		if (s.manager.allQuads.findByRef(quad) < 0)
 		{
-			quadManager.quads.insertLast(this);
+			s.manager.allQuads.insertLast(quad);
 		}
 		if (layer == 0)
 		{
@@ -241,9 +218,10 @@ class d3QuadEntity : trigger_base
 		{
 			sub_layer = 1;
 		}
-		UpdateSelf();
-		UpdateSides();
-		// quad.UpdateCollision();
+		quad.base.ApplyProjection(s.cam);
+		quad.UpdateIntersectQuad(s.cam);
+		// UpdateSelf();
+		// UpdateSides();
 	}
 	//
 	// void editor_var_changed(var_info@ info)
@@ -253,11 +231,11 @@ class d3QuadEntity : trigger_base
 	// 	// quad.UpdateCollision();
 	// }
 	//
-	// void editor_draw(float fuck)
-	// {
-	// 	if (@quad == null) { return; }
-	// 	quad.Draw(get_scene(), layer, sub_layer);
-	// }
+	void editor_draw(float fuck)
+	{
+		if (@quad == null) { return; }
+		quad.Draw(get_scene(), layer, sub_layer);
+	}
 	//
 	// void draw(float doublefuck)
 	// {
