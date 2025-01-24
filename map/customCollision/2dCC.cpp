@@ -250,6 +250,7 @@ class d2CQuad
 
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
+		if (!activeLines[0] && !activeLines[1] && !activeLines[2] && !activeLines[3]) { return; }
 		base.Draw(s, layer, sub_layer);
 		// DrawDebug(s, layer, sub_layer);
 	   	float hw = 3;

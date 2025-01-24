@@ -1,5 +1,5 @@
 #include "3dCC.cpp";
-//DustScripts/map/customCollision/3dCC.cpp
+//DustScripts/map/customCollision/3dCollisionEditor.cpp
 
 class script : script_base
 {
@@ -173,86 +173,89 @@ class d3QuadEntity : trigger_base
 	scripttrigger@ self;
 	script@ script;
 
-	// void init(script@ s, scripttrigger@ self)
-	// {
-	// 	@script = @s;
-	// 	@this.self = @self;
-	// 	if (d2colour == 0x00000000)
-	// 	{
-	// 		d2colour = 0xFFFFFFFF;
-	// 	}
-	// 	if (d3colour == 0x00000000)
-	// 	{
-	// 		d3colour = 0xFFFFFFFF;
-	// 	}
-	// 	// oldCentre = d2Math::Vector2(self.x(), self.y());
-	// 	@this.manager = @s.manager; 
-	// 	@quad = @d3::d3CQuad();
-	// 	@quad.base = @d3::d3Quad(
-	// 		d3Math::Vector3(self.x()-48, self.y()-48, 0),
-	// 		d3Math::Vector3(self.x()+48, self.y()-48, 0),
-	// 		d3Math::Vector3(self.x(), self.y()+48, 0),
-	// 		d3Math::Vector3(self.x(), self.y(), 48),
-	// 		d3colour);
-	// 	// @quad.collisionBase.colour = d2colour;
-	// 	// @quad.collisionBase.activeSides = {true, true, true, true};
-	// 	if (s.manager.allQuads.findByRef(quad) < 0)
-	// 	{
-	// 		s.manager.allQuads.insertLast(quad);
-	// 	}
-	// 	if (layer == 0)
-	// 	{
-	// 		layer = 21;
-	// 	}
-	// 	if (sub_layer == 0)
-	// 	{
-	// 		sub_layer = 1;
-	// 	}
-	// 	quad.base.ApplyProjection(manager.cam);
-	// 	// quad.UpdateIntersectQuad(script.manager.cam);
-	// 	UpdateSelf();
-	// 	// UpdateSides();
-	// }
-	// //
-	// void editor_var_changed(var_info@ info)
-	// {
-	// 	UpdateSelf();
-	// 	// UpdateSides();
-	// 	// quad.UpdateCollision();
-	// }
+	void init(script@ s, scripttrigger@ self)
+	{
+		@script = @s;
+		@this.self = @self;
+		if (d2colour == 0x00000000)
+		{
+			d2colour = 0xFFFFFFFF;
+		}
+		if (d3colour == 0x00000000)
+		{
+			d3colour = 0xFFFFFFFF;
+		}
+		// oldCentre = d2Math::Vector2(self.x(), self.y());
+		@this.manager = @s.manager; 
+		@quad = @d3::d3CQuad();
+		@quad.base = @d3::d3Quad(
+			d3Math::Vector3(self.x()-48, self.y()-48, 0),
+			d3Math::Vector3(self.x()+48, self.y()-48, 0),
+			d3Math::Vector3(self.x(), self.y()+48, 48),
+			d3Math::Vector3(self.x(), self.y(), 48),
+			d3colour);
+		quad.collisionBase.base.colour = d2colour;
+		quad.activeSides[0] = true;
+		quad.activeSides[1] = true;
+		quad.activeSides[2] = true;
+		quad.activeSides[3] = true;
+		if (s.manager.allQuads.findByRef(quad) < 0)
+		{
+			s.manager.allQuads.insertLast(quad);
+		}
+		if (layer == 0)
+		{
+			layer = 21;
+		}
+		if (sub_layer == 0)
+		{
+			sub_layer = 1;
+		}
+		quad.base.ApplyProjection(manager.cam);
+		// quad.UpdateIntersectQuad(script.manager.cam);
+		UpdateSelf();
+		// UpdateSides();
+	}
 	//
-	// void UpdateRotation()
-	// {
-	// 	quad.base.ApplyProjection(manager.cam);
-	// 	// quad.UpdateIntersectQuad(script.manager.cam);
-	// }
+	void editor_var_changed(var_info@ info)
+	{
+		UpdateSelf();
+		// UpdateSides();
+		// quad.UpdateCollision();
+	}
+
+	void UpdateRotation()
+	{
+		quad.base.ApplyProjection(manager.cam);
+		quad.UpdateIntersectQuad(script.manager.cam);
+	}
+
+	void editor_draw(float fuck)
+	{
+		if (@quad == null) { return; }
+		quad.Draw(get_scene(), layer, sub_layer);
+	}
 	//
-	// void editor_draw(float fuck)
+	// void draw(float doublefuck)
 	// {
 	// 	if (@quad == null) { return; }
 	// 	quad.Draw(get_scene(), layer, sub_layer);
 	// }
-	// //
-	// // void draw(float doublefuck)
-	// // {
-	// // 	if (@quad == null) { return; }
-	// // 	quad.Draw(get_scene(), layer, sub_layer);
-	// // }
-	// //
-	// void UpdateSelf()
-	// {
-	// 	// quad.base.colour = colour; 
-	// 	// quad.base.p1 = d2Math::Vector2(p1x, p1y);
-	// 	// quad.base.p2 = d2Math::Vector2(p2x, p2y);
-	// 	// quad.base.p3 = d2Math::Vector2(p3x, p3y);
-	// 	// quad.base.p4 = d2Math::Vector2(p4x, p4y);
-	// 	// quad.UpdateCollision();
-	// 	// d2Math::Vector2 centre = quad.base.FindCentre();
-	// 	// oldCentre = centre;
-	// 	// self.set_centre(centre.x, centre.y);
-	// 	quad.base.colour = d3colour;
-	// 	// quad.collisionBase.colour = d2colour;
-	// }
+	//
+	void UpdateSelf()
+	{
+		// quad.base.colour = colour; 
+		// quad.base.p1 = d2Math::Vector2(p1x, p1y);
+		// quad.base.p2 = d2Math::Vector2(p2x, p2y);
+		// quad.base.p3 = d2Math::Vector2(p3x, p3y);
+		// quad.base.p4 = d2Math::Vector2(p4x, p4y);
+		// quad.UpdateCollision();
+		// d2Math::Vector2 centre = quad.base.FindCentre();
+		// oldCentre = centre;
+		// self.set_centre(centre.x, centre.y);
+		quad.base.colour = d3colour;
+		quad.collisionBase.base.colour = d2colour;
+	}
 	//
 	// //seperating since this should only happen at start of level
 	// void UpdateSides()
