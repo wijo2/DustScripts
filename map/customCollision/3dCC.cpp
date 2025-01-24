@@ -10,7 +10,11 @@ class d3Cam
 	d3Math::Vector3 centre;
 	float rotation; //0 = normal xy, z away from cam, upwards = angle in radians topdown clockwise
 
-	d3Cam() {}
+	d3Cam()
+	{
+		centre = d3Math::Vector3(0,0,0);
+		rotation = 0;
+	}
 
 	d3Math::Vector3 WorldToCamPos(d3Math::Vector3 vec)
 	{
@@ -145,12 +149,13 @@ class d3Quad
 
 	bool IsIntersected(int side)
 	{
+		//if all points of side are on same side of cam it's not intersected
 		switch (side)
 		{
-			case 1: return GetSide(1) == GetSide(2) && GetSide(2) == GetSide(3);
-			case 2: return GetSide(1) == GetSide(2) && GetSide(2) == GetSide(4);
-			case 3: return GetSide(1) == GetSide(3) && GetSide(3) == GetSide(4);
-			case 4: return GetSide(2) == GetSide(3) && GetSide(3) == GetSide(4);
+			case 1: return !(GetSide(1) == GetSide(2) && GetSide(2) == GetSide(3));
+			case 2: return !(GetSide(1) == GetSide(2) && GetSide(2) == GetSide(4));
+			case 3: return !(GetSide(1) == GetSide(3) && GetSide(3) == GetSide(4));
+			case 4: return !(GetSide(2) == GetSide(3) && GetSide(3) == GetSide(4));
 		}
 		return false;
 	}
@@ -172,7 +177,7 @@ class nothing3{} //this tricks my lsp to obey
 class d3CQuad
 {
 	d3Quad@ base;
-	d2::d2CQuad collisionBase;
+	d2::d2CQuad@ collisionBase;
 
 	//sides:
 	//1: 1, 2, 3
@@ -195,8 +200,8 @@ class d3CQuad
 
 	d3CQuad()
 	{
-		base = d3Quad();
-		collisionBase = d2::d2CQuad();
+		@base = @d3Quad();
+		@collisionBase = @d2::d2CQuad();
 	}
 
 	//doesn't update collision
@@ -212,9 +217,10 @@ class d3CQuad
 		{
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
-			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1][side3]);
-			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1][side2]);
-			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2][side3]);
+			// puts("trig sides " + side1 + " " + side2 + " " + side3);
+			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side3-1]);
+			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1-1][side2-1]);
+			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2-1][side3-1]);
 			collisionBase.base.p4 = collisionBase.base.p3;
 			collisionBase.activeLines[0] = activeSides[side1-1];
 			collisionBase.spikeLines[0] = spikeSides[side1-1];
@@ -235,6 +241,7 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			int side4 = GetNextSide(side3, side2);
+			// puts("trig sides " + side1 + " " + side2 + " " + side3 + " " + side4);
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1][side3]);
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1][side2]);
 			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2][side3]);
@@ -279,6 +286,7 @@ class d3CQuad
 		if (side != 4 && side2 != 4 &&
 			((base.intersectionType && base.GetSide(shared4[0]) != base.GetSide(shared4[1])) || 
 			(!base.intersectionType && base.IsIntersected(4)))) { return 4; }
+		puts("GetNextSide returning 0 with inputs " + side + ", " + side2);
 		return 0;
 	}
 }	
@@ -291,14 +299,15 @@ class d3Manager
 	
 	d3Manager()
 	{
-		manager = d2::CollisionManager();
-		cam = d3Cam();
+		@manager = @d2::CollisionManager();
+		@cam = @d3Cam();
 	}
 
 	void UpdateLooks()
 	{
 		for (uint i = 0; i < allQuads.length(); i++)
 		{
+			allQuads[i].base.ApplyProjection(cam);
 			allQuads[i].UpdateIntersectQuad(cam);
 		}
 	}

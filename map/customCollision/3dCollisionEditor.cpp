@@ -1,4 +1,5 @@
 #include "3dCC.cpp";
+//DustScripts/map/customCollision/3dCC.cpp
 
 class script : script_base
 {
@@ -21,10 +22,9 @@ class script : script_base
 	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
 	[hidden] int dustPosY;
 
-	[slider,min:0,max:3] float rotation;
+	[slider,min:0,max:6.2] float rotation;
 
 	bool dontGrabCorner = false;
-	d3::d3Cam@ cam;
 
 	//debug
 	array<d2Math::Rect> debugDraw;
@@ -40,7 +40,6 @@ class script : script_base
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
-		@cam = @d3::d3Cam();
 	}
 
 	void on_editor_start() 
@@ -81,6 +80,7 @@ class script : script_base
 		// 	}
 		// }
 		manager.cam.rotation = rotation;
+		manager.UpdateLooks();
 	}
 
 	void step(int idc) 
@@ -118,142 +118,140 @@ class script : script_base
 		}
 	}
 
-	void on_level_end() 
-	{
-		// int count = 0;
-		// for (uint i = 0; i < manager.allQuads.length(); i++) 
-		// {
-		// 	count += quadManager.quads[i].quad.GetDustCount();
-		// }
-		// MakeDust(count);
-	}
+	// void on_level_end() 
+	// {
+	// 	int count = 0;
+	// 	for (uint i = 0; i < manager.allQuads.length(); i++) 
+	// 	{
+	// 		count += quadManager.quads[i].quad.GetDustCount();
+	// 	}
+	// 	MakeDust(count);
+	// }
 
-	void MakeDust(int n) 
-	{
-		// d2Math::Vector2 pos = d2Math::Vector2(dustPosX, dustPosY);
-		// int width = int(sqrt(n));
-		// if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
-		// int height = n/width;
-		// int lastRow = n - width*height;
-		// puts(width+ ", " + height + ", " + lastRow);
-		//
-		// tileinfo@ t = create_tileinfo();
-		// t.solid(true);
-		// t.sprite_set(2);
-		// t.sprite_tile(13);
-		// t.sprite_palette(1);
-		// t.set_dustblock(2);
-		//
-		// scene@ s = get_scene();
-		//
-		// for (int x = floor(-width/2.0); x < width/2; x += 1)
-		// {
-		// 	for (int y = floor(-height/2.0); y < height/2; y += 1) //stops 1 short 
-		// 	{
-		// 		s.set_tile(floor(pos.x/48+x), floor(pos.y/48+y), 19, t, false);
-		// 	}
-		// }
-		// for (int x = floor(-width/2.0); x < floor(-width/2.0) + lastRow; x += 1) 
-		// {
-		// 	s.set_tile(floor(pos.x/48)+x, floor(pos.y/48)+int(height/2), 19, t, false);
-		// }
-	}
+	// void MakeDust(int n) 
+	// {
+	// 	d2Math::Vector2 pos = d2Math::Vector2(dustPosX, dustPosY);
+	// 	int width = int(sqrt(n));
+	// 	if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
+	// 	int height = n/width;
+	// 	int lastRow = n - width*height;
+	// 	puts(width+ ", " + height + ", " + lastRow);
+	//
+	// 	tileinfo@ t = create_tileinfo();
+	// 	t.solid(true);
+	// 	t.sprite_set(2);
+	// 	t.sprite_tile(13);
+	// 	t.sprite_palette(1);
+	// 	t.set_dustblock(2);
+	//
+	// 	scene@ s = get_scene();
+	//
+	// 	for (int x = floor(-width/2.0); x < width/2; x += 1)
+	// 	{
+	// 		for (int y = floor(-height/2.0); y < height/2; y += 1) //stops 1 short 
+	// 		{
+	// 			s.set_tile(floor(pos.x/48+x), floor(pos.y/48+y), 19, t, false);
+	// 		}
+	// 	}
+	// 	for (int x = floor(-width/2.0); x < floor(-width/2.0) + lastRow; x += 1) 
+	// 	{
+	// 		s.set_tile(floor(pos.x/48)+x, floor(pos.y/48)+int(height/2), 19, t, false);
+	// 	}
+	// }
 }
 
 class d3QuadEntity : trigger_base 
 {
 	[text] int layer;
 	[text] int sub_layer;
-	[colour,alpha] uint colour;
-	//
-	// [text] bool side1active = true;
-	// [text] bool side2active = true;
-	// [text] bool side3active = true;
-	// [text] bool side4active = true;
-	// [text] bool side1dust;
-	// [text] bool side2dust;
-	// [text] bool side3dust;
-	// [text] bool side4dust;
-	// [text] bool side1spikes;
-	// [text] bool side2spikes;
-	// [text] bool side3spikes;
-	// [text] bool side4spikes;
-	//
-	// int selectedCorner = 0;
-	//
-	// d2Math::Vector2 oldCentre;
-	//
+	[colour,alpha] uint d2colour;
+	[colour,alpha] uint d3colour;
+
 	d3::d3Manager@ manager;
 	d3::d3CQuad@ quad;
 
 	scripttrigger@ self;
 	script@ script;
 
-	void init(script@ s, scripttrigger@ self)
-	{
-		@script = @s;
-		if (colour == 0x00000000)
-		{
-			colour = 0xFFFFFFFF;
-		}
-		// oldCentre = d2Math::Vector2(self.x(), self.y());
-		@this.self = @self;
-		@this.manager = @s.manager; 
-		@quad = @d3::d3CQuad();
-		@quad.base = @d3::d3Quad(
-			d3Math::Vector3(self.x()-48, self.y()-48, 0),
-			d3Math::Vector3(self.x()+48, self.y()-48, 0),
-			d3Math::Vector3(self.x(), self.y()+48, 0),
-			d3Math::Vector3(self.x(), self.y(), 48),
-			colour);
-		if (s.manager.allQuads.findByRef(quad) < 0)
-		{
-			s.manager.allQuads.insertLast(quad);
-		}
-		if (layer == 0)
-		{
-			layer = 21;
-		}
-		if (sub_layer == 0)
-		{
-			sub_layer = 1;
-		}
-		quad.base.ApplyProjection(s.cam);
-		quad.UpdateIntersectQuad(s.cam);
-		// UpdateSelf();
-		// UpdateSides();
-	}
-	//
+	// void init(script@ s, scripttrigger@ self)
+	// {
+	// 	@script = @s;
+	// 	@this.self = @self;
+	// 	if (d2colour == 0x00000000)
+	// 	{
+	// 		d2colour = 0xFFFFFFFF;
+	// 	}
+	// 	if (d3colour == 0x00000000)
+	// 	{
+	// 		d3colour = 0xFFFFFFFF;
+	// 	}
+	// 	// oldCentre = d2Math::Vector2(self.x(), self.y());
+	// 	@this.manager = @s.manager; 
+	// 	@quad = @d3::d3CQuad();
+	// 	@quad.base = @d3::d3Quad(
+	// 		d3Math::Vector3(self.x()-48, self.y()-48, 0),
+	// 		d3Math::Vector3(self.x()+48, self.y()-48, 0),
+	// 		d3Math::Vector3(self.x(), self.y()+48, 0),
+	// 		d3Math::Vector3(self.x(), self.y(), 48),
+	// 		d3colour);
+	// 	// @quad.collisionBase.colour = d2colour;
+	// 	// @quad.collisionBase.activeSides = {true, true, true, true};
+	// 	if (s.manager.allQuads.findByRef(quad) < 0)
+	// 	{
+	// 		s.manager.allQuads.insertLast(quad);
+	// 	}
+	// 	if (layer == 0)
+	// 	{
+	// 		layer = 21;
+	// 	}
+	// 	if (sub_layer == 0)
+	// 	{
+	// 		sub_layer = 1;
+	// 	}
+	// 	quad.base.ApplyProjection(manager.cam);
+	// 	// quad.UpdateIntersectQuad(script.manager.cam);
+	// 	UpdateSelf();
+	// 	// UpdateSides();
+	// }
+	// //
 	// void editor_var_changed(var_info@ info)
 	// {
 	// 	UpdateSelf();
-	// 	UpdateSides();
+	// 	// UpdateSides();
 	// 	// quad.UpdateCollision();
 	// }
 	//
-	void editor_draw(float fuck)
-	{
-		if (@quad == null) { return; }
-		quad.Draw(get_scene(), layer, sub_layer);
-	}
+	// void UpdateRotation()
+	// {
+	// 	quad.base.ApplyProjection(manager.cam);
+	// 	// quad.UpdateIntersectQuad(script.manager.cam);
+	// }
 	//
-	// void draw(float doublefuck)
+	// void editor_draw(float fuck)
 	// {
 	// 	if (@quad == null) { return; }
 	// 	quad.Draw(get_scene(), layer, sub_layer);
 	// }
-	//
+	// //
+	// // void draw(float doublefuck)
+	// // {
+	// // 	if (@quad == null) { return; }
+	// // 	quad.Draw(get_scene(), layer, sub_layer);
+	// // }
+	// //
 	// void UpdateSelf()
 	// {
-	// 	quad.base.colour = colour; 
-	// 	quad.base.p1 = d2Math::Vector2(p1x, p1y);
-	// 	quad.base.p2 = d2Math::Vector2(p2x, p2y);
-	// 	quad.base.p3 = d2Math::Vector2(p3x, p3y);
-	// 	quad.base.p4 = d2Math::Vector2(p4x, p4y);
-	// 	quad.UpdateCollision();
-	// 	d2Math::Vector2 centre = quad.base.FindCentre();
-	// 	oldCentre = centre;
-	// 	self.set_centre(centre.x, centre.y);
+	// 	// quad.base.colour = colour; 
+	// 	// quad.base.p1 = d2Math::Vector2(p1x, p1y);
+	// 	// quad.base.p2 = d2Math::Vector2(p2x, p2y);
+	// 	// quad.base.p3 = d2Math::Vector2(p3x, p3y);
+	// 	// quad.base.p4 = d2Math::Vector2(p4x, p4y);
+	// 	// quad.UpdateCollision();
+	// 	// d2Math::Vector2 centre = quad.base.FindCentre();
+	// 	// oldCentre = centre;
+	// 	// self.set_centre(centre.x, centre.y);
+	// 	quad.base.colour = d3colour;
+	// 	// quad.collisionBase.colour = d2colour;
 	// }
 	//
 	// //seperating since this should only happen at start of level
