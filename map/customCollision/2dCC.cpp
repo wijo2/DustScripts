@@ -256,7 +256,6 @@ class d2CQuad
 	   	float hw = 3;
 		for (int side = 0; side < 4; side++)
 		{
-			puts("B start");
 			d2Math::Vector2 p1 = base.PointByNumber(side + 1);
 			d2Math::Vector2 p2 = base.PointByNumber(side + 2);
 	   		d2Math::Vector2 centre = d2Math::Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);

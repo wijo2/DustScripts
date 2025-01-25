@@ -173,6 +173,11 @@ class d3Quad
 		dir = dir/abs(first.z - second.z) * abs(first.z);
 		return d2Math::Vector2(dir.x + first.x, dir.y + first.y);
 	}
+
+	d3Math::Vector3 Find3dCentre()
+	{
+		return (p1 + p2 + p3 + p4)/4
+	}
 }
 
 class nothing3{} //this tricks my lsp to obey
@@ -329,6 +334,15 @@ class d3Manager
 			allQuads[i].base.ApplyProjection(cam);
 			allQuads[i].UpdateIntersectQuad(cam);
 		}
+	}
+
+	void UpdateCollision()
+	{
+		for (uint i = 0; i < allQuads.length(); i++)
+		{
+			allQuads[i].collisionBase.UpdateCollision();
+		}
+
 	}
 }
 

@@ -7,7 +7,7 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
-	[text] int collisionOrder = 4;
+	[text] int collisionOrder = 7;
 	[text] bool showPlayArea;
 	[text] bool showCacheDebug;
 
@@ -79,6 +79,7 @@ class script : script_base
 		// 		}
 		// 	}
 		// }
+		//temp!!!
 		manager.cam.rotation = rotation;
 		manager.UpdateLooks();
 	}
@@ -87,6 +88,11 @@ class script : script_base
 	{
 		debugDraw = array<d2Math::Rect>(0);
 		manager.manager.step();
+
+		//temp!!!
+		manager.cam.rotation = rotation;
+		manager.UpdateLooks();
+		manager.UpdateCollision();
 	}
 
 	void editor_draw(float lolxd) 
@@ -180,6 +186,14 @@ class d3QuadEntity : trigger_base
 	[text] bool side3spikes = false;
 	[text] bool side4spikes = false;
 
+	[hidden] d3Math::Vector3 p1;
+	[hidden] d3Math::Vector3 p2;
+	[hidden] d3Math::Vector3 p3;
+	[hidden] d3Math::Vector3 p4;
+
+	d3Math:: Vector3 d3Centre;
+	d2Math::Vector2 oldCentre;
+
 	d3::d3Manager@ manager;
 	d3::d3CQuad@ quad;
 
@@ -202,12 +216,17 @@ class d3QuadEntity : trigger_base
 		@this.manager = @s.manager; 
 		@quad = @d3::d3CQuad();
 		@quad.collisionBase.script = @script;
-		@quad.base = @d3::d3Quad(
-			d3Math::Vector3(self.x(), self.y()+100, 100),
-			d3Math::Vector3(self.x()-48, self.y()-48, 0),
-			d3Math::Vector3(self.x(), self.y(), 100),
-			d3Math::Vector3(self.x()+48, self.y()-48, 0),
-			d3colour);
+		if (p1 == d3Math::Vector3(0,0,0) && 
+			p2 == d3Math::Vector3(0,0,0) && 
+			p3 == d3Math::Vector3(0,0,0) && 
+			p4 == d3Math::Vector3(0,0,0))
+		{
+			p1 = d3Math::Vector3(self.x(), self.y()+100, 100);
+			p2 = d3Math::Vector3(self.x()-48, self.y()-48, 0);
+			p3 = d3Math::Vector3(self.x(), self.y(), 100);
+			p4 = d3Math::Vector3(self.x()+48, self.y()-48, 0);
+		}
+		@quad.base = @d3::d3Quad(p1, p2, p3, p4, d3colour);
 		quad.collisionBase.base.colour = d2colour;
 		if (s.manager.allQuads.findByRef(quad) < 0)
 		{
@@ -222,16 +241,15 @@ class d3QuadEntity : trigger_base
 			sub_layer = 1;
 		}
 		quad.base.ApplyProjection(manager.cam);
-		// quad.UpdateIntersectQuad(script.manager.cam);
 		UpdateSelf();
 		UpdateSides();
+		quad.collisionBase.UpdateCollision();
 	}
 	//
 	void editor_var_changed(var_info@ info)
 	{
 		UpdateSelf();
 		UpdateSides();
-		// quad.UpdateCollision();
 	}
 
 	void UpdateRotation()
@@ -239,6 +257,7 @@ class d3QuadEntity : trigger_base
 		quad.base.ApplyProjection(manager.cam);
 		quad.UpdateIntersectQuad(script.manager.cam);
 		UpdateSides();
+		quad.collisionBase.UpdateCollision();
 	}
 
 	void editor_draw(float fuck)
@@ -246,24 +265,22 @@ class d3QuadEntity : trigger_base
 		if (@quad == null) { return; }
 		quad.Draw(get_scene(), layer, sub_layer);
 	}
-	//
-	// void draw(float doublefuck)
-	// {
-	// 	if (@quad == null) { return; }
-	// 	quad.Draw(get_scene(), layer, sub_layer);
-	// }
-	//
+
+	void draw(float doublefuck)
+	{
+		if (@quad == null) { return; }
+		quad.Draw(get_scene(), layer, sub_layer);
+	}
+
 	void UpdateSelf()
 	{
-		// quad.base.colour = colour; 
 		// quad.base.p1 = d2Math::Vector2(p1x, p1y);
 		// quad.base.p2 = d2Math::Vector2(p2x, p2y);
 		// quad.base.p3 = d2Math::Vector2(p3x, p3y);
 		// quad.base.p4 = d2Math::Vector2(p4x, p4y);
-		// quad.UpdateCollision();
-		// d2Math::Vector2 centre = quad.base.FindCentre();
-		// oldCentre = centre;
-		// self.set_centre(centre.x, centre.y);
+		d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+		oldCentre = centre;
+		self.set_centre(centre.x, centre.y);
 		quad.base.colour = d3colour;
 		quad.collisionBase.base.colour = d2colour;
 	}
