@@ -168,9 +168,9 @@ class d3Quad
 	{
 		d3Math::Vector3 first = CPointByNumber(pair[1]); 
 		d3Math::Vector3 second = CPointByNumber(pair[0]);
-		d3Math::Vector3 dir = first - second;
+		d3Math::Vector3 dir = second - first;
 		if (first.z == second.z) { return d2Math::Vector2(first.x + second.x, first.y + second.y)/2; }
-		dir = dir/abs(first.z - second.z) * first.z;
+		dir = dir/abs(first.z - second.z) * abs(first.z);
 		return d2Math::Vector2(dir.x + first.x, dir.y + first.y);
 	}
 }
@@ -220,6 +220,13 @@ class d3CQuad
 			collisionBase.activeLines[3] = false;
 			return;
 		}
+
+		//sides:
+		//1: 1, 2, 3
+		//2: 1, 2, 4
+		//3: 1, 3, 4
+		//4: 2, 3, 4
+
 		// puts("trying to do intersecting");
 		int side1 = 1;
 		if (!base.intersectionType && !base.IsIntersected(1)) { side1 = 2; }
@@ -229,9 +236,9 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			// puts("trig sides " + side1 + " " + side2 + " " + side3);
-			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side3-1]);
-			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1-1][side2-1]);
-			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2-1][side3-1]);
+			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
+			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
+			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side1-1]);
 			collisionBase.base.p4 = collisionBase.base.p3;
 			collisionBase.activeLines[0] = activeSides[side1-1];
 			collisionBase.spikeLines[0] = spikeSides[side1-1];
@@ -252,11 +259,12 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			int side4 = GetNextSide(side3, side2);
-			puts("trig sides " + side1 + " " + side2 + " " + side3 + " " + side4);
-			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side3-1]);
-			collisionBase.base.p2 = base.GetIntersection(sideLookup[side1-1][side2-1]);
-			collisionBase.base.p3 = base.GetIntersection(sideLookup[side2-1][side3-1]);
-			collisionBase.base.p4 = base.GetIntersection(sideLookup[side3-1][side4-1]);
+			// puts("quad sides " + side1 + " " + side2 + " " + side3 + " " + side4);
+			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
+			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
+			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side4-1]);
+			collisionBase.base.p4 = base.GetIntersection(sideLookup[side4-1][side1-1]);
+			// puts("quad points " + collisionBase.base.p1 + " " + collisionBase.base.p2 + " " + collisionBase.base.p3 + " " + collisionBase.base.p4);
 			collisionBase.activeLines[0] = activeSides[side1-1];
 			collisionBase.spikeLines[0] = spikeSides[side1-1];
 			collisionBase.dustLines[0] = dustSides[side1-1];

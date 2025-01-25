@@ -22,7 +22,7 @@ class script : script_base
 	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
 	[hidden] int dustPosY;
 
-	[slider,min:0,max:6.2] float rotation;
+	[slider,min:0,max:6.4] float rotation;
 
 	bool dontGrabCorner = false;
 
@@ -167,6 +167,19 @@ class d3QuadEntity : trigger_base
 	[colour,alpha] uint d2colour;
 	[colour,alpha] uint d3colour;
 
+	[text] bool side1active = true;
+	[text] bool side2active = true;
+	[text] bool side3active = true;
+	[text] bool side4active = true;
+	[text] bool side1dust = false;
+	[text] bool side2dust = false;
+	[text] bool side3dust = false;
+	[text] bool side4dust = false;
+	[text] bool side1spikes = false;
+	[text] bool side2spikes = false;
+	[text] bool side3spikes = false;
+	[text] bool side4spikes = false;
+
 	d3::d3Manager@ manager;
 	d3::d3CQuad@ quad;
 
@@ -188,17 +201,14 @@ class d3QuadEntity : trigger_base
 		// oldCentre = d2Math::Vector2(self.x(), self.y());
 		@this.manager = @s.manager; 
 		@quad = @d3::d3CQuad();
+		@quad.collisionBase.script = @script;
 		@quad.base = @d3::d3Quad(
+			d3Math::Vector3(self.x(), self.y()+100, 100),
 			d3Math::Vector3(self.x()-48, self.y()-48, 0),
+			d3Math::Vector3(self.x(), self.y(), 100),
 			d3Math::Vector3(self.x()+48, self.y()-48, 0),
-			d3Math::Vector3(self.x(), self.y()+48, 48),
-			d3Math::Vector3(self.x(), self.y(), 48),
 			d3colour);
 		quad.collisionBase.base.colour = d2colour;
-		quad.activeSides[0] = true;
-		quad.activeSides[1] = true;
-		quad.activeSides[2] = true;
-		quad.activeSides[3] = true;
 		if (s.manager.allQuads.findByRef(quad) < 0)
 		{
 			s.manager.allQuads.insertLast(quad);
@@ -214,13 +224,13 @@ class d3QuadEntity : trigger_base
 		quad.base.ApplyProjection(manager.cam);
 		// quad.UpdateIntersectQuad(script.manager.cam);
 		UpdateSelf();
-		// UpdateSides();
+		UpdateSides();
 	}
 	//
 	void editor_var_changed(var_info@ info)
 	{
 		UpdateSelf();
-		// UpdateSides();
+		UpdateSides();
 		// quad.UpdateCollision();
 	}
 
@@ -228,6 +238,7 @@ class d3QuadEntity : trigger_base
 	{
 		quad.base.ApplyProjection(manager.cam);
 		quad.UpdateIntersectQuad(script.manager.cam);
+		UpdateSides();
 	}
 
 	void editor_draw(float fuck)
@@ -256,23 +267,22 @@ class d3QuadEntity : trigger_base
 		quad.base.colour = d3colour;
 		quad.collisionBase.base.colour = d2colour;
 	}
-	//
-	// //seperating since this should only happen at start of level
-	// void UpdateSides()
-	// {
-	// 	quad.activeLines[0] = side1active;
-	// 	quad.activeLines[1] = side2active;
-	// 	quad.activeLines[2] = side3active;
-	// 	quad.activeLines[3] = side4active;
-	// 	quad.dustLines[0] = side1dust;
-	// 	quad.dustLines[1] = side2dust;
-	// 	quad.dustLines[2] = side3dust;
-	// 	quad.dustLines[3] = side4dust;
-	// 	quad.spikeLines[0] = side1spikes;
-	// 	quad.spikeLines[1] = side2spikes;
-	// 	quad.spikeLines[2] = side3spikes;
-	// 	quad.spikeLines[3] = side4spikes;
-	// }
+
+	void UpdateSides()
+	{
+		quad.activeSides[0] = side1active;
+		quad.activeSides[1] = side2active;
+		quad.activeSides[2] = side3active;
+		quad.activeSides[3] = side4active;
+		quad.dustSides[0] = side1dust;
+		quad.dustSides[1] = side2dust;
+		quad.dustSides[2] = side3dust;
+		quad.dustSides[3] = side4dust;
+		quad.spikeSides[0] = side1spikes;
+		quad.spikeSides[1] = side2spikes;
+		quad.spikeSides[2] = side3spikes;
+		quad.spikeSides[3] = side4spikes;
+	}
 	//
 	// //corner drag
 	// void editor_step()
