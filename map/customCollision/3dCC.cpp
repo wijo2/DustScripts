@@ -27,6 +27,30 @@ class d3Cam
 			vec.x * s + vec.z * c
 		);
 	}
+
+	d3Math::Vector3 CamToWorldPos(d3Math::Vector3 vec)
+	{
+		float c = cos(-rotation);
+		float s = sin(-rotation);
+		vec = d3Math::Vector3(
+			vec.x * c - vec.z * s,
+			vec.y,
+			vec.x * s + vec.z * c
+		);
+		return vec + centre;
+	}
+
+	d3Math::Vector3 CamToWorldDir(d3Math::Vector3 vec)
+	{
+		float c = cos(-rotation);
+		float s = sin(-rotation);
+		vec = d3Math::Vector3(
+			vec.x * c - vec.z * s,
+			vec.y,
+			vec.x * s + vec.z * c
+		);
+		return vec;
+	}
 }
 
 class nothing2{} //this tricks my lsp to obey
@@ -176,7 +200,7 @@ class d3Quad
 
 	d3Math::Vector3 Find3dCentre()
 	{
-		return (p1 + p2 + p3 + p4)/4
+		return (p1 + p2 + p3 + p4)/4;
 	}
 }
 

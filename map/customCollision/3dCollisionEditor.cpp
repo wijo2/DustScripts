@@ -7,7 +7,7 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
-	[text] int collisionOrder = 7;
+	[text] int collisionOrder = 8;
 	[text] bool showPlayArea;
 	[text] bool showCacheDebug;
 
@@ -191,7 +191,6 @@ class d3QuadEntity : trigger_base
 	[hidden] d3Math::Vector3 p3;
 	[hidden] d3Math::Vector3 p4;
 
-	d3Math:: Vector3 d3Centre;
 	d2Math::Vector2 oldCentre;
 
 	d3::d3Manager@ manager;
@@ -212,15 +211,18 @@ class d3QuadEntity : trigger_base
 		{
 			d3colour = 0xFFFFFFFF;
 		}
-		// oldCentre = d2Math::Vector2(self.x(), self.y());
+		oldCentre = d2Math::Vector2(self.x(), self.y());
 		@this.manager = @s.manager; 
 		@quad = @d3::d3CQuad();
 		@quad.collisionBase.script = @script;
+		@quad.collisionBase.manager = @manager.manager;
 		if (p1 == d3Math::Vector3(0,0,0) && 
 			p2 == d3Math::Vector3(0,0,0) && 
 			p3 == d3Math::Vector3(0,0,0) && 
 			p4 == d3Math::Vector3(0,0,0))
 		{
+			puts("creating shape!");
+			puts("p1: " + p1.x + " " + p1.y + " " + p1.z);
 			p1 = d3Math::Vector3(self.x(), self.y()+100, 100);
 			p2 = d3Math::Vector3(self.x()-48, self.y()-48, 0);
 			p3 = d3Math::Vector3(self.x(), self.y(), 100);
@@ -240,21 +242,19 @@ class d3QuadEntity : trigger_base
 		{
 			sub_layer = 1;
 		}
-		quad.base.ApplyProjection(manager.cam);
-		UpdateSelf();
 		UpdateSides();
+		UpdateSelf();
 		quad.collisionBase.UpdateCollision();
 	}
 	//
 	void editor_var_changed(var_info@ info)
 	{
-		UpdateSelf();
 		UpdateSides();
+		UpdateSelf();
 	}
 
 	void UpdateRotation()
 	{
-		quad.base.ApplyProjection(manager.cam);
 		quad.UpdateIntersectQuad(script.manager.cam);
 		UpdateSides();
 		quad.collisionBase.UpdateCollision();
@@ -278,9 +278,16 @@ class d3QuadEntity : trigger_base
 		// quad.base.p2 = d2Math::Vector2(p2x, p2y);
 		// quad.base.p3 = d2Math::Vector2(p3x, p3y);
 		// quad.base.p4 = d2Math::Vector2(p4x, p4y);
-		d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
-		oldCentre = centre;
-		self.set_centre(centre.x, centre.y);
+		quad.base.ApplyProjection(manager.cam);
+		if (quad.collisionBase.activeLines[0] || 
+			quad.collisionBase.activeLines[1] || 
+			quad.collisionBase.activeLines[2] || 
+			quad.collisionBase.activeLines[3]) 
+		{
+			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+			oldCentre = centre;
+			self.set_centre(centre.x, centre.y);
+		}
 		quad.base.colour = d3colour;
 		quad.collisionBase.base.colour = d2colour;
 	}
@@ -300,113 +307,104 @@ class d3QuadEntity : trigger_base
 		quad.spikeSides[2] = side3spikes;
 		quad.spikeSides[3] = side4spikes;
 	}
-	//
-	// //corner drag
-	// void editor_step()
-	// {
-	// 	scene@ s = get_scene();
-	//
-	// 	d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
-	// 	d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
-	//
-	// 	if (script.input.mouse_state() & 0x20 != 0 
-	// 		&& script.editor.editor_tab() == "Triggers"
-	// 		&& @script.editor.get_selected_trigger() != null
- //   && script.editor.get_selected_trigger().is_same(self.as_entity())
-	// 		&& !script.dontGrabCorner) 
-	// 	{
-	//
-	// 		if (selectedCorner == 0) 
-	// 		{
-	// 			array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
-	// 			for (uint i = 0; i < corners.length(); i++)
-	// 			{
-	// 				d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(corners[i].x, corners[i].y));
-	// 				if (pos.Distance(mousePosHud) < 50) 
-	// 				{
-	// 					selectedCorner = i + 1;
-	// 					return;
-	// 				}
-	// 			}
-	// 		}
-	// 		else 
-	// 		{
-	// 			switch(selectedCorner) 
-	// 			{
-	// 				case 1:
-	// 					p1x = mousePosWorld.x;
-	// 					p1y = mousePosWorld.y;
-	// 				break;
-	// 				case 2:
-	// 					p2x = mousePosWorld.x;
-	// 					p2y = mousePosWorld.y;
-	// 				break;
-	// 				case 3:
-	// 					p3x = mousePosWorld.x;
-	// 					p3y = mousePosWorld.y;
-	// 				break;
-	// 				case 4:
-	// 					p4x = mousePosWorld.x;
-	// 					p4y = mousePosWorld.y;
-	// 				break;
-	// 			}
-	// 			selectedCorner = 0;
-	// 			UpdateSelf();
-	// 		}
-	// 		return;
-	// 	}
-	//
-	// 	if (script.editor.editor_tab() == "Triggers"
-	// 		&& @script.editor.get_selected_trigger() != null
- //   && script.editor.get_selected_trigger().is_same(self.as_entity())
-	// 		&& selectedCorner != 0)
-	// 	{
-	// 		switch(selectedCorner) 
-	// 		{
-	// 			case 1:
-	// 				p1x = mousePosWorld.x;
-	// 				p1y = mousePosWorld.y;
-	// 			break;
-	// 			case 2:
-	// 				p2x = mousePosWorld.x;
-	// 				p2y = mousePosWorld.y;
-	// 			break;
-	// 			case 3:
-	// 				p3x = mousePosWorld.x;
-	// 				p3y = mousePosWorld.y;
-	// 			break;
-	// 			case 4:
-	// 				p4x = mousePosWorld.x;
-	// 				p4y = mousePosWorld.y;
-	// 			break;
-	// 		}
-	// 		UpdateSelf();
-	// 	}
-	//
-	// 	d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
-	// 	d2Math::Vector2 dif = oldCentre - curCen;
-	// 	if (dif.Magnitude() > 0.1 && selectedCorner == 0)
-	// 	{
-	// 		p1x -= dif.x;
-	// 		p1y -= dif.y;
-	// 		p2x -= dif.x;
-	// 		p2y -= dif.y;
-	// 		p3x -= dif.x;
-	// 		p3y -= dif.y;
-	// 		p4x -= dif.x;
-	// 		p4y -= dif.y;
-	// 		UpdateSelf();
-	// 		oldCentre = quad.base.FindCentre();
-	// 	}
-	// }
-	//
-	// void on_remove()
-	// {
-	// 	quad.ClearOldCache();
-	// 	int i = quadManager.quads.findByRef(this);
-	// 	if (i >= 0)
-	// 	{
-	// 		quadManager.quads.removeAt(i);
-	// 	}
-	// }
+
+	void editor_step()
+	{
+		scene@ s = get_scene();
+		//
+		// d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
+		// d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
+		//
+		// if (script.input.mouse_state() & 0x20 != 0 
+		// 	&& script.editor.editor_tab() == "Triggers"
+		// 	&& @script.editor.get_selected_trigger() != null
+  //  && script.editor.get_selected_trigger().is_same(self.as_entity())
+		// 	&& !script.dontGrabCorner) 
+		// {
+		//
+		// 	if (selectedCorner == 0) 
+		// 	{
+		// 		array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
+		// 		for (uint i = 0; i < corners.length(); i++)
+		// 		{
+		// 			d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(corners[i].x, corners[i].y));
+		// 			if (pos.Distance(mousePosHud) < 50) 
+		// 			{
+		// 				selectedCorner = i + 1;
+		// 				return;
+		// 			}
+		// 		}
+		// 	}
+		// 	else 
+		// 	{
+		// 		switch(selectedCorner) 
+		// 		{
+		// 			case 1:
+		// 				p1x = mousePosWorld.x;
+		// 				p1y = mousePosWorld.y;
+		// 			break;
+		// 			case 2:
+		// 				p2x = mousePosWorld.x;
+		// 				p2y = mousePosWorld.y;
+		// 			break;
+		// 			case 3:
+		// 				p3x = mousePosWorld.x;
+		// 				p3y = mousePosWorld.y;
+		// 			break;
+		// 			case 4:
+		// 				p4x = mousePosWorld.x;
+		// 				p4y = mousePosWorld.y;
+		// 			break;
+		// 		}
+		// 		selectedCorner = 0;
+		// 		UpdateSelf();
+		// 	}
+		// 	return;
+		// }
+		//
+		// if (script.editor.editor_tab() == "Triggers"
+		// 	&& @script.editor.get_selected_trigger() != null
+  //  && script.editor.get_selected_trigger().is_same(self.as_entity())
+		// 	&& selectedCorner != 0)
+		// {
+		// 	switch(selectedCorner) 
+		// 	{
+		// 		case 1:
+		// 			p1x = mousePosWorld.x;
+		// 			p1y = mousePosWorld.y;
+		// 		break;
+		// 		case 2:
+		// 			p2x = mousePosWorld.x;
+		// 			p2y = mousePosWorld.y;
+		// 		break;
+		// 		case 3:
+		// 			p3x = mousePosWorld.x;
+		// 			p3y = mousePosWorld.y;
+		// 		break;
+		// 		case 4:
+		// 			p4x = mousePosWorld.x;
+		// 			p4y = mousePosWorld.y;
+		// 		break;
+		// 	}
+		// 	UpdateSelf();
+		// }
+
+		// d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
+		// d2Math::Vector2 dif = oldCentre - curCen;
+		// if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */)
+		// {
+		// 	dif = script.cam.CamToWorldDir(dif);
+		// 	UpdateSelf();
+		// }
+	}
+
+	void on_remove()
+	{
+		quad.collisionBase.ClearOldCache();
+		int i = manager.allQuads.findByRef(quad);
+		if (i >= 0)
+		{
+			manager.allQuads.removeAt(i);
+		}
+	}
 };
