@@ -7,32 +7,32 @@ class nothing{} //this tricks my lsp to obey
 
 class d3Cam
 {
-	d3Math::Vector3 centre;
+	Vector3 centre;
 	float rotation; //0 = normal xy, z away from cam, upwards = angle in radians topdown clockwise
 
 	d3Cam()
 	{
-		centre = d3Math::Vector3(0,0,0);
+		centre = Vector3(0,0,0);
 		rotation = 0;
 	}
 
-	d3Math::Vector3 WorldToCamPos(d3Math::Vector3 vec)
+	Vector3 WorldToCamPos(Vector3 vec)
 	{
 		vec -= centre;
 		float c = cos(rotation);
 		float s = sin(rotation);
-		return d3Math::Vector3(
+		return Vector3(
 			vec.x * c - vec.z * s,
 			vec.y,
 			vec.x * s + vec.z * c
 		);
 	}
 
-	d3Math::Vector3 CamToWorldPos(d3Math::Vector3 vec)
+	Vector3 CamToWorldPos(Vector3 vec)
 	{
 		float c = cos(-rotation);
 		float s = sin(-rotation);
-		vec = d3Math::Vector3(
+		vec = Vector3(
 			vec.x * c - vec.z * s,
 			vec.y,
 			vec.x * s + vec.z * c
@@ -40,11 +40,11 @@ class d3Cam
 		return vec + centre;
 	}
 
-	d3Math::Vector3 CamToWorldDir(d3Math::Vector3 vec)
+	Vector3 CamToWorldDir(Vector3 vec)
 	{
 		float c = cos(-rotation);
 		float s = sin(-rotation);
-		vec = d3Math::Vector3(
+		vec = Vector3(
 			vec.x * c - vec.z * s,
 			vec.y,
 			vec.x * s + vec.z * c
@@ -56,17 +56,17 @@ class d3Cam
 class nothing2{} //this tricks my lsp to obey
 class d3Quad
 {
-	d3Math::Vector3 p1;
-	d3Math::Vector3 p2;
-	d3Math::Vector3 p3;
-	d3Math::Vector3 p4;
+	Vector3 p1;
+	Vector3 p2;
+	Vector3 p3;
+	Vector3 p4;
 	uint colour;
 
 	//cam space coords
-	d3Math::Vector3 csp1;
-	d3Math::Vector3 csp2;
-	d3Math::Vector3 csp3;
-	d3Math::Vector3 csp4;
+	Vector3 csp1;
+	Vector3 csp2;
+	Vector3 csp3;
+	Vector3 csp4;
 
 	//""projected"" positions
 	d2Math::Vector2 pp1;
@@ -87,13 +87,13 @@ class d3Quad
 
 	d3Quad()
 	{
-		p1 = d3Math::Vector3();
-		p2 = d3Math::Vector3();
-		p3 = d3Math::Vector3();
-		p4 = d3Math::Vector3();
+		p1 = Vector3();
+		p2 = Vector3();
+		p3 = Vector3();
+		p4 = Vector3();
 	}
 
-	d3Quad(d3Math::Vector3 p1, d3Math::Vector3 p2, d3Math::Vector3 p3, d3Math::Vector3 p4, uint colour)
+	d3Quad(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4, uint colour)
 	{
 		this.p1 = p1;
 		this.p2 = p2;
@@ -136,7 +136,7 @@ class d3Quad
 	}
 
 	//cam coords
-	d3Math::Vector3 CPointByNumber(int n)
+	Vector3 CPointByNumber(int n)
 	{
 		switch (n)
 		{
@@ -145,7 +145,7 @@ class d3Quad
 			case 3: return csp3;
 			case 4: return csp4;
 		}
-		return d3Math::Vector3();
+		return Vector3();
 	}
 
 	//sides:
@@ -190,15 +190,15 @@ class d3Quad
 	//input is pair for convenience
 	d2Math::Vector2 GetIntersection(array<int> pair)
 	{
-		d3Math::Vector3 first = CPointByNumber(pair[1]); 
-		d3Math::Vector3 second = CPointByNumber(pair[0]);
-		d3Math::Vector3 dir = second - first;
+		Vector3 first = CPointByNumber(pair[1]); 
+		Vector3 second = CPointByNumber(pair[0]);
+		Vector3 dir = second - first;
 		if (first.z == second.z) { return d2Math::Vector2(first.x + second.x, first.y + second.y)/2; }
 		dir = dir/abs(first.z - second.z) * abs(first.z);
 		return d2Math::Vector2(dir.x + first.x, dir.y + first.y);
 	}
 
-	d3Math::Vector3 Find3dCentre()
+	Vector3 Find3dCentre()
 	{
 		return (p1 + p2 + p3 + p4)/4;
 	}
