@@ -23,8 +23,11 @@ class script : script_base
 	[hidden] int dustPosY;
 
 	[slider,min:0,max:6.4] float rotation;
+	float oldRotation;
 
 	bool dontGrabCorner = false;
+
+	array<d3QuadEntity@> quadEntities;
 
 	//debug
 	array<d2Math::Rect> debugDraw;
@@ -46,12 +49,14 @@ class script : script_base
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+		oldRotation = rotation;
 	}
 
 	void PlayInit()
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+		oldRotation = rotation;
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -79,9 +84,17 @@ class script : script_base
 		// 		}
 		// 	}
 		// }
-		//temp!!!
-		manager.cam.rotation = rotation;
-		manager.UpdateLooks();
+		if (oldRotation != rotation)
+		{
+			manager.cam.rotation = rotation;
+			manager.UpdateLooks();
+			for (uint i = 0; i < quadEntities.length(); i++)
+			{
+				quadEntities[i].UpdateRotation();
+			}
+			//temp!!!
+			manager.UpdateCollision();
+		}
 	}
 
 	void step(int idc) 
@@ -244,7 +257,17 @@ class d3QuadEntity : trigger_base
 		}
 		UpdateSides();
 		UpdateSelf();
+		if (quad.collisionBase.activeLines[0] || 
+			quad.collisionBase.activeLines[1] || 
+			quad.collisionBase.activeLines[2] || 
+			quad.collisionBase.activeLines[3]) 
+		{
+			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+			oldCentre = centre;
+			self.set_centre(centre.x, centre.y);
+		}
 		quad.collisionBase.UpdateCollision();
+		s.quadEntities.push_back(this);
 	}
 	//
 	void editor_var_changed(var_info@ info)
@@ -255,9 +278,17 @@ class d3QuadEntity : trigger_base
 
 	void UpdateRotation()
 	{
-		quad.UpdateIntersectQuad(script.manager.cam);
 		UpdateSides();
-		quad.collisionBase.UpdateCollision();
+		if (quad.collisionBase.activeLines[0] || 
+			quad.collisionBase.activeLines[1] || 
+			quad.collisionBase.activeLines[2] || 
+			quad.collisionBase.activeLines[3]) 
+		{
+			puts("updating centre!");
+			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+			oldCentre = centre;
+			self.set_centre(centre.x, centre.y);
+		}
 	}
 
 	void editor_draw(float fuck)
@@ -274,20 +305,12 @@ class d3QuadEntity : trigger_base
 
 	void UpdateSelf()
 	{
-		// quad.base.p1 = d2Math::Vector2(p1x, p1y);
-		// quad.base.p2 = d2Math::Vector2(p2x, p2y);
-		// quad.base.p3 = d2Math::Vector2(p3x, p3y);
-		// quad.base.p4 = d2Math::Vector2(p4x, p4y);
+		quad.base.p1 = p1;
+		quad.base.p2 = p2;
+		quad.base.p3 = p3;
+		quad.base.p4 = p4;
 		quad.base.ApplyProjection(manager.cam);
-		if (quad.collisionBase.activeLines[0] || 
-			quad.collisionBase.activeLines[1] || 
-			quad.collisionBase.activeLines[2] || 
-			quad.collisionBase.activeLines[3]) 
-		{
-			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
-			oldCentre = centre;
-			self.set_centre(centre.x, centre.y);
-		}
+		quad.UpdateIntersectQuad(manager.cam);
 		quad.base.colour = d3colour;
 		quad.collisionBase.base.colour = d2colour;
 	}
@@ -389,13 +412,21 @@ class d3QuadEntity : trigger_base
 		// 	UpdateSelf();
 		// }
 
-		// d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
-		// d2Math::Vector2 dif = oldCentre - curCen;
-		// if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */)
-		// {
-		// 	dif = script.cam.CamToWorldDir(dif);
-		// 	UpdateSelf();
-		// }
+		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
+		d2Math::Vector2 dif = oldCentre - curCen;
+		if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */)
+		{
+			puts("centre changed!");
+			d3Math::Vector3 dif2 = manager.cam.CamToWorldDir(d3Math::Vector3(dif.x, dif.y, 0));
+			p1 -= dif2;
+			p2 -= dif2;
+			p3 -= dif2;
+			p4 -= dif2;
+			UpdateSelf();
+			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+			oldCentre = centre;
+			self.set_centre(centre.x, centre.y);
+		}
 	}
 
 	void on_remove()

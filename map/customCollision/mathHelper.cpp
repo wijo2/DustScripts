@@ -548,7 +548,7 @@ Vector2 WorldToScreenPos(Vector2 pos)
 namespace d3Math
 {
 
-[hidden] class Vector3
+class Vector3
 {
 	[hidden] float x;
 	[hidden] float y;
