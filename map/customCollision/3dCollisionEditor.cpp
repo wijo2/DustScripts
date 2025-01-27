@@ -30,6 +30,10 @@ class script : script_base
 
 	array<d3QuadEntity@> quadEntities;
 
+	d2Math::Vector2 middleDragStart;
+	float middleDragStartRot;
+	[label:"enable middle to rotate"] bool middleDragEnable;
+
 	//debug
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugY] int debugX;
@@ -85,8 +89,24 @@ class script : script_base
 		// 		}
 		// 	}
 		// }
+
+		HandleMiddleDrag();
 		UpdateCamPos();
 		UpdateRotation();
+	}
+
+	void HandleMiddleDrag()
+	{
+		if (!middleDragEnable) { return; }
+		if (input.mouse_state() & 0x80 != 0)
+		{
+			middleDragStartRot = rotation;
+			middleDragStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+		}
+		if (input.mouse_state() & 0x10 != 0)
+		{
+			rotation = middleDragStartRot + (input.mouse_x_hud(true) - middleDragStart.x) / 200;
+		}
 	}
 
 	void step(int idc) 
@@ -292,7 +312,7 @@ class d3QuadEntity : trigger_base
 		quad.collisionBase.UpdateCollision();
 		s.quadEntities.push_back(this);
 	}
-	//
+	
 	void editor_var_changed(var_info@ info)
 	{
 		UpdateSides();

@@ -113,10 +113,11 @@ class d3Quad
 
 	void ApplyProjection(d3Cam@ cam)
 	{
-		csp1 = cam.WorldToCamPos(p1);
-		csp2 = cam.WorldToCamPos(p2);
-		csp3 = cam.WorldToCamPos(p3);
-		csp4 = cam.WorldToCamPos(p4);
+		Vector3 centre = cam.WorldToCamPos(Vector3(0,0,0));
+		csp1 = cam.WorldToCamPos(p1) - centre;
+		csp2 = cam.WorldToCamPos(p2) - centre;
+		csp3 = cam.WorldToCamPos(p3) - centre;
+		csp4 = cam.WorldToCamPos(p4) - centre;
 
 		pp1 = d2Math::Vector2(csp1.x, csp1.y);
 		pp2 = d2Math::Vector2(csp2.x, csp2.y);
