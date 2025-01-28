@@ -54,14 +54,20 @@ class script : script_base
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
-		oldCamPos = d2Math::Vector2(manager.cam.centre.x, manager.cam.centre.y);
+		rotation = 0;
+		oldRotation = 0;
+		camera@ c = get_active_camera();
+		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
 	}
 
 	void PlayInit()
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
-		oldCamPos = d2Math::Vector2(manager.cam.centre.x, manager.cam.centre.y);
+		rotation = 0;
+		oldRotation = 0;
+		camera@ c = get_active_camera();
+		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -147,6 +153,7 @@ class script : script_base
 		{
 			Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
 			manager.cam.centre -= dif2;
+			manager.cam.igCoords = rcamPos;
 			oldCamPos = rcamPos;
 			puts("cam pos updated! " + manager.cam.centre.x + ", " + manager.cam.centre.y + ", " + manager.cam.centre.z);
 		}
@@ -273,12 +280,17 @@ class d3QuadEntity : trigger_base
 		@quad = @d3::d3CQuad();
 		@quad.collisionBase.script = @script;
 		@quad.collisionBase.manager = @manager.manager;
+		
 		if (p1 == Vector3(0,0,0) && 
 			p2 == Vector3(0,0,0) && 
 			p3 == Vector3(0,0,0) && 
 			p4 == Vector3(0,0,0))
 		{
 			puts("creating shape!");
+			// p1 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y()+100, 100));
+			// p2 = manager.cam.CamToWorldPos(Vector3(self.x()-48, self.y()-48, 0));
+			// p3 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y(), 100));
+			// p4 = manager.cam.CamToWorldPos(Vector3(self.x()+48, self.y()-48, 0));
 			p1 = Vector3(self.x(), self.y()+100, 100);
 			p2 = Vector3(self.x()-48, self.y()-48, 0);
 			p3 = Vector3(self.x(), self.y(), 100);
@@ -307,7 +319,9 @@ class d3QuadEntity : trigger_base
 		{
 			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
 			oldCentre = centre;
-			self.set_centre(centre.x, centre.y);
+			puts("set 1 " + centre.x);
+			self.x(centre.x);
+			self.y(centre.y);
 		}
 		quad.collisionBase.UpdateCollision();
 		s.quadEntities.push_back(this);
@@ -330,7 +344,9 @@ class d3QuadEntity : trigger_base
 		{
 			oldCentre = d2Math::Vector2(0,0);
 			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
-			self.set_centre(centre.x, centre.y);
+			self.x(centre.x);
+			self.y(centre.y);
+			puts("set 2 " + centre.x);
 		}
 	}
 
@@ -457,8 +473,13 @@ class d3QuadEntity : trigger_base
 
 		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = oldCentre - curCen;
-		if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */)
+		if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */ &&
+			(quad.collisionBase.activeLines[0] ||
+			quad.collisionBase.activeLines[1] ||
+			quad.collisionBase.activeLines[2] ||
+			quad.collisionBase.activeLines[3]))
 		{
+			puts("updating centre! " + oldCentre.x + ", " + curCen.x);
 			if (oldCentre == d2Math::Vector2(0,0))
 			{
 				d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
@@ -474,7 +495,8 @@ class d3QuadEntity : trigger_base
 				UpdateSelf();
 				d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
 				oldCentre = centre;
-				self.set_centre(centre.x, centre.y);
+				self.x(centre.x);
+				self.y(centre.y);
 			}
 		}
 	}

@@ -9,10 +9,13 @@ class d3Cam
 {
 	Vector3 centre;
 	float rotation; //0 = normal xy, z away from cam, upwards = angle in radians topdown clockwise
+	//coords of centre of cam in in-game coordinate system
+	d2Math::Vector2 igCoords;
 
 	d3Cam()
 	{
 		centre = Vector3(0,0,0);
+		d2Math::Vector2 igCoords;
 		rotation = 0;
 	}
 
@@ -113,11 +116,11 @@ class d3Quad
 
 	void ApplyProjection(d3Cam@ cam)
 	{
-		Vector3 centre = cam.WorldToCamPos(Vector3(0,0,0));
-		csp1 = cam.WorldToCamPos(p1) - centre;
-		csp2 = cam.WorldToCamPos(p2) - centre;
-		csp3 = cam.WorldToCamPos(p3) - centre;
-		csp4 = cam.WorldToCamPos(p4) - centre;
+		Vector3 centre = Vector3(cam.igCoords.x, cam.igCoords.y, 0);
+		csp1 = cam.WorldToCamPos(p1) + centre;
+		csp2 = cam.WorldToCamPos(p2) + centre;
+		csp3 = cam.WorldToCamPos(p3) + centre;
+		csp4 = cam.WorldToCamPos(p4) + centre;
 
 		pp1 = d2Math::Vector2(csp1.x, csp1.y);
 		pp2 = d2Math::Vector2(csp2.x, csp2.y);
