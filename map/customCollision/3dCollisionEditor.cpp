@@ -23,7 +23,7 @@ class script : script_base
 	[hidden] int dustPosY;
 
 	d2Math::Vector2 oldCamPos;
-	[slider,min:0,max:6.4] float rotation;
+	[hidden] float rotation;
 	float oldRotation;
 
 	bool dontGrabCorner = false;
@@ -32,7 +32,12 @@ class script : script_base
 
 	d2Math::Vector2 middleDragStart;
 	float middleDragStartRot;
-	[label:"enable middle to rotate"] bool middleDragEnable;
+	[label:"middle mouse hotkeys"] bool middleDragEnable;
+
+	bool wasRotating = false;
+	//bools for up/down keys cause reasons
+	bool right90 = false;
+	bool left90 = false;
 
 	//debug
 	array<d2Math::Rect> debugDraw;
@@ -58,6 +63,7 @@ class script : script_base
 		oldRotation = 0;
 		camera@ c = get_active_camera();
 		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
+		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 	}
 
 	void PlayInit()
@@ -68,6 +74,8 @@ class script : script_base
 		oldRotation = 0;
 		camera@ c = get_active_camera();
 		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
+		manager.cam.centre = Vector3(c.x(), c.y(), 0);
+		c.controller_mode(4);
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -96,12 +104,13 @@ class script : script_base
 		// 	}
 		// }
 
-		HandleMiddleDrag();
+		HandleMiddleCommands();
 		UpdateCamPos();
 		UpdateRotation();
 	}
 
-	void HandleMiddleDrag()
+	//everything with middle mouse
+	void HandleMiddleCommands()
 	{
 		if (!middleDragEnable) { return; }
 		if (input.mouse_state() & 0x80 != 0)
@@ -113,19 +122,86 @@ class script : script_base
 		{
 			rotation = middleDragStartRot + (input.mouse_x_hud(true) - middleDragStart.x) / 200;
 		}
+		if (input.key_check_gvb(10))
+		{
+			if (input.mouse_state() & 0x1 != 0)
+			{
+				manager.cam.centre.z += 24;
+				UpdateRotation(true);
+			}
+			if (input.mouse_state() & 0x2 != 0)
+			{
+				manager.cam.centre.z -= 24;
+				UpdateRotation(true);
+			}
+		}
 	}
 
 	void step(int idc) 
 	{
 		debugDraw = array<d2Math::Rect>(0);
+		HandleGameplayRotation();
 		manager.manager.step();
 		UpdateCamPos();
 		UpdateRotation();
 	}
 
-	void UpdateRotation()
+	void HandleGameplayRotation()
 	{
-		if (oldRotation != rotation)
+		float rotPerSec = 3;
+		camera@ ca = get_active_camera();
+		controllable@ co = controller_controllable(uint(get_active_player()));
+		if (ca.input_taunt() != 0)
+		{
+			co.as_entity().time_warp(0);
+			wasRotating = true;
+			//right
+			if (ca.input_x() & 0x2 != 0)
+			{
+				rotation += rotPerSec/60;
+			}
+			//left
+			if (ca.input_x() & 0x1 != 0)
+			{
+				rotation -= rotPerSec/60;
+			}
+			//down = right 90
+			if (ca.input_y() & 0x2 != 0)
+			{
+				if (!right90)
+				{
+					right90 = true;
+					rotation += 1.570796;
+				}
+			}
+			else { right90 = false; }
+			//up = left 90
+			if (ca.input_y() & 0x1 != 0)
+			{
+				if (!left90)
+				{
+					left90 = true;
+					rotation -= 1.570796;
+				}
+			}
+			else { left90 = false; }
+
+		}
+		else
+		{
+			if (wasRotating)
+			{
+				co.as_entity().time_warp(1);
+				wasRotating = false;
+				manager.UpdateCollision();
+			}
+		}
+	}
+
+	//sorry it's also used for scroll up/down fuck you, whoever got confused by this later (probably me)
+	void UpdateRotation(bool force = false)
+	{
+		if (oldRotation != rotation || force)
 		{
 			oldRotation = rotation;
 			manager.cam.rotation = rotation;
@@ -155,7 +231,7 @@ class script : script_base
 			manager.cam.centre -= dif2;
 			manager.cam.igCoords = rcamPos;
 			oldCamPos = rcamPos;
-			puts("cam pos updated! " + manager.cam.centre.x + ", " + manager.cam.centre.y + ", " + manager.cam.centre.z);
+			// puts("cam pos updated! " + manager.cam.centre.x + ", " + manager.cam.centre.y + ", " + manager.cam.centre.z);
 		}
 	}
 
@@ -262,11 +338,13 @@ class d3QuadEntity : trigger_base
 
 	scripttrigger@ self;
 	script@ script;
+	input_api@ input;
 
 	void init(script@ s, scripttrigger@ self)
 	{
 		@script = @s;
 		@this.self = @self;
+		@input = @get_input_api();
 		if (d2colour == 0x00000000)
 		{
 			d2colour = 0xFFFFFFFF;
@@ -497,6 +575,29 @@ class d3QuadEntity : trigger_base
 				oldCentre = centre;
 				self.x(centre.x);
 				self.y(centre.y);
+			}
+		}
+		
+		if (self.editor_selected() && input.key_check_gvb(10))
+		{
+			puts("trying to move!");
+			if (input.mouse_state() & 0x1 != 0)
+			{
+				Vector3 dif2 = Vector3(0, 0, 24);
+				p1 += dif2;
+				p2 += dif2;
+				p3 += dif2;
+				p4 += dif2;
+				UpdateSelf();
+			}
+			if (input.mouse_state() & 0x2 != 0)
+			{
+				Vector3 dif2 = Vector3(0, 0, -24);
+				p1 += dif2;
+				p2 += dif2;
+				p3 += dif2;
+				p4 += dif2;
+				UpdateSelf();
 			}
 		}
 	}
