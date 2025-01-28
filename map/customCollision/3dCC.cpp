@@ -64,6 +64,7 @@ class d3Quad
 	Vector3 p3;
 	Vector3 p4;
 	uint colour;
+	bool shaded = true;
 
 	//cam space coords
 	Vector3 csp1;
@@ -108,10 +109,56 @@ class d3Quad
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
 		if (colour == 0x00000000 || behind) { return; }
-		s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, colour, colour, colour, colour);
-		s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
-		s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
-		s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+		if (!shaded)
+		{
+			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, colour, colour, colour, colour);
+			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+		}
+		else
+		{
+			uint col = 0;
+			float factor = GetSideFacing(1);
+			if (factor > 0)
+			{
+				col = GetFactoredColour(factor);
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, 
+					  col, col, col, col);
+			}
+			factor = GetSideFacing(2);
+			if (factor > 0)
+			{
+				col = GetFactoredColour(factor);
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y,
+					  col, col, col, col);
+			}
+			factor = GetSideFacing(3);
+			if (factor > 0)
+			{
+				col = GetFactoredColour(factor);
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
+					  col, col, col, col);
+			}
+			factor = GetSideFacing(4);
+			if (factor > 0)
+			{
+				col = GetFactoredColour(factor);
+				s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
+					  col, col, col, col);
+			}
+		}
+	}
+
+	uint GetFactoredColour(float factor)
+	{
+		factor *= 1.2;
+		if (factor > 1) { factor = 1; }
+		if (factor < 0.5) { factor = 0.5; }
+		return (uint(float(colour & 0x000000FF)*factor) & 0x000000FF) +
+	   (uint(float(colour & 0x00FF0000)*factor) & 0x00FF0000) +
+	   (uint(float(colour & 0x0000FF00)*factor) & 0x0000FF00) +
+	   (colour & 0xFF000000);
 	}
 
 	void ApplyProjection(d3Cam@ cam)
@@ -205,6 +252,41 @@ class d3Quad
 	Vector3 Find3dCentre()
 	{
 		return (p1 + p2 + p3 + p4)/4;
+	}
+
+	//gets facing of side's normal in relarion to camera from 1 to -1, positive = towards cam 
+	float GetSideFacing(int side)
+	{
+		array<Vector3> points(3);
+		switch (side)
+		{
+			case 1:
+				points[0] = csp1;
+				points[1] = csp2;
+				points[2] = csp3;
+			break;
+			case 2:
+				points[0] = csp1;
+				points[1] = csp2;
+				points[2] = csp4;
+			break;
+			case 3:
+				points[0] = csp1;
+				points[1] = csp3;
+				points[2] = csp4;
+			break;
+			case 4:
+				points[0] = csp2;
+				points[1] = csp3;
+				points[2] = csp4;
+			break;
+			default:
+				return 0;
+		}
+		Vector3 dir = (points[0]+points[1]+points[2])/3 - (csp1+csp2+csp3+csp4)/4;
+		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]);
+		norm = (norm*norm.Dot(dir)).Normalised();
+		return -norm.z;
 	}
 }
 
@@ -315,7 +397,7 @@ class d3CQuad
 
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
-		base.Draw(s, layer, sub_layer);
+		base.Draw(s, layer-1, sub_layer);
 		collisionBase.Draw(s, layer, sub_layer);
 	}
 

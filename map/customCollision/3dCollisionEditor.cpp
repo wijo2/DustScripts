@@ -83,26 +83,26 @@ class script : script_base
 
 	void editor_step()
 	{
-		// dontGrabCorner = false;
-		// if (input.mouse_state() & 0x20 != 0 
-		// 	&& editor.editor_tab() == "Triggers"
-		// 	&& @editor.get_selected_trigger() == null)
-		// {
-		// 	d2Math::Vector2 mousePos = d2Math::Vector2();
-		// 	mousePos.x = input.mouse_x_world(21);
-		// 	mousePos.y = input.mouse_y_world(21);
-		// 	for (uint i = 0; i < quadManager.quads.length(); i++)
-		// 	{
-		// 		if (quadManager.quads[i].quad.base.IsInside(mousePos))
-		// 		{
-		// 			editor.set_selected_trigger(
-		// 				quadManager.quads[i].self.as_entity()
-		// 			);
-		// 			dontGrabCorner = true;
-		// 			break;
-		// 		}
-		// 	}
-		// }
+		dontGrabCorner = false;
+		if (input.mouse_state() & 0x20 != 0 
+			&& editor.editor_tab() == "Triggers"
+			&& @editor.get_selected_trigger() == null)
+		{
+			d2Math::Vector2 mousePos = d2Math::Vector2();
+			mousePos.x = input.mouse_x_world(21);
+			mousePos.y = input.mouse_y_world(21);
+			for (uint i = 0; i < quadEntities.length(); i++)
+			{
+				if (quadEntities[i].quad.collisionBase.base.IsInside(mousePos))
+				{
+					editor.set_selected_trigger(
+						quadEntities[i].self.as_entity()
+					);
+					dontGrabCorner = true;
+					break;
+				}
+			}
+		}
 
 		HandleMiddleCommands();
 		UpdateCamPos();
@@ -126,12 +126,14 @@ class script : script_base
 		{
 			if (input.mouse_state() & 0x1 != 0)
 			{
-				manager.cam.centre.z += 24;
+				manager.cam.centre = manager.cam.CamToWorldPos(
+					manager.cam.WorldToCamPos(manager.cam.centre) + Vector3(0,0,24));
 				UpdateRotation(true);
 			}
 			if (input.mouse_state() & 0x2 != 0)
 			{
-				manager.cam.centre.z -= 24;
+				manager.cam.centre = manager.cam.CamToWorldPos(
+					manager.cam.WorldToCamPos(manager.cam.centre) - Vector3(0,0,24));
 				UpdateRotation(true);
 			}
 		}
@@ -331,6 +333,8 @@ class d3QuadEntity : trigger_base
 	[hidden] Vector3 p3;
 	[hidden] Vector3 p4;
 
+	int selectedCorner = 0;
+
 	d2Math::Vector2 oldCentre;
 
 	d3::d3Manager@ manager;
@@ -347,7 +351,7 @@ class d3QuadEntity : trigger_base
 		@input = @get_input_api();
 		if (d2colour == 0x00000000)
 		{
-			d2colour = 0xFFFFFFFF;
+			d2colour = 0xFFAAAAAA;
 		}
 		if (d3colour == 0x00000000)
 		{
@@ -364,15 +368,11 @@ class d3QuadEntity : trigger_base
 			p3 == Vector3(0,0,0) && 
 			p4 == Vector3(0,0,0))
 		{
-			puts("creating shape!");
-			// p1 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y()+100, 100));
-			// p2 = manager.cam.CamToWorldPos(Vector3(self.x()-48, self.y()-48, 0));
-			// p3 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y(), 100));
-			// p4 = manager.cam.CamToWorldPos(Vector3(self.x()+48, self.y()-48, 0));
-			p1 = Vector3(self.x(), self.y()+100, 100);
-			p2 = Vector3(self.x()-48, self.y()-48, 0);
-			p3 = Vector3(self.x(), self.y(), 100);
-			p4 = Vector3(self.x()+48, self.y()-48, 0);
+			Vector3 cen = Vector3(manager.cam.igCoords.x, manager.cam.igCoords.y, 0);
+			p1 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y()+100, 50) - cen);
+			p2 = manager.cam.CamToWorldPos(Vector3(self.x()-100, self.y(), -50) - cen);
+			p3 = manager.cam.CamToWorldPos(Vector3(self.x(), self.y()-100, 50) - cen);
+			p4 = manager.cam.CamToWorldPos(Vector3(self.x()+100, self.y(), -50) - cen);
 		}
 		@quad.base = @d3::d3Quad(p1, p2, p3, p4, d3colour);
 		quad.collisionBase.base.colour = d2colour;
@@ -397,7 +397,6 @@ class d3QuadEntity : trigger_base
 		{
 			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
 			oldCentre = centre;
-			puts("set 1 " + centre.x);
 			self.x(centre.x);
 			self.y(centre.y);
 		}
@@ -424,7 +423,6 @@ class d3QuadEntity : trigger_base
 			d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
 			self.x(centre.x);
 			self.y(centre.y);
-			puts("set 2 " + centre.x);
 		}
 	}
 
@@ -471,83 +469,110 @@ class d3QuadEntity : trigger_base
 	void editor_step()
 	{
 		scene@ s = get_scene();
-		//
-		// d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
-		// d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
-		//
-		// if (script.input.mouse_state() & 0x20 != 0 
-		// 	&& script.editor.editor_tab() == "Triggers"
-		// 	&& @script.editor.get_selected_trigger() != null
-  //  && script.editor.get_selected_trigger().is_same(self.as_entity())
-		// 	&& !script.dontGrabCorner) 
-		// {
-		//
-		// 	if (selectedCorner == 0) 
-		// 	{
-		// 		array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
-		// 		for (uint i = 0; i < corners.length(); i++)
-		// 		{
-		// 			d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(corners[i].x, corners[i].y));
-		// 			if (pos.Distance(mousePosHud) < 50) 
-		// 			{
-		// 				selectedCorner = i + 1;
-		// 				return;
-		// 			}
-		// 		}
-		// 	}
-		// 	else 
-		// 	{
-		// 		switch(selectedCorner) 
-		// 		{
-		// 			case 1:
-		// 				p1x = mousePosWorld.x;
-		// 				p1y = mousePosWorld.y;
-		// 			break;
-		// 			case 2:
-		// 				p2x = mousePosWorld.x;
-		// 				p2y = mousePosWorld.y;
-		// 			break;
-		// 			case 3:
-		// 				p3x = mousePosWorld.x;
-		// 				p3y = mousePosWorld.y;
-		// 			break;
-		// 			case 4:
-		// 				p4x = mousePosWorld.x;
-		// 				p4y = mousePosWorld.y;
-		// 			break;
-		// 		}
-		// 		selectedCorner = 0;
-		// 		UpdateSelf();
-		// 	}
-		// 	return;
-		// }
-		//
-		// if (script.editor.editor_tab() == "Triggers"
-		// 	&& @script.editor.get_selected_trigger() != null
-  //  && script.editor.get_selected_trigger().is_same(self.as_entity())
-		// 	&& selectedCorner != 0)
-		// {
-		// 	switch(selectedCorner) 
-		// 	{
-		// 		case 1:
-		// 			p1x = mousePosWorld.x;
-		// 			p1y = mousePosWorld.y;
-		// 		break;
-		// 		case 2:
-		// 			p2x = mousePosWorld.x;
-		// 			p2y = mousePosWorld.y;
-		// 		break;
-		// 		case 3:
-		// 			p3x = mousePosWorld.x;
-		// 			p3y = mousePosWorld.y;
-		// 		break;
-		// 		case 4:
-		// 			p4x = mousePosWorld.x;
-		// 			p4y = mousePosWorld.y;
-		// 		break;
-		// 	}
-		// 	UpdateSelf();
-		// }
+
+		d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
+		d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
+
+		//select/deselect corner
+		if (script.input.mouse_state() & 0x20 != 0 
+			&& script.editor.editor_tab() == "Triggers"
+			&& @script.editor.get_selected_trigger() != null
+   && script.editor.get_selected_trigger().is_same(self.as_entity())
+			&& !script.dontGrabCorner) 
+		{
+
+			if (selectedCorner == 0) 
+			{
+				array<d2Math::Vector2> corners = { 
+					d2Math::Vector2(quad.base.csp1.x, quad.base.csp1.y),
+					d2Math::Vector2(quad.base.csp2.x, quad.base.csp2.y),
+					d2Math::Vector2(quad.base.csp3.x, quad.base.csp3.y),
+					d2Math::Vector2(quad.base.csp4.x, quad.base.csp4.y)
+				};
+				for (uint i = 0; i < corners.length(); i++)
+				{
+					d2Math::Vector2 pos = d2Math::WorldToScreenPos(
+						d2Math::Vector2(corners[i].x, corners[i].y)
+					);
+					if (pos.Distance(mousePosHud) < 50) 
+					{
+						selectedCorner = i + 1;
+						return;
+					}
+				}
+			}
+			else 
+			{
+				Vector3 cen = Vector3(manager.cam.igCoords.x, manager.cam.igCoords.y, 0);
+				switch(selectedCorner) 
+				{
+					case 1:
+						p1 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp1.z) - cen);
+					break;
+					case 2:
+						p2 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp2.z) - cen);
+					break;
+					case 3:
+						p3 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp3.z) - cen);
+					break;
+					case 4:
+						p4 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp4.z) - cen);
+					break;
+				}
+				selectedCorner = 0;
+				UpdateSelf();
+				if ((quad.collisionBase.activeLines[0] || 
+					quad.collisionBase.activeLines[1] || 
+					quad.collisionBase.activeLines[2] || 
+					quad.collisionBase.activeLines[3]) &&
+					oldCentre != d2Math::Vector2(0,0)) 
+				{
+					oldCentre = d2Math::Vector2(0,0);
+					d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+					self.x(centre.x);
+					self.y(centre.y);
+					puts("set 2 " + centre.x);
+				}
+			}
+			return;
+		}
+
+		//update corner pos
+		if (script.editor.editor_tab() == "Triggers"
+			&& @script.editor.get_selected_trigger() != null
+   && script.editor.get_selected_trigger().is_same(self.as_entity())
+			&& selectedCorner != 0)
+		{
+			Vector3 cen = Vector3(manager.cam.igCoords.x, manager.cam.igCoords.y, 0);
+			switch(selectedCorner) 
+			{
+				case 1:
+					p1 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp1.z) - cen);
+				break;
+				case 2:
+					p2 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp2.z) - cen);
+				break;
+				case 3:
+					p3 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp3.z) - cen);
+				break;
+				case 4:
+					p4 = manager.cam.CamToWorldPos(Vector3(mousePosWorld.x, mousePosWorld.y, quad.base.csp4.z) - cen);
+				break;
+			}
+			UpdateSelf();
+			if ((quad.collisionBase.activeLines[0] || 
+				quad.collisionBase.activeLines[1] || 
+				quad.collisionBase.activeLines[2] || 
+				quad.collisionBase.activeLines[3]) &&
+				oldCentre != d2Math::Vector2(0,0)) 
+			{
+				oldCentre = d2Math::Vector2(0,0);
+				d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
+				self.x(centre.x);
+				self.y(centre.y);
+				puts("set 2 " + centre.x);
+			}
+		}
 
 		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = oldCentre - curCen;

@@ -573,6 +573,18 @@ class Vector3
 	{
 		return sqrt(x**2 + y**2 + z**2);
 	}
+	Vector3 Normalised()
+	{
+		return this/Magnitude();
+	}
+	Vector3 Cross(Vector3@ o)
+	{
+		return Vector3(y*o.z - z*o.y, z*o.x - x*o.z, x*o.y - y*o.x);
+	}
+	float Dot(Vector3@ o)
+	{
+		return x*o.x + y*o.y + z*o.z;
+	}
 
 	Vector3 opNeg()
 	{
