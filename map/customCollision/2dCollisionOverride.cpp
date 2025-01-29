@@ -2,7 +2,6 @@
 
 class CollisionOverride : callback_base
 {
-
 	d2::CollisionManager@ manager;
 
 	CollisionOverride(d2::CollisionManager@ manager)
@@ -67,6 +66,10 @@ class CollisionOverride : callback_base
 
 		// CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
+
+		//I need to be able to collide with multiple things at a time for
+		//3d to be remotely functional so this is A solution I guess
+		Collision curBest;
 		for (uint i = 0; i < colliders.length(); i++)
 		{
 			if (colliders[i].maxDist + 100 < (colliders[i].base.FindCentre() - pos).Magnitude()) { continue; }
@@ -124,26 +127,43 @@ class CollisionOverride : callback_base
 				}
 
 				// puts("hit! " + side);
-				tc.hit(true);
-				tc.type(angle);
 				int offset = 4;
+				Collision newHit;
+				newHit.angle = angle;
+				newHit.def = false;
 				switch (side)
 				{
 					case 0:
-						tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) - offset);
-						tc.hit_y((CIR.y1 + CIR.y2) / 2);
+						newHit.x = edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) - offset; 
+						newHit.y = (CIR.y1 + CIR.y2) / 2; 
+						if (newHit.x > curBest.x || curBest.def)
+						{
+							curBest = newHit;
+						}
 					break;
 					case 1:
-						tc.hit_x(edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) + offset);
-						tc.hit_y((CIR.y1 + CIR.y2) / 2);
+						newHit.x = edges[li].GetRevValue((CIR.y1 + CIR.y2) / 2) + offset; 
+						newHit.y = (CIR.y1 + CIR.y2) / 2; 
+						if (newHit.x < curBest.x || curBest.def)
+						{
+							curBest = newHit;
+						}
 					break;
 					case 2:
-						tc.hit_x((CIR.x1 + CIR.x2) / 2);
-						tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - offset);
+						newHit.x = (CIR.x1 + CIR.x2) / 2; 
+						newHit.y = edges[li].GetValue((CIR.x1 + CIR.x2) / 2) - offset; 
+						if (newHit.y > curBest.y || curBest.def)
+						{
+							curBest = newHit;
+						}
 					break;
 					case 3:
-						tc.hit_x((CIR.x1 + CIR.x2) / 2);
-						tc.hit_y(edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + offset);
+						newHit.x = (CIR.x1 + CIR.x2) / 2; 
+						newHit.y = edges[li].GetValue((CIR.x1 + CIR.x2) / 2) + offset; 
+						if (newHit.y < curBest.y || curBest.def)
+						{
+							curBest = newHit;
+						}
 					break;
 				}
 				if (@ec.as_dustman() != null)
@@ -156,11 +176,22 @@ class CollisionOverride : callback_base
 						colliders[i].SideTouched(s);
 					}
 				}
-				return;
 			}
 		}
-		//if nothing was found use the default
-		ec.check_collision(tc, side, moving, snap_offset);
+		if (!curBest.def)
+		{
+			puts("trying? " + curBest.y);
+			puts("side: " + side);
+			tc.hit(true);
+			tc.hit_x(curBest.x);
+			tc.hit_y(curBest.y);
+			tc.type(curBest.angle);
+		}
+		else 
+		{
+			//if nothing was found use the default
+			ec.check_collision(tc, side, moving, snap_offset);
+		}
 	}
 
 	bool IsSuitableAngle(int side, int angle)
@@ -221,4 +252,13 @@ class CollisionOverride : callback_base
 			}
 		}
 	}
+}
+
+class Collision
+{
+	float x = 0;
+	float y = 0;
+	int angle = 0;
+	//default
+	bool def = true;
 }

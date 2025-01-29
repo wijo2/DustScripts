@@ -66,11 +66,20 @@ class d3Quad
 	uint colour;
 	bool shaded = true;
 
+	//cached answer for shading
+	float fac1;
+	float fac2;
+	float fac3;
+	float fac4;
+
 	//cam space coords
 	Vector3 csp1;
 	Vector3 csp2;
 	Vector3 csp3;
 	Vector3 csp4;
+
+	//smallest z value (cam space), used for layering
+	float depth;
 
 	//""projected"" positions
 	d2Math::Vector2 pp1;
@@ -119,31 +128,27 @@ class d3Quad
 		else
 		{
 			uint col = 0;
-			float factor = GetSideFacing(1);
-			if (factor > 0)
+			if (fac1 > 0)
 			{
-				col = GetFactoredColour(factor);
+				col = GetFactoredColour(fac1);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, 
 					  col, col, col, col);
 			}
-			factor = GetSideFacing(2);
-			if (factor > 0)
+			if (fac2 > 0)
 			{
-				col = GetFactoredColour(factor);
+				col = GetFactoredColour(fac2);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y,
 					  col, col, col, col);
 			}
-			factor = GetSideFacing(3);
-			if (factor > 0)
+			if (fac3 > 0)
 			{
-				col = GetFactoredColour(factor);
+				col = GetFactoredColour(fac3);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
 					  col, col, col, col);
 			}
-			factor = GetSideFacing(4);
-			if (factor > 0)
+			if (fac4 > 0)
 			{
-				col = GetFactoredColour(factor);
+				col = GetFactoredColour(fac4);
 				s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
 					  col, col, col, col);
 			}
@@ -184,6 +189,16 @@ class d3Quad
 		intersecting = !behind && behindc > 0;
 		// puts("intersecting " + intersecting);
 		intersectionType = behindc == 2;
+
+		fac1 = GetSideFacing(1);
+		fac2 = GetSideFacing(2);
+		fac3 = GetSideFacing(3);
+		fac4 = GetSideFacing(4);
+
+		depth = csp1.z;
+		if (csp2.z < depth) { depth = csp2.z; }
+		if (csp3.z < depth) { depth = csp3.z; }
+		if (csp4.z < depth) { depth = csp4.z; }
 	}
 
 	//cam coords
@@ -297,6 +312,11 @@ class d3CQuad
 	d3Quad@ base;
 	d2::d2CQuad@ collisionBase;
 
+	//I would rather not have this here but what u gonna do, I need to centralise drawing 
+	//if I want proper layering :/
+	int layer;
+	int sub_layer;
+
 	//sides:
 	//1: 1, 2, 3
 	//2: 1, 2, 4
@@ -395,9 +415,13 @@ class d3CQuad
 		}
 	}
 
-	void Draw(scene@ s, uint layer, uint sub_layer)
+	void DrawBase(scene@ s)
 	{
-		base.Draw(s, layer-1, sub_layer);
+		base.Draw(s, layer, sub_layer);
+	}
+
+	void DrawIntersect(scene@ s)
+	{
 		collisionBase.Draw(s, layer, sub_layer);
 	}
 
@@ -422,6 +446,13 @@ class d3CQuad
 			(!base.intersectionType && base.IsIntersected(4)))) { return 4; }
 		puts("GetNextSide returning 0 with inputs " + side + ", " + side2 + " and intersection type " + base.intersectionType);
 		return 0;
+	}
+
+	int opCmp(d3CQuad@ o)
+	{
+		if (o.base.depth == base.depth) { return 0; }
+		if (o.base.depth < base.depth) { return -1; }
+		return 1;
 	}
 }	
 
@@ -453,6 +484,23 @@ class d3Manager
 			allQuads[i].collisionBase.UpdateCollision();
 		}
 
+	}
+
+	void SortQuadList()
+	{
+		allQuads.sortAsc();
+	}
+
+	void Draw()
+	{
+		for (uint i = 0; i < allQuads.length(); i++)
+		{
+			allQuads[i].DrawBase(get_scene());
+		}
+		for (uint i = 0; i < allQuads.length(); i++)
+		{
+			allQuads[i].DrawIntersect(get_scene());
+		}
 	}
 }
 

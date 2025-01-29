@@ -13,11 +13,13 @@ class script : script_base
 
 	[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
 	[hidden] int playAreaCornerY;
-	[text] int playAreaWidth;
-	[text] int playAreaHeight;
+	[text] int playAreaWidth = 10000;
+	[text] int playAreaHeight = 10000;
 
 	[colour,alpha] uint spikeColour;
 	[colour,alpha] uint dustColour;
+	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
+	[colour,alpha] uint default2dCol = 0xBB888888;
 
 	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
 	[hidden] int dustPosY;
@@ -129,12 +131,14 @@ class script : script_base
 				manager.cam.centre = manager.cam.CamToWorldPos(
 					manager.cam.WorldToCamPos(manager.cam.centre) + Vector3(0,0,24));
 				UpdateRotation(true);
+				manager.UpdateCollision();
 			}
 			if (input.mouse_state() & 0x2 != 0)
 			{
 				manager.cam.centre = manager.cam.CamToWorldPos(
 					manager.cam.WorldToCamPos(manager.cam.centre) - Vector3(0,0,24));
 				UpdateRotation(true);
+				manager.UpdateCollision();
 			}
 		}
 	}
@@ -212,8 +216,7 @@ class script : script_base
 			{
 				quadEntities[i].UpdateRotation();
 			}
-			//temp!!!
-			manager.UpdateCollision();
+			manager.SortQuadList();
 		}
 	}
 
@@ -243,6 +246,7 @@ class script : script_base
 		{
 			manager.manager.playArea.Draw(get_scene(), 22, 1);
 		}
+		manager.Draw();
 		if (showCacheDebug) 
 		{
 			manager.manager.Draw(get_scene(), 22, 1);
@@ -252,17 +256,18 @@ class script : script_base
 	void draw(float idkAnymore) 
 	{
 		scene@ sc = get_scene();
-		for (uint i = 0; i < debugDraw.length(); i++) 
-		{
-			debugDraw[i].Draw(sc, 22, 1);
-		}
 		if (showPlayArea) 
 		{
 			manager.manager.playArea.Draw(sc, 22, 1);
 		}
+		manager.Draw();
 		if (showCacheDebug) 
 		{
 			manager.manager.Draw(sc, 22, 1);
+		}
+		for (uint i = 0; i < debugDraw.length(); i++) 
+		{
+			debugDraw[i].Draw(sc, 22, 1);
 		}
 	}
 
@@ -351,11 +356,11 @@ class d3QuadEntity : trigger_base
 		@input = @get_input_api();
 		if (d2colour == 0x00000000)
 		{
-			d2colour = 0xFFAAAAAA;
+			d2colour = s.default2dCol;
 		}
 		if (d3colour == 0x00000000)
 		{
-			d3colour = 0xFFFFFFFF;
+			d3colour = s.default3dCol;
 		}
 		oldCentre = d2Math::Vector2(self.x(), self.y());
 		@this.manager = @s.manager; 
@@ -426,18 +431,6 @@ class d3QuadEntity : trigger_base
 		}
 	}
 
-	void editor_draw(float fuck)
-	{
-		if (@quad == null) { return; }
-		quad.Draw(get_scene(), layer, sub_layer);
-	}
-
-	void draw(float doublefuck)
-	{
-		if (@quad == null) { return; }
-		quad.Draw(get_scene(), layer, sub_layer);
-	}
-
 	void UpdateSelf()
 	{
 		quad.base.p1 = p1;
@@ -448,6 +441,8 @@ class d3QuadEntity : trigger_base
 		quad.UpdateIntersectQuad(manager.cam);
 		quad.base.colour = d3colour;
 		quad.collisionBase.base.colour = d2colour;
+		quad.layer = layer;
+		quad.sub_layer = sub_layer;
 	}
 
 	void UpdateSides()
@@ -582,7 +577,7 @@ class d3QuadEntity : trigger_base
 			quad.collisionBase.activeLines[2] ||
 			quad.collisionBase.activeLines[3]))
 		{
-			puts("updating centre! " + oldCentre.x + ", " + curCen.x);
+			// puts("updating centre! " + oldCentre.x + ", " + curCen.x);
 			if (oldCentre == d2Math::Vector2(0,0))
 			{
 				d2Math::Vector2 centre = quad.collisionBase.base.FindCentre();
