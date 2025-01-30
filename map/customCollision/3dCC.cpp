@@ -78,14 +78,13 @@ class d3Quad
 	Vector3 csp3;
 	Vector3 csp4;
 
-	//smallest z value (cam space), used for layering
-	float depth;
-
 	//""projected"" positions
 	d2Math::Vector2 pp1;
 	d2Math::Vector2 pp2;
 	d2Math::Vector2 pp3;
 	d2Math::Vector2 pp4;
+
+	array<bool> drawnSides(4);
 
 	//behind cam, don't draw
 	bool behind;
@@ -120,33 +119,45 @@ class d3Quad
 		if (colour == 0x00000000 || behind) { return; }
 		if (!shaded)
 		{
-			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, colour, colour, colour, colour);
-			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
-			s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
-			s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			if (drawnSides[0])
+			{
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, colour, colour, colour, colour);
+			}
+			if (drawnSides[1])
+			{
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			}
+			if (drawnSides[2])
+			{
+				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			}
+			if (drawnSides[3])
+			{
+				s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y, colour, colour, colour, colour);
+			}
 		}
 		else
 		{
 			uint col = 0;
-			if (fac1 > 0)
+			if (fac1 > 0 && drawnSides[0])
 			{
 				col = GetFactoredColour(fac1);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp3.x, pp3.y, pp3.x, pp3.y, 
 					  col, col, col, col);
 			}
-			if (fac2 > 0)
+			if (fac2 > 0 && drawnSides[1])
 			{
 				col = GetFactoredColour(fac2);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp2.x, pp2.y, pp4.x, pp4.y, pp4.x, pp4.y,
 					  col, col, col, col);
 			}
-			if (fac3 > 0)
+			if (fac3 > 0 && drawnSides[2])
 			{
 				col = GetFactoredColour(fac3);
 				s.draw_quad_world(layer, sub_layer, false, pp1.x, pp1.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
 					  col, col, col, col);
 			}
-			if (fac4 > 0)
+			if (fac4 > 0 && drawnSides[3])
 			{
 				col = GetFactoredColour(fac4);
 				s.draw_quad_world(layer, sub_layer, false, pp2.x, pp2.y, pp3.x, pp3.y, pp4.x, pp4.y, pp4.x, pp4.y,
@@ -159,7 +170,7 @@ class d3Quad
 	{
 		factor *= 1.2;
 		if (factor > 1) { factor = 1; }
-		if (factor < 0.5) { factor = 0.5; }
+		if (factor < 0.2) { factor = 0.2; }
 		return (uint(float(colour & 0x000000FF)*factor) & 0x000000FF) +
 	   (uint(float(colour & 0x00FF0000)*factor) & 0x00FF0000) +
 	   (uint(float(colour & 0x0000FF00)*factor) & 0x0000FF00) +
@@ -194,11 +205,6 @@ class d3Quad
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
-
-		depth = csp1.z;
-		if (csp2.z < depth) { depth = csp2.z; }
-		if (csp3.z < depth) { depth = csp3.z; }
-		if (csp4.z < depth) { depth = csp4.z; }
 	}
 
 	//cam coords
@@ -272,6 +278,11 @@ class d3Quad
 	//gets facing of side's normal in relarion to camera from 1 to -1, positive = towards cam 
 	float GetSideFacing(int side)
 	{
+		return -GetNormalVector(side).z;
+	}
+
+	Vector3 GetNormalVector(int side)
+	{
 		array<Vector3> points(3);
 		switch (side)
 		{
@@ -295,13 +306,76 @@ class d3Quad
 				points[1] = csp3;
 				points[2] = csp4;
 			break;
-			default:
-				return 0;
 		}
 		Vector3 dir = (points[0]+points[1]+points[2])/3 - (csp1+csp2+csp3+csp4)/4;
 		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]);
-		norm = (norm*norm.Dot(dir)).Normalised();
-		return -norm.z;
+		return (norm*norm.Dot(dir)).Normalised();
+	}
+
+	//1 = point is under (more z), -1 = point is over (less z), 0 = point not inside
+	int PointRelation(Vector3 pos)
+	{
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp3.x, csp3.y)))
+		{
+			puts("upstream nonzero");
+			Vector3 norm = GetNormalVector(1);
+			if (norm.z * (norm.Dot(pos - (csp1+csp2+csp3)/3)) > 0)
+			{
+				return 1;
+			}
+			return -1;
+		}
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp4.x, csp4.y)))
+		{
+			puts("upstream nonzero");
+			Vector3 norm = GetNormalVector(2);
+			if (norm.z * (norm.Dot(pos - (csp1+csp2+csp4)/3)) > 0)
+			{
+				return 1;
+			}
+			return -1;
+		}
+			if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp3.x, csp3.y),
+				d2Math::Vector2(csp4.x, csp4.y)))
+
+		{
+			puts("upstream nonzero");
+			Vector3 norm = GetNormalVector(3);
+			if (norm.z * (norm.Dot(pos - (csp1+csp3+csp4)/3)) > 0)
+			{
+				return 1;
+			}
+			return -1;
+
+		}
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp3.x, csp3.y),
+				d2Math::Vector2(csp4.x, csp4.y)))
+
+		{
+			puts("upstream nonzero");
+			Vector3 norm = GetNormalVector(4);
+			if (norm.z * (norm.Dot(pos - (csp2+csp3+csp4)/3)) > 0)
+			{
+				return 1;
+			}
+			return -1;
+		}
+		puts("upstream 0");
+		return 0;
 	}
 }
 
@@ -448,11 +522,25 @@ class d3CQuad
 		return 0;
 	}
 
+	//is any point of this quad is under o return 1, if any of this is over other quad return -1, otherwise 0
+	int AnyPointUnder(d3CQuad@ o)
+	{
+		int i;
+		i = o.base.PointRelation(base.csp1);
+		if (i != 0) { return i; }
+		i = o.base.PointRelation(base.csp2);
+		if (i != 0) { return i; }
+		i = o.base.PointRelation(base.csp3);
+		if (i != 0) { return i; }
+		i = o.base.PointRelation(base.csp4);
+		return i;
+	}
+
 	int opCmp(d3CQuad@ o)
 	{
-		if (o.base.depth == base.depth) { return 0; }
-		if (o.base.depth < base.depth) { return -1; }
-		return 1;
+		int r = AnyPointUnder(o);
+		if (r != 0) { return -r; }
+		return o.AnyPointUnder(this);
 	}
 }	
 

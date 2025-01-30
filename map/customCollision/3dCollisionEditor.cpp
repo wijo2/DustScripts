@@ -451,6 +451,10 @@ class d3QuadEntity : trigger_base
 		quad.activeSides[1] = side2active;
 		quad.activeSides[2] = side3active;
 		quad.activeSides[3] = side4active;
+		quad.base.drawnSides[0] = side1active;
+		quad.base.drawnSides[1] = side2active;
+		quad.base.drawnSides[2] = side3active;
+		quad.base.drawnSides[3] = side4active;
 		quad.dustSides[0] = side1dust;
 		quad.dustSides[1] = side2dust;
 		quad.dustSides[2] = side3dust;
@@ -600,7 +604,7 @@ class d3QuadEntity : trigger_base
 		
 		if (self.editor_selected() && input.key_check_gvb(10))
 		{
-			puts("trying to move!");
+			// puts("trying to move!");
 			if (input.mouse_state() & 0x1 != 0)
 			{
 				Vector3 dif2 = Vector3(0, 0, 24);
