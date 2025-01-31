@@ -228,6 +228,7 @@ class d2CQuad
 			d.combo_count(d.combo_count() + 1);
 			d.combo_timer(1);
 		}
+		puts("side " + side + " spikes " + spikeLines[0] + " " + spikeLines[1] + " " + spikeLines[2] + " " + spikeLines[3]);
 		if (spikeLines[side-1])
 		{
 			puts("die!");

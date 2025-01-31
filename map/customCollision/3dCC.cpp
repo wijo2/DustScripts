@@ -114,7 +114,7 @@ class d3Quad
 		this.colour = colour;
 	}
 
-	void Draw(scene@ s, uint layer, uint sub_layer)
+	void Draw(scene@ s, uint layer, uint sub_layer, script@ script)
 	{
 		if (colour == 0x00000000 || behind) { return; }
 		if (!shaded)
@@ -245,8 +245,13 @@ class d3Quad
 		return false;
 	}
 
+	//I realise now this is the same functionality as the method literally 2 methods up
+	//but oh well can't be bothered to fix :p
 	bool IsIntersected(int side)
 	{
+		if (side == 1) { puts("1 is intersected " + 
+						!(GetSide(1) == GetSide(2) && GetSide(2) == GetSide(3))
+		); }
 		//if all points of side are on same side of cam it's not intersected
 		switch (side)
 		{
@@ -321,7 +326,7 @@ class d3Quad
 				d2Math::Vector2(csp2.x, csp2.y),
 				d2Math::Vector2(csp3.x, csp3.y)))
 		{
-			puts("upstream nonzero");
+			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(1);
 			if (norm.z * (norm.Dot(pos - (csp1+csp2+csp3)/3)) > 0)
 			{
@@ -335,7 +340,7 @@ class d3Quad
 				d2Math::Vector2(csp2.x, csp2.y),
 				d2Math::Vector2(csp4.x, csp4.y)))
 		{
-			puts("upstream nonzero");
+			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(2);
 			if (norm.z * (norm.Dot(pos - (csp1+csp2+csp4)/3)) > 0)
 			{
@@ -350,7 +355,7 @@ class d3Quad
 				d2Math::Vector2(csp4.x, csp4.y)))
 
 		{
-			puts("upstream nonzero");
+			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(3);
 			if (norm.z * (norm.Dot(pos - (csp1+csp3+csp4)/3)) > 0)
 			{
@@ -366,7 +371,7 @@ class d3Quad
 				d2Math::Vector2(csp4.x, csp4.y)))
 
 		{
-			puts("upstream nonzero");
+			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(4);
 			if (norm.z * (norm.Dot(pos - (csp2+csp3+csp4)/3)) > 0)
 			{
@@ -374,7 +379,7 @@ class d3Quad
 			}
 			return -1;
 		}
-		puts("upstream 0");
+		// puts("upstream 0");
 		return 0;
 	}
 }
@@ -385,6 +390,8 @@ class d3CQuad
 {
 	d3Quad@ base;
 	d2::d2CQuad@ collisionBase;
+
+	d3Manager@ manager;
 
 	//I would rather not have this here but what u gonna do, I need to centralise drawing 
 	//if I want proper layering :/
@@ -439,28 +446,30 @@ class d3CQuad
 		// puts("trying to do intersecting");
 		int side1 = 1;
 		if (!base.intersectionType && !base.IsIntersected(1)) { side1 = 2; }
+		// puts("starting with " + side1);
 		//3-1 = triangle
 		if (!base.intersectionType)
 		{
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
-			// puts("trig sides " + side1 + " " + side2 + " " + side3);
+			puts("trig sides " + side1 + " " + side2 + " " + side3);
+			// puts("spike sides " + spikeSides[0] + " " + spikeSides[1] + " " + spikeSides[2] + " " + spikeSides[3]);
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
 			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side1-1]);
 			collisionBase.base.p4 = collisionBase.base.p3;
-			collisionBase.activeLines[0] = activeSides[side1-1];
-			collisionBase.spikeLines[0] = spikeSides[side1-1];
-			collisionBase.dustLines[0] = dustSides[side1-1];
-			collisionBase.activeLines[1] = activeSides[side2-1];
-			collisionBase.spikeLines[1] = spikeSides[side2-1];
-			collisionBase.dustLines[1] = dustSides[side2-1];
-			collisionBase.activeLines[2] = activeSides[side3-1];
-			collisionBase.spikeLines[2] = spikeSides[side3-1];
-			collisionBase.dustLines[2] = dustSides[side3-1];
-			collisionBase.activeLines[3] = false;
-			collisionBase.spikeLines[3] = false;
-			collisionBase.dustLines[3] = false;
+			collisionBase.activeLines[0] = activeSides[side2-1];
+			collisionBase.spikeLines[0] = spikeSides[side2-1];
+			collisionBase.dustLines[0] = dustSides[side2-1];
+			collisionBase.activeLines[1] = activeSides[side3-1];
+			collisionBase.spikeLines[1] = spikeSides[side3-1];
+			collisionBase.dustLines[1] = dustSides[side3-1];
+			collisionBase.activeLines[2] = false;
+			collisionBase.spikeLines[2] = false;
+			collisionBase.dustLines[2] = false;
+			collisionBase.activeLines[3] = activeSides[side1-1];
+			collisionBase.spikeLines[3] = spikeSides[side1-1];
+			collisionBase.dustLines[3] = dustSides[side1-1];
 		}
 		//2-2 = quad
 		else
@@ -468,30 +477,84 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			int side4 = GetNextSide(side3, side2);
-			// puts("quad sides " + side1 + " " + side2 + " " + side3 + " " + side4);
+			puts("quad sides " + side1 + " " + side2 + " " + side3 + " " + side4);
+			// puts("spike sides " + spikeSides[0] + " " + spikeSides[1] + " " + spikeSides[2] + " " + spikeSides[3]);
+			// puts("trying 1 is intersected " + base.IsIntersected(1));
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
 			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side4-1]);
 			collisionBase.base.p4 = base.GetIntersection(sideLookup[side4-1][side1-1]);
 			// puts("quad points " + collisionBase.base.p1 + " " + collisionBase.base.p2 + " " + collisionBase.base.p3 + " " + collisionBase.base.p4);
-			collisionBase.activeLines[0] = activeSides[side1-1];
-			collisionBase.spikeLines[0] = spikeSides[side1-1];
-			collisionBase.dustLines[0] = dustSides[side1-1];
-			collisionBase.activeLines[1] = activeSides[side2-1];
-			collisionBase.spikeLines[1] = spikeSides[side2-1];
-			collisionBase.dustLines[1] = dustSides[side2-1];
-			collisionBase.activeLines[2] = activeSides[side3-1];
-			collisionBase.spikeLines[2] = spikeSides[side3-1];
-			collisionBase.dustLines[2] = dustSides[side3-1];
-			collisionBase.activeLines[3] = activeSides[side4-1];
-			collisionBase.spikeLines[3] = spikeSides[side4-1];
-			collisionBase.dustLines[3] = dustSides[side4-1];
+			collisionBase.activeLines[0] = activeSides[side2-1];
+			collisionBase.spikeLines[0] = spikeSides[side2-1];
+			collisionBase.dustLines[0] = dustSides[side2-1];
+			collisionBase.activeLines[1] = activeSides[side3-1];
+			collisionBase.spikeLines[1] = spikeSides[side3-1];
+			collisionBase.dustLines[1] = dustSides[side3-1];
+			collisionBase.activeLines[2] = activeSides[side4-1];
+			collisionBase.spikeLines[2] = spikeSides[side4-1];
+			collisionBase.dustLines[2] = dustSides[side4-1];
+			collisionBase.activeLines[3] = activeSides[side1-1];
+			collisionBase.spikeLines[3] = spikeSides[side1-1];
+			collisionBase.dustLines[3] = dustSides[side1-1];
 		}
 	}
 
 	void DrawBase(scene@ s)
 	{
-		base.Draw(s, layer, sub_layer);
+		//I could make a loop and stuff but like this is literally easier so whatever
+		base.Draw(s, layer, sub_layer, manager.script);
+		uint sc = manager.script.spikeColour;
+		uint dc = manager.script.dustColour;
+		return;
+		if (spikeSides[0] && base.fac1 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp2.x, base.pp2.y, base.pp3.x, base.pp3.y, base.pp3.x, base.pp3.y,
+					 sc,sc,sc,sc);
+		}
+		if (spikeSides[1] && base.fac2 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp2.x, base.pp2.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 sc,sc,sc,sc);
+		}
+		if (spikeSides[2] && base.fac3 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp3.x, base.pp3.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 sc,sc,sc,sc);
+		}
+		if (spikeSides[3] && base.fac4 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp2.x, base.pp2.y, base.pp3.x, base.pp3.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 sc,sc,sc,sc);
+		}
+		if (dustSides[0] && base.fac1 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp2.x, base.pp2.y, base.pp3.x, base.pp3.y, base.pp3.x, base.pp3.y,
+					 dc,dc,dc,dc);
+		}
+		if (dustSides[1] && base.fac2 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp2.x, base.pp2.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 dc,dc,dc,dc);
+		}
+		if (dustSides[2] && base.fac3 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp1.x, base.pp1.y, base.pp3.x, base.pp3.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 dc,dc,dc,dc);
+		}
+		if (dustSides[3] && base.fac4 > 0)
+		{
+			s.draw_quad_world(layer, sub_layer, false, 
+					 base.pp2.x, base.pp2.y, base.pp3.x, base.pp3.y, base.pp4.x, base.pp4.y, base.pp4.x, base.pp4.y,
+					 dc,dc,dc,dc);
+		}
 	}
 
 	void DrawIntersect(scene@ s)
@@ -549,6 +612,8 @@ class d3Manager
 	array<d3CQuad@> allQuads;
 	d2::CollisionManager@ manager;
 	d3Cam@ cam;
+
+	script@ script;
 	
 	d3Manager()
 	{

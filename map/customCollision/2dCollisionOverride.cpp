@@ -180,8 +180,8 @@ class CollisionOverride : callback_base
 		}
 		if (!curBest.def)
 		{
-			puts("trying? " + curBest.y);
-			puts("side: " + side);
+			// puts("trying? " + curBest.y);
+			// puts("side: " + side);
 			tc.hit(true);
 			tc.hit_x(curBest.x);
 			tc.hit_y(curBest.y);

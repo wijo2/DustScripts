@@ -61,6 +61,7 @@ class script : script_base
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+		@manager.script = @this;
 		rotation = 0;
 		oldRotation = 0;
 		camera@ c = get_active_camera();
@@ -72,6 +73,7 @@ class script : script_base
 	{
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+		@manager.script = @this;
 		rotation = 0;
 		oldRotation = 0;
 		camera@ c = get_active_camera();
@@ -367,6 +369,7 @@ class d3QuadEntity : trigger_base
 		@quad = @d3::d3CQuad();
 		@quad.collisionBase.script = @script;
 		@quad.collisionBase.manager = @manager.manager;
+		@quad.manager = @manager;
 		
 		if (p1 == Vector3(0,0,0) && 
 			p2 == Vector3(0,0,0) && 
