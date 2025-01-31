@@ -249,9 +249,9 @@ class d3Quad
 	//but oh well can't be bothered to fix :p
 	bool IsIntersected(int side)
 	{
-		if (side == 1) { puts("1 is intersected " + 
-						!(GetSide(1) == GetSide(2) && GetSide(2) == GetSide(3))
-		); }
+		// if (side == 1) { puts("1 is intersected " + 
+		// 				!(GetSide(1) == GetSide(2) && GetSide(2) == GetSide(3))
+		// ); }
 		//if all points of side are on same side of cam it's not intersected
 		switch (side)
 		{
@@ -457,7 +457,8 @@ class d3CQuad
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
 			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side1-1]);
-			collisionBase.base.p4 = collisionBase.base.p3;
+			//need to offset for nodefrompoint to work correctly
+			collisionBase.base.p4 = collisionBase.base.p3 + d2Math::Vector2(0.1,0.1);
 			collisionBase.activeLines[0] = activeSides[side2-1];
 			collisionBase.spikeLines[0] = spikeSides[side2-1];
 			collisionBase.dustLines[0] = dustSides[side2-1];
@@ -506,7 +507,6 @@ class d3CQuad
 		base.Draw(s, layer, sub_layer, manager.script);
 		uint sc = manager.script.spikeColour;
 		uint dc = manager.script.dustColour;
-		return;
 		if (spikeSides[0] && base.fac1 > 0)
 		{
 			s.draw_quad_world(layer, sub_layer, false, 

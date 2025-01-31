@@ -390,7 +390,7 @@ class d3QuadEntity : trigger_base
 		}
 		if (layer == 0)
 		{
-			layer = 21;
+			layer = 18;
 		}
 		if (sub_layer == 0)
 		{
@@ -639,3 +639,116 @@ class d3QuadEntity : trigger_base
 		}
 	}
 };
+
+class d3NodeCluster : trigger_base 
+{
+	[text] int layer;
+	[text] int sub_layer;
+	[colour,alpha] uint d2colour;
+	[colour,alpha] uint d3colour;
+
+	[hidden] array<Vector3> nodes;
+
+	d2Math::Vector2 oldCentre;
+
+	d3::d3Manager@ manager;
+	//stores node indecies of each quad
+	//each int array should be 4 indecies long
+	[hidden] array<array<int>> quadNodes;
+	array<d3::d3CQuad@> quads;
+
+	scripttrigger@ self;
+	script@ script;
+	input_api@ input;
+
+	void init(script@ s, scripttrigger@ self)
+	{
+		@script = @s;
+		@this.self = @self;
+		@input = @get_input_api();
+		@this.manager = @s.manager; 
+		if (d2colour == 0x00000000)
+		{
+			d2colour = s.default2dCol;
+		}
+		if (d3colour == 0x00000000)
+		{
+			d3colour = s.default3dCol;
+		}
+		oldCentre = d2Math::Vector2(self.x(), self.y());
+		if (layer == 0)
+		{
+			layer = 18;
+		}
+		if (sub_layer == 0)
+		{
+			sub_layer = 1;
+		}
+	}
+
+	//initialises the quad list. only call in init!!!
+	void InitQuads()
+	{
+		quads = {};
+		for (uint i = 0; i < quadNodes.length(); i++)
+		{
+			d3::d3CQuad nq;
+			nq.layer = layer;
+			nq.sub_layer = sub_layer;
+			nq.base.colour = d3colour;
+			nq.collisionBase.colour = d2colour;
+			@nq.manager = @manager;
+	   		quads.push_back(@nq);
+			manager.allQuads.push_back(@nq);
+		}
+		UpdatePositions();
+	}
+
+	void UpdatePositions()
+	{
+		for (uint i = 0; i < quadNodes.length(); i++)
+		{
+			d3::d3CQuad@ q = quads[i];
+			array<int>@ p = quadNodes[i];
+			q.base.p1 = p[0];
+			q.base.p2 = p[1];
+			q.base.p3 = p[2];
+			q.base.p4 = p[3];
+		}
+	}
+
+	//finds all other quads that share a trig with
+	//this one and disable both of the sides
+	array<int> DealWithSharedTrigs(int quad)
+	{
+		array<int> ret;
+		array<int>@ q = quadNodes[quad];
+		for (uint i = 0; i < quadNodes.length(); i++)
+		{
+			
+		}
+	}
+
+	array<int> FindSharedTrig(int n1, int n2, int n3)
+	{
+		array<int> ret;
+		for (uint i = 0; i < quadNodes.length(); i++)
+		{
+			array<int>@ l = quadNodes[i];
+			if (l.find(n1) != 0 && l.find(n2) != 0 && l.find(n3) != 0)
+			{
+				ret.push_back(i);
+			}
+		}
+		return ret;
+	}
+
+	void on_remove()
+	{
+		for (uint i = 0; i < quads.length(); i++)
+		{
+			//error safety is overrated
+			manager.allQuads.removeAT(uint(manager.allQuads.find(quads[0])));
+		}
+	}
+}
