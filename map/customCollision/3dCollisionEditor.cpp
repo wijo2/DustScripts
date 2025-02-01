@@ -654,7 +654,7 @@ class d3NodeCluster : trigger_base
 	d3::d3Manager@ manager;
 	//stores node indecies of each quad
 	//each int array should be 4 indecies long
-	[hidden] array<array<int>> quadNodes;
+	[hidden] array<array<uint>> quadNodes;
 	array<d3::d3CQuad@> quads;
 
 	scripttrigger@ self;
@@ -689,19 +689,20 @@ class d3NodeCluster : trigger_base
 	//initialises the quad list. only call in init!!!
 	void InitQuads()
 	{
-		quads = {};
+		quads.resize(0);
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
 			d3::d3CQuad nq;
 			nq.layer = layer;
 			nq.sub_layer = sub_layer;
 			nq.base.colour = d3colour;
-			nq.collisionBase.colour = d2colour;
+			nq.collisionBase.base.colour = d2colour;
 			@nq.manager = @manager;
 	   		quads.push_back(@nq);
 			manager.allQuads.push_back(@nq);
 		}
 		UpdatePositions();
+		SetActiveSidesAll();
 	}
 
 	void UpdatePositions()
@@ -709,35 +710,125 @@ class d3NodeCluster : trigger_base
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
 			d3::d3CQuad@ q = quads[i];
-			array<int>@ p = quadNodes[i];
-			q.base.p1 = p[0];
-			q.base.p2 = p[1];
-			q.base.p3 = p[2];
-			q.base.p4 = p[3];
+			array<uint>@ p = @quadNodes[i];
+			q.base.p1 = nodes[p[0]];
+			q.base.p2 = nodes[p[1]];
+			q.base.p3 = nodes[p[2]];
+			q.base.p4 = nodes[p[3]];
+
+			//shrinking the quads slightly so that layering can work
+			Vector3 c = q.base.Find3dCentre();
+			q.base.p1 += (c-q.base.p1)/1000;
+			q.base.p2 += (c-q.base.p2)/1000;
+			q.base.p3 += (c-q.base.p3)/1000;
+			q.base.p4 += (c-q.base.p4)/1000;
+		}
+	}
+
+	void SetActiveSidesAll()
+	{
+		ActivateAllSides();
+		for (uint i = 0; i < quadNodes.length(); i++)
+		{
+			DealWithSharedTrigs(i);
 		}
 	}
 
 	//finds all other quads that share a trig with
 	//this one and disable both of the sides
-	array<int> DealWithSharedTrigs(int quad)
+	void DealWithSharedTrigs(uint quad)
 	{
-		array<int> ret;
-		array<int>@ q = quadNodes[quad];
-		for (uint i = 0; i < quadNodes.length(); i++)
+		array<uint>@ q = quadNodes[quad];
+
+		array<uint> m1 = FindSharedTrig(q[0], q[1], q[2]);
+		array<uint> m2 = FindSharedTrig(q[0], q[1], q[3]);
+		array<uint> m3 = FindSharedTrig(q[0], q[2], q[3]);
+		array<uint> m4 = FindSharedTrig(q[1], q[2], q[3]);
+
+		if (m1.length() > 1)
 		{
-			
+			for (uint i = 0; i < m1.length(); i++)
+			{
+				int side = SideFromNodes(i, q[0], q[1], q[2]);
+				if (side < 0) { continue; }
+				quads[i].activeSides[side-1] = false;
+				quads[i].base.drawnSides[side-1] = false;
+			}
+		}
+		if (m2.length() > 1)
+		{
+			for (uint i = 0; i < m2.length(); i++)
+			{
+				int side = SideFromNodes(i, q[0], q[1], q[3]);
+				if (side < 0) { continue; }
+				quads[i].activeSides[side-1] = false;
+				quads[i].base.drawnSides[side-1] = false;
+			}
+		}
+		if (m3.length() > 1)
+		{
+			for (uint i = 0; i < m3.length(); i++)
+			{
+				int side = SideFromNodes(i, q[0], q[2], q[3]);
+				if (side < 0) { continue; }
+				quads[i].activeSides[side-1] = false;
+				quads[i].base.drawnSides[side-1] = false;
+			}
+		}
+		if (m4.length() > 1)
+		{
+			for (uint i = 0; i < m4.length(); i++)
+			{
+				int side = SideFromNodes(i, q[1], q[2], q[3]);
+				if (side < 0) { continue; }
+				quads[i].activeSides[side-1] = false;
+				quads[i].base.drawnSides[side-1] = false;
+			}
 		}
 	}
 
-	array<int> FindSharedTrig(int n1, int n2, int n3)
+	void ActivateAllSides()
 	{
-		array<int> ret;
+		array<bool> a = {true, true, true, true};
+		for (uint i = 0; i < quads.length(); i++)
+		{
+	   		d3::d3CQuad@ q = quads[i];
+			q.activeSides = a;
+			q.base.drawnSides = a;
+		}
+	}
+
+	int SideFromNodes(uint quad, uint n1, uint n2, uint n3)
+	{
+		array<uint>@ q = quadNodes[quad];
+		array<uint> na = {n1, n2, n3};
+		array<uint> s1 = {q[0], q[1], q[2]};
+		array<uint> s2 = {q[0], q[1], q[3]};
+		array<uint> s3 = {q[0], q[2], q[3]};
+		array<uint> s4 = {q[1], q[2], q[3]};
+		if (IsSameArr(na, s1)) { return 1; }
+		if (IsSameArr(na, s2)) { return 2; }
+		if (IsSameArr(na, s3)) { return 3; }
+		if (IsSameArr(na, s4)) { return 4; }
+		return -1;
+	}
+
+	bool IsSameArr(array<uint> a1, array<uint> a2)
+	{
+		a1.sortAsc();
+		a2.sortAsc();
+		return a1 == a2;
+	}
+
+	array<uint> FindSharedTrig(uint n1, uint n2, uint n3)
+	{
+		array<uint> ret;
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
-			array<int>@ l = quadNodes[i];
+			array<uint>@ l = quadNodes[i];
 			if (l.find(n1) != 0 && l.find(n2) != 0 && l.find(n3) != 0)
 			{
-				ret.push_back(i);
+				ret.insertLast(i);
 			}
 		}
 		return ret;
@@ -748,7 +839,7 @@ class d3NodeCluster : trigger_base
 		for (uint i = 0; i < quads.length(); i++)
 		{
 			//error safety is overrated
-			manager.allQuads.removeAT(uint(manager.allQuads.find(quads[0])));
+			manager.allQuads.removeAt(uint(manager.allQuads.find(quads[0])));
 		}
 	}
 }

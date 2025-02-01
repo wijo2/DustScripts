@@ -411,9 +411,9 @@ class CollisionManager
 		uint x2 = (rect.x2 - playArea.x1) >> collisionOrder;
 		uint y2 = (rect.y2 - playArea.y1) >> collisionOrder;
 
-		for (uint x = x1; x <= x2; x++)
+		for (uint x = uint(max(x1, 0)); x <= uint(min(x2, collisionGrid.length()-1)); x++)
 		{
-			for (uint y = y1; y <= y2; y++)
+			for (uint y = uint(max(y1, 0)); y <= uint(min(y2, collisionGrid[x].length()-1)); y++)
 			{
 				if (debug) 
 				{
