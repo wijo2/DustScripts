@@ -593,6 +593,7 @@ class Vector3
 	}
 	Vector3 Normalised()
 	{
+		if (this.Magnitude() == 0) { return Vector3(); }
 		return this/Magnitude();
 	}
 	Vector3 Cross(Vector3@ o)

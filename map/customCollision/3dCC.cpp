@@ -452,7 +452,7 @@ class d3CQuad
 		{
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
-			puts("trig sides " + side1 + " " + side2 + " " + side3);
+			// puts("trig sides " + side1 + " " + side2 + " " + side3);
 			// puts("spike sides " + spikeSides[0] + " " + spikeSides[1] + " " + spikeSides[2] + " " + spikeSides[3]);
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
@@ -478,7 +478,7 @@ class d3CQuad
 			int side2 = GetNextSide(side1, 0);
 			int side3 = GetNextSide(side2, side1);
 			int side4 = GetNextSide(side3, side2);
-			puts("quad sides " + side1 + " " + side2 + " " + side3 + " " + side4);
+			// puts("quad sides " + side1 + " " + side2 + " " + side3 + " " + side4);
 			// puts("spike sides " + spikeSides[0] + " " + spikeSides[1] + " " + spikeSides[2] + " " + spikeSides[3]);
 			// puts("trying 1 is intersected " + base.IsIntersected(1));
 			collisionBase.base.p1 = base.GetIntersection(sideLookup[side1-1][side2-1]);
@@ -628,6 +628,7 @@ class d3Manager
 			allQuads[i].base.ApplyProjection(cam);
 			allQuads[i].UpdateIntersectQuad(cam);
 		}
+		SortQuadList();
 	}
 
 	void UpdateCollision()

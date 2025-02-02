@@ -170,7 +170,6 @@ class CollisionOverride : callback_base
 				{
 					int n1 = colliders[i].base.GetNodeFromPoint(edges[li].bound1);
 					int n2 = colliders[i].base.GetNodeFromPoint(edges[li].bound2);
-					puts("collision points " + n1 + ", " + n2);
 					int s = colliders[i].base.GetSideFromNodes(n1, n2);
 					if (s != -1)
 					{
