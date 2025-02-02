@@ -656,6 +656,17 @@ class d3Manager
 			allQuads[i].DrawIntersect(get_scene());
 		}
 	}
+
+	void RemoveQuad(d3CQuad@ q)
+	{
+		for (uint i = 0; i < allQuads.length(); i++)
+		{
+			if (allQuads[i] is q)
+			{
+				allQuads.removeAt(i);
+			}
+		}
+	}
 }
 
 }

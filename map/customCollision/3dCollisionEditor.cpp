@@ -41,6 +41,8 @@ class script : script_base
 	bool right90 = false;
 	bool left90 = false;
 
+	bool firstFrame = true;
+
 	//debug
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugY] int debugX;
@@ -87,6 +89,12 @@ class script : script_base
 
 	void editor_step()
 	{
+		if (firstFrame)
+		{
+			firstFrame = false;
+			manager.UpdateLooks();
+		}
+
 		dontGrabCorner = false;
 		if (input.mouse_state() & 0x20 != 0 
 			&& editor.editor_tab() == "Triggers"
@@ -147,6 +155,12 @@ class script : script_base
 
 	void step(int idc) 
 	{
+		if (firstFrame)
+		{
+			firstFrame = false;
+			manager.UpdateLooks();
+			manager.UpdateCollision();
+		}
 		debugDraw = array<d2Math::Rect>(0);
 		HandleGameplayRotation();
 		manager.manager.step();
@@ -174,12 +188,13 @@ class script : script_base
 				rotation -= rotPerSec/60;
 			}
 			//down = right 90
+			float hpi = asin(1);
 			if (ca.input_y() & 0x2 != 0)
 			{
 				if (!right90)
 				{
 					right90 = true;
-					rotation += 1.570796;
+					rotation += hpi;
 				}
 			}
 			else { right90 = false; }
@@ -189,7 +204,7 @@ class script : script_base
 				if (!left90)
 				{
 					left90 = true;
-					rotation -= 1.570796;
+					rotation -= hpi;
 				}
 			}
 			else { left90 = false; }
