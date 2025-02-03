@@ -34,6 +34,10 @@ class d3NodeCluster : trigger_base
 		@this.self = @self;
 		@input = @get_input_api();
 		@this.manager = @s.manager; 
+		if (s.nodeClusters.findByRef(this) < 0)
+		{
+			s.nodeClusters.insertLast(this);
+		}
 		if (d2colour == 0x00000000)
 		{
 			d2colour = s.default2dCol;
@@ -52,6 +56,7 @@ class d3NodeCluster : trigger_base
 			sub_layer = 1;
 		}
 		InitQuads();
+		s.firstFrame = true;
 	}
 
 	void checkpoint_load() { InitQuads(); }
@@ -179,7 +184,7 @@ class d3NodeCluster : trigger_base
 				for (uint q = 0; q < quadNodes.length(); q++)
 				{
 					if (quads[q].base.PointRelation(mpos) != 0 &&
-						(bq == -1 || quads[q] < quads[bq]))
+						(bq == -1 || quads[q] > quads[bq]))
 					{
 						bq = q;
 					}
@@ -189,6 +194,7 @@ class d3NodeCluster : trigger_base
 					manager.RemoveQuad(quads[bq]);
 					quads.removeAt(bq);
 					quadNodes.removeAt(bq);
+					SetActiveSidesAll();
 				}
 			}
 
@@ -254,6 +260,11 @@ class d3NodeCluster : trigger_base
 				s.draw_rectangle_world(21,1, pos.x-w, pos.y-w, pos.x+w, pos.y+w, 0, c);
 			}
 		}
+	}
+
+	void UpdateRotation()
+	{
+		SetActiveSidesAll();
 	}
 
 	//finds first available spot and adds the node, returns index of node
@@ -354,43 +365,79 @@ class d3NodeCluster : trigger_base
 
 		if (m1.length() > 1)
 		{
+			bool draw = false;
 			for (uint i = 0; i < m1.length(); i++)
 			{
 				int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
 				if (side < 0) { continue; }
 				quads[m1[i]].activeSides[side-1] = false;
-				quads[m1[i]].base.drawnSides[side-1] = false;
+				if (quads[m1[i]].base.behind) { draw = true; }
+			}
+			if (!draw)
+			{
+				for (uint i = 0; i < m1.length(); i++)
+				{
+					int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
+					quads[m1[i]].base.drawnSides[side-1] = false;
+				}
 			}
 		}
 		if (m2.length() > 1)
 		{
+			bool draw = false;
 			for (uint i = 0; i < m2.length(); i++)
 			{
 				int side = SideFromNodes(m2[i], q[0], q[1], q[3]);
 				if (side < 0) { continue; }
 				quads[m2[i]].activeSides[side-1] = false;
-				quads[m2[i]].base.drawnSides[side-1] = false;
+				if (quads[m2[i]].base.behind) { draw = true; }
+			}
+			if (!draw)
+			{
+				for (uint i = 0; i < m2.length(); i++)
+				{
+					int side = SideFromNodes(m2[i], q[0], q[1], q[3]);
+					quads[m2[i]].base.drawnSides[side-1] = false;
+				}
 			}
 		}
 		if (m3.length() > 1)
 		{
+			bool draw = false;
 			for (uint i = 0; i < m3.length(); i++)
 			{
 				int side = SideFromNodes(m3[i], q[0], q[2], q[3]);
 				if (side < 0) { continue; }
 				quads[m3[i]].activeSides[side-1] = false;
-				quads[m3[i]].base.drawnSides[side-1] = false;
+				if (quads[m3[i]].base.behind) { draw = true; }
+			}
+			if (!draw)
+			{
+				for (uint i = 0; i < m3.length(); i++)
+				{
+					int side = SideFromNodes(m3[i], q[0], q[2], q[3]);
+					quads[m3[i]].base.drawnSides[side-1] = false;
+				}
 			}
 		}
 		if (m4.length() > 1)
 		{
+			bool draw = false;
 			for (uint i = 0; i < m4.length(); i++)
 			{
 				int side = SideFromNodes(m4[i], q[1], q[2], q[3]);
 				if (side < 0) { continue; }
 				quads[m4[i]].activeSides[side-1] = false;
-				quads[m4[i]].base.drawnSides[side-1] = false;
+				if (quads[m4[i]].base.behind) { draw = true; }
 			}
+				if (!draw)
+			{
+				for (uint i = 0; i < m4.length(); i++)
+				{
+					int side = SideFromNodes(m4[i], q[1], q[2], q[3]);
+					quads[m4[i]].base.drawnSides[side-1] = false;
+				}
+				}
 		}
 	}
 
@@ -453,7 +500,7 @@ class d3NodeCluster : trigger_base
 		for (uint i = 0; i < quads.length(); i++)
 		{
 			//error safety is overrated
-			manager.allQuads.removeAt(uint(manager.allQuads.find(quads[0])));
+			manager.RemoveQuad(quads[i]);
 		}
 	}
 }

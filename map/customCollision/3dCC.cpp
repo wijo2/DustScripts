@@ -54,6 +54,18 @@ class d3Cam
 		);
 		return vec;
 	}
+
+	Vector3 WorldToCamDir(Vector3 vec)
+	{
+		float c = cos(rotation);
+		float s = sin(rotation);
+		vec = Vector3(
+			vec.x * c - vec.z * s,
+			vec.y,
+			vec.x * s + vec.z * c
+		);
+		return vec;
+	}
 }
 
 class nothing2{} //this tricks my lsp to obey
@@ -196,10 +208,10 @@ class d3Quad
 		if (csp3.z <= 0) { behindc += 1; sides[2] = false; } else { sides[2] = true; }
 		if (csp4.z <= 0) { behindc += 1; sides[3] = false; } else { sides[3] = true; }
 		// puts("behindc " + behindc);
-		behind = behindc == 4;
+		behind = (behindc == 4);
 		intersecting = !behind && behindc > 0;
 		// puts("intersecting " + intersecting);
-		intersectionType = behindc == 2;
+		intersectionType = (behindc == 2);
 
 		fac1 = GetSideFacing(1);
 		fac2 = GetSideFacing(2);
@@ -434,8 +446,10 @@ class d3CQuad
 			collisionBase.activeLines[1] = false;
 			collisionBase.activeLines[2] = false;
 			collisionBase.activeLines[3] = false;
+			collisionBase.deactive = true;
 			return;
 		}
+		collisionBase.deactive = false;
 
 		//sides:
 		//1: 1, 2, 3

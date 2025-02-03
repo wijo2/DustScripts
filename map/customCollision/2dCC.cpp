@@ -124,6 +124,9 @@ class d2CQuad
 
 	float maxDist = 0;
 
+	//used for 3d stuff
+	bool deactive = false;
+
 	script@ script;
 
 	d2CQuad() { @base = @d2Quad(); @manager = null; }
@@ -249,7 +252,7 @@ class d2CQuad
 
 	void Draw(scene@ s, uint layer, uint sub_layer)
 	{
-		if (!activeLines[0] && !activeLines[1] && !activeLines[2] && !activeLines[3]) { return; }
+		if (deactive) { return; }
 		base.Draw(s, layer, sub_layer);
 		// DrawDebug(s, layer, sub_layer);
 	   	float hw = 3;
