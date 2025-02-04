@@ -262,6 +262,7 @@ class d2CQuad
 			d2Math::Vector2 p2 = base.PointByNumber(side + 2);
 	   		d2Math::Vector2 centre = d2Math::Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 			float hl = p1.Distance(p2)/2;
+			if (@script == null) { continue; }
 			if (dustLines[side])
 			{
 				s.draw_rectangle_world(layer, sub_layer,
@@ -277,6 +278,14 @@ class d2CQuad
 						  centre.x - hw, centre.y - hl,
 						  centre.x + hw, centre.y + hl,
 						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.spikeColour
+				);
+			}
+			if (activeLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.edgeColour
 				);
 			}
 		}
@@ -295,15 +304,15 @@ class d2CQuad
 	void DrawDebug(scene@ s, uint layer, uint sub_layer)
 	{
 		array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
-			.IterateOverLine(4, base.p1, base.p2);
+			.IterateOverLine(6, base.p1, base.p2);
 		array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
-			.IterateOverLine(4, base.p2, base.p3);
+			.IterateOverLine(6, base.p2, base.p3);
 		arr = AddArrays(arr, arr1);
 		arr1 = d2Math::LineFunc(base.p3, base.p4)
-			.IterateOverLine(4, base.p3, base.p4);
+			.IterateOverLine(6, base.p3, base.p4);
 		arr = AddArrays(arr, arr1);
 		arr1 = d2Math::LineFunc(base.p4, base.p1)
-			.IterateOverLine(4, base.p4, base.p1);
+			.IterateOverLine(6, base.p4, base.p1);
 		arr = AddArrays(arr, arr1);
 		for (uint i = 0; i < arr.length(); i++)
 		{
@@ -313,7 +322,7 @@ class d2CQuad
 				layer,
 				sub_layer,
 				x,y,
-				x+16,y+16,
+				x+64,y+64,
 				0,
 				0x80FF0000
 			);
@@ -457,7 +466,7 @@ class CollisionManager
 					dx,dy,
 					dx+(1 << collisionOrder),dy+(1 << collisionOrder),
 					0,
-					0x8000FF00
+					0x8800FF00
 				);
 			}
 		}

@@ -378,7 +378,7 @@ class Rect
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
-						 x1,y1,x2,y2,0,0xFF3333FF);
+						 x1,y1,x2,y2,0,0x883333FF);
 	}
 }
 
@@ -494,7 +494,7 @@ class IntRect
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
-						 x1,y1,x2,y2,0,0xFF3333FF);
+						 x1,y1,x2,y2,0,0x88333377);
 	}
 }
 

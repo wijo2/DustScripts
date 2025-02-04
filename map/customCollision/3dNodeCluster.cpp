@@ -265,6 +265,35 @@ class d3NodeCluster : trigger_base
 	void UpdateRotation()
 	{
 		SetActiveSidesAll();
+		UpdateSelf();
+	}
+
+	void editor_var_changed(var_info@ info)
+	{
+		SetActiveSidesAll();
+		UpdateSelf();
+		manager.UpdateLooks();
+	}
+
+	void UpdateSelf()
+	{
+		float closest = -1;
+		for(uint i = 0; i < quadNodes.length(); i++)
+		{
+			for(uint a = 0; a < quadNodes[i].length(); a++)
+			{
+				float nz = manager.cam.WorldToCamPos(nodes[a]).z;
+				if (nz < closest || closest == -1) { closest = nz; }
+			}
+		}
+		uint d2col = script.ApplyFog(d2colour, closest);
+		uint d3col = script.ApplyFog(d3colour, closest);
+		for(uint i = 0; i < quads.length(); i++)
+		{
+			quads[i].collisionBase.base.colour = d2col;
+			quads[i].base.colour = d3col;
+		}
+		UpdatePositions();
 	}
 
 	//finds first available spot and adds the node, returns index of node
@@ -304,6 +333,7 @@ class d3NodeCluster : trigger_base
 			nq.base.colour = d3colour;
 			nq.collisionBase.base.colour = d2colour;
 	   		@nq.collisionBase.manager = @manager.manager;
+	   		@nq.collisionBase.script = @script;
 			@nq.manager = @manager;
 	   		quads.insertLast(@nq);
 			manager.allQuads.insertLast(@nq);
@@ -326,10 +356,11 @@ class d3NodeCluster : trigger_base
 
 			//shrinking the quads slightly so that layering can work
 			Vector3 c = q.base.Find3dCentre();
-			q.base.p1 += (c-q.base.p1)/1000;
-			q.base.p2 += (c-q.base.p2)/1000;
-			q.base.p3 += (c-q.base.p3)/1000;
-			q.base.p4 += (c-q.base.p4)/1000;
+			int shrinkAmount = 10;
+			q.base.p1 += (c-q.base.p1)/shrinkAmount;
+			q.base.p2 += (c-q.base.p2)/shrinkAmount;
+			q.base.p3 += (c-q.base.p3)/shrinkAmount;
+			q.base.p4 += (c-q.base.p4)/shrinkAmount;
 		}
 	}
 
@@ -338,6 +369,7 @@ class d3NodeCluster : trigger_base
 		// puts("quad 0: " + quadNodes[0][0]+","+quadNodes[0][1]+","+quadNodes[0][2]+","+quadNodes[0][3]);
 		// puts("quad 1: " + quadNodes[1][0]+","+quadNodes[1][1]+","+quadNodes[1][2]+","+quadNodes[1][3]);
 		ActivateAllSides();
+		// return;
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
 			// puts("");

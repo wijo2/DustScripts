@@ -16,8 +16,12 @@ class script : script_base
 	[text] int playAreaWidth = 10000;
 	[text] int playAreaHeight = 10000;
 
-	[colour,alpha] uint spikeColour;
-	[colour,alpha] uint dustColour;
+	[colour,alpha] uint spikeColour = 0xFFFF0000;
+	[colour,alpha] uint dustColour = 0xFF00FF00;
+	[colour,alpha] uint edgeColour = 0x11000000;
+	[colour,alpha] uint fogColour = 0x66000000;
+	//more = fog is further
+	[text] float fogDist = 500;
 	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
 	[colour,alpha] uint default2dCol = 0xBB888888;
 
@@ -127,6 +131,18 @@ class script : script_base
 		UpdateRotation();
 	}
 
+	uint ApplyFog(uint col, float dist)
+	{
+		float ed = fogDist/dist;
+		if (ed > 1  || ed < 0) { return col; }
+		uint a = uint(((col & 0xFF000000) >> 24) * ed + ((fogColour & 0xFF000000) >> 24) * (1-ed));
+		uint r = uint(((col & 0xFF0000) >> 16) * ed + ((fogColour & 0xFF0000) >> 16) * (1-ed));
+		uint g = uint(((col & 0xFF00) >> 8) * ed + ((fogColour & 0xFF00) >> 8) * (1-ed));
+		uint b = uint((col & 0xFF) * ed + (fogColour & 0xFF) * (1-ed));
+		puts("cols " + a + ", " + r + ", " + g + ", " + b);
+		return ((a & 0xFF) << 24) + ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
+	}
+
 	//everything with middle mouse
 	void HandleMiddleCommands()
 	{
@@ -172,7 +188,40 @@ class script : script_base
 		manager.manager.step();
 		UpdateCamPos();
 		UpdateRotation();
+		UpdatePlayArea();
 	}
+
+void UpdatePlayArea()
+{
+	controllable@ p = controller_controllable(uint(get_active_player()));
+	if (@p == null) { return; }
+	bool update = false;
+	if (p.x() - playAreaCornerX < playAreaWidth/6)
+	{
+		playAreaCornerX -= playAreaWidth/2;
+		update = true;
+	}
+	if (playAreaCornerX + playAreaWidth - p.x() < playAreaWidth/6)
+	{
+		playAreaCornerX += playAreaWidth/2;
+		update = true;
+	}
+	if (p.y() - playAreaCornerY < playAreaHeight/6)
+	{
+		playAreaCornerY -= playAreaHeight/2;
+		update = true;
+	}
+	if (playAreaCornerY + playAreaHeight - p.y() < playAreaWidth/6)
+	{
+		playAreaCornerY += playAreaHeight/2;
+		update = true;
+	}
+	if (update)
+	{
+		manager.manager.playArea = d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight);
+		manager.UpdateCollision();
+	}
+}
 
 	void HandleGameplayRotation()
 	{
