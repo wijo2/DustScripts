@@ -363,6 +363,7 @@ class CollisionManager
 		);
 		uint w = this.playArea.width >> collisionOrder;
 		uint h = this.playArea.height >> collisionOrder;
+		collisionGrid.resize(0);
 		collisionGrid.resize(w);
 		for (uint i = 0; i < w; i++) {
 			collisionGrid[i].resize(h);

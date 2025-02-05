@@ -356,7 +356,7 @@ class d3NodeCluster : trigger_base
 
 			//shrinking the quads slightly so that layering can work
 			Vector3 c = q.base.Find3dCentre();
-			int shrinkAmount = 10;
+			int shrinkAmount = 10000;
 			q.base.p1 += (c-q.base.p1)/shrinkAmount;
 			q.base.p2 += (c-q.base.p2)/shrinkAmount;
 			q.base.p3 += (c-q.base.p3)/shrinkAmount;

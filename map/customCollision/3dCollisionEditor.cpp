@@ -139,7 +139,7 @@ class script : script_base
 		uint r = uint(((col & 0xFF0000) >> 16) * ed + ((fogColour & 0xFF0000) >> 16) * (1-ed));
 		uint g = uint(((col & 0xFF00) >> 8) * ed + ((fogColour & 0xFF00) >> 8) * (1-ed));
 		uint b = uint((col & 0xFF) * ed + (fogColour & 0xFF) * (1-ed));
-		puts("cols " + a + ", " + r + ", " + g + ", " + b);
+		// puts("cols " + a + ", " + r + ", " + g + ", " + b);
 		return ((a & 0xFF) << 24) + ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
 	}
 
@@ -218,7 +218,7 @@ void UpdatePlayArea()
 	}
 	if (update)
 	{
-		manager.manager.playArea = d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight);
+		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 		manager.UpdateCollision();
 	}
 }

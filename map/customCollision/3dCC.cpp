@@ -649,7 +649,7 @@ class d3Manager
 	{
 		for (uint i = 0; i < allQuads.length(); i++)
 		{
-			allQuads[i].collisionBase.UpdateCollision();
+			allQuads[i].collisionBase.UpdateCollision(false);
 		}
 
 	}

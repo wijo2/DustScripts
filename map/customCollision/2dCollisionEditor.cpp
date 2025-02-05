@@ -17,6 +17,7 @@ class script : script_base
 
 	[colour,alpha] uint spikeColour;
 	[colour,alpha] uint dustColour;
+	[colour,alpha] uint edgeColour;
 
 	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
 	[hidden] int dustPosY;
@@ -273,7 +274,7 @@ class QuadEntity : trigger_base
 		}
 		UpdateSelf();
 		UpdateSides();
-		// quad.UpdateCollision();
+		quad.UpdateCollision();
 	}
 
 	void editor_var_changed(var_info@ info)
@@ -306,6 +307,8 @@ class QuadEntity : trigger_base
 		d2Math::Vector2 centre = quad.base.FindCentre();
 		oldCentre = centre;
 		self.set_centre(centre.x, centre.y);
+		self.x(centre.x);
+		self.y(centre.y);
 	}
 
 	//seperating since this should only happen at start of level

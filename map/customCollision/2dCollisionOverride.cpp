@@ -70,7 +70,7 @@ class CollisionOverride : callback_base
 		//I need to be able to collide with multiple things at a time for
 		//3d to be remotely functional so this is A solution I guess
 		Collision curBest;
-		puts("side: " + side + " colliders: " + colliders.length());
+		// puts("side: " + side + " colliders: " + colliders.length());
 		for (uint i = 0; i < colliders.length(); i++)
 		{
 			if (colliders[i].maxDist + 100 < (colliders[i].base.FindCentre() - pos).Magnitude()) { continue; }
@@ -182,7 +182,7 @@ class CollisionOverride : callback_base
 		if (!curBest.def)
 		{
 			// puts("trying? " + curBest.y);
-			puts("something side: " + side);
+			// puts("something side: " + side);
 			tc.hit(true);
 			tc.hit_x(curBest.x);
 			tc.hit_y(curBest.y);
@@ -190,7 +190,7 @@ class CollisionOverride : callback_base
 		}
 		else 
 		{
-			puts("nothing side " + side);
+			// puts("nothing side " + side);
 			//if nothing was found use the default
 			ec.check_collision(tc, side, moving, snap_offset);
 		}
