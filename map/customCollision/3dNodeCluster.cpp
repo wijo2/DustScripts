@@ -1,7 +1,9 @@
 #include "3dCC.cpp";
 
+class fuckThis{}
 class d3NodeCluster : trigger_base 
 {
+	[hidden] bool hasInit = false;
 	[text] int layer;
 	[text] int sub_layer;
 	[colour,alpha] uint d2colour;
@@ -24,6 +26,9 @@ class d3NodeCluster : trigger_base
 	[hidden] array<array<uint>> quadNodes;
 	array<d3::d3CQuad@> quads;
 
+	//3d pos of trigger centre
+	[hidden] Vector3 d3pos;
+
 	scripttrigger@ self;
 	script@ script;
 	input_api@ input;
@@ -38,24 +43,34 @@ class d3NodeCluster : trigger_base
 		{
 			s.nodeClusters.insertLast(this);
 		}
-		if (d2colour == 0x00000000)
+		if (!hasInit)
 		{
-			d2colour = s.default2dCol;
+			if (d2colour == 0x00000000)
+			{
+				d2colour = s.default2dCol;
+			}
+			if (d3colour == 0x00000000)
+			{
+				d3colour = s.default3dCol;
+			}
+			if (layer == 0)
+			{
+				layer = 18;
+			}
+			if (sub_layer == 0)
+			{
+				sub_layer = 1;
+			}
+			d2Math::Vector2 camCen = manager.cam.igCoords;
+			d3pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
+			hasInit = true;
 		}
-		if (d3colour == 0x00000000)
+		else
 		{
-			d3colour = s.default3dCol;
-		}
-		oldCentre = d2Math::Vector2(self.x(), self.y());
-		if (layer == 0)
-		{
-			layer = 18;
-		}
-		if (sub_layer == 0)
-		{
-			sub_layer = 1;
+			
 		}
 		InitQuads();
+		UpdateRotation();
 		s.firstFrame = true;
 	}
 
@@ -231,6 +246,17 @@ class d3NodeCluster : trigger_base
 				manager.UpdateLooks();
 			}
 		}
+
+			//trigger move
+			d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
+			d2Math::Vector2 dif = curPos - oldCentre;
+			if (dif != d2Math::Vector2())
+			{
+				d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
+				oldCentre = d2Math::Vector2(self.x(), self.y());
+				if (d3pos.z < 0) { self.editor_handle_size(0); }
+				else { self.editor_handle_size(10); }
+			}
 	}
 
 	void editor_draw(float ok)
@@ -294,6 +320,14 @@ class d3NodeCluster : trigger_base
 			quads[i].base.colour = d3col;
 		}
 		UpdatePositions();
+		d2Math::Vector2 camCen = manager.cam.igCoords;
+		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
+		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
+		self.x(newPos.x);
+		self.y(newPos.y);
+		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
+		if (newPos.z < 0) { self.editor_handle_size(0); }
+		else { self.editor_handle_size(10); }
 	}
 
 	//finds first available spot and adds the node, returns index of node
