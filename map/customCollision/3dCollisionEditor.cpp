@@ -37,6 +37,8 @@ class script : script_base
 	array<d3QuadEntity@> quadEntities;
 	array<d3NodeCluster@> nodeClusters;
 
+	[hidden] d3StartPos@ startPos;
+
 	d2Math::Vector2 middleDragStart;
 	float middleDragStartRot;
 	[label:"middle mouse hotkeys"] bool middleDragEnable;
@@ -48,8 +50,6 @@ class script : script_base
 	bool wasGrounded;
 
 	bool firstFrame = true;
-
-	[hidden] d3StartPos@ startPos;
 
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
@@ -184,7 +184,6 @@ class script : script_base
 		{
 			if (@startPos != null)
 			{
-				puts("moving?");
 				manager.cam.centre = startPos.pos;
 			}
 			firstFrame = false;
@@ -494,7 +493,6 @@ class d3StartPos : trigger_base
 		}
 		if (!self.destroyed())
 		{
-			puts("setting sp");
 			@s.startPos = @this;
 		}
 
@@ -505,6 +503,7 @@ class d3StartPos : trigger_base
 			hasInit = true;
 		}
 		UpdateRotation();
+		s.firstFrame = true;
 	}
 
 	void editor_step()
