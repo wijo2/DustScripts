@@ -45,8 +45,11 @@ class script : script_base
 	//bools for up/down keys cause reasons
 	bool right90 = false;
 	bool left90 = false;
+	bool wasGrounded;
 
 	bool firstFrame = true;
+
+	[hidden] d3StartPos@ startPos;
 
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
@@ -89,10 +92,10 @@ class script : script_base
 		@manager.script = @this;
 		rotation = 0;
 		oldRotation = 0;
-		camera@ c = get_active_camera();
+		controllable@ c = controller_controllable(uint(get_active_player()));
 		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
-		c.controller_mode(4);
+		get_active_camera().controller_mode(4);
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -179,6 +182,11 @@ class script : script_base
 	{
 		if (firstFrame)
 		{
+			if (@startPos != null)
+			{
+				puts("moving?");
+				manager.cam.centre = startPos.pos;
+			}
 			firstFrame = false;
 			UpdateRotation(true);
 			manager.UpdateCollision();
@@ -191,37 +199,37 @@ class script : script_base
 		UpdatePlayArea();
 	}
 
-void UpdatePlayArea()
-{
-	controllable@ p = controller_controllable(uint(get_active_player()));
-	if (@p == null) { return; }
-	bool update = false;
-	if (p.x() - playAreaCornerX < playAreaWidth/6)
+	void UpdatePlayArea()
 	{
-		playAreaCornerX -= playAreaWidth/2;
-		update = true;
+		controllable@ p = controller_controllable(uint(get_active_player()));
+		if (@p == null) { return; }
+		bool update = false;
+		if (p.x() - playAreaCornerX < playAreaWidth/6)
+		{
+			playAreaCornerX -= playAreaWidth/2;
+			update = true;
+		}
+		if (playAreaCornerX + playAreaWidth - p.x() < playAreaWidth/6)
+		{
+			playAreaCornerX += playAreaWidth/2;
+			update = true;
+		}
+		if (p.y() - playAreaCornerY < playAreaHeight/6)
+		{
+			playAreaCornerY -= playAreaHeight/2;
+			update = true;
+		}
+		if (playAreaCornerY + playAreaHeight - p.y() < playAreaWidth/6)
+		{
+			playAreaCornerY += playAreaHeight/2;
+			update = true;
+		}
+		if (update)
+		{
+			manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+			manager.UpdateCollision();
+		}
 	}
-	if (playAreaCornerX + playAreaWidth - p.x() < playAreaWidth/6)
-	{
-		playAreaCornerX += playAreaWidth/2;
-		update = true;
-	}
-	if (p.y() - playAreaCornerY < playAreaHeight/6)
-	{
-		playAreaCornerY -= playAreaHeight/2;
-		update = true;
-	}
-	if (playAreaCornerY + playAreaHeight - p.y() < playAreaWidth/6)
-	{
-		playAreaCornerY += playAreaHeight/2;
-		update = true;
-	}
-	if (update)
-	{
-		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
-		manager.UpdateCollision();
-	}
-}
 
 	void HandleGameplayRotation()
 	{
@@ -231,6 +239,10 @@ void UpdatePlayArea()
 		if (ca.input_taunt() != 0)
 		{
 			co.as_entity().time_warp(0);
+			if (!wasRotating)
+			{
+				wasGrounded = co.ground();
+			}
 			wasRotating = true;
 			//right
 			if (ca.input_x() & 0x2 != 0)
@@ -272,6 +284,7 @@ void UpdatePlayArea()
 				co.as_entity().time_warp(1);
 				wasRotating = false;
 				manager.UpdateCollision();
+				co.ground(wasGrounded);
 			}
 		}
 	}
@@ -292,27 +305,52 @@ void UpdatePlayArea()
 			{
 				nodeClusters[i].UpdateRotation();
 			}
+			if (@startPos != null)
+			{
+				startPos.UpdateRotation();
+			}
 			manager.SortQuadList();
 		}
 	}
 
 	void UpdateCamPos()
 	{
-		camera@ rcam = get_active_camera();
-		auto rcamPos = d2Math::Vector2(rcam.x(), rcam.y());
-		if (oldCamPos == d2Math::Vector2(0,0))
+		if (!is_playing())
 		{
-			oldCamPos = rcamPos;
-			return;
+			camera@ rcam = get_active_camera();
+			auto rcamPos = d2Math::Vector2(rcam.x(), rcam.y());
+			if (oldCamPos == d2Math::Vector2(0,0))
+			{
+				oldCamPos = rcamPos;
+				return;
+			}
+			d2Math::Vector2 dif = oldCamPos - rcamPos;
+			if (dif.Magnitude() > 0.1)
+			{
+				Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
+				manager.cam.centre -= dif2;
+				manager.cam.igCoords = rcamPos;
+				oldCamPos = rcamPos;
+				// puts("cam pos updated! " + manager.cam.centre.x + ", " + manager.cam.centre.y + ", " + manager.cam.centre.z);
+			}
 		}
-		d2Math::Vector2 dif = oldCamPos - rcamPos;
-		if (dif.Magnitude() > 0.1)
+		else
 		{
-			Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
-			manager.cam.centre -= dif2;
-			manager.cam.igCoords = rcamPos;
-			oldCamPos = rcamPos;
-			// puts("cam pos updated! " + manager.cam.centre.x + ", " + manager.cam.centre.y + ", " + manager.cam.centre.z);
+			controllable@ player = controller_controllable(uint(get_active_player()));
+			auto rcamPos = d2Math::Vector2(player.x(), player.y());
+			if (oldCamPos == d2Math::Vector2(0,0))
+			{
+				oldCamPos = rcamPos;
+				return;
+			}
+			d2Math::Vector2 dif = oldCamPos - rcamPos;
+			if (dif.Magnitude() > 0.1)
+			{
+				Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
+				manager.cam.centre -= dif2;
+				manager.cam.igCoords = rcamPos;
+				oldCamPos = rcamPos;
+			}
 		}
 	}
 
@@ -433,6 +471,68 @@ void UpdatePlayArea()
 	// }
 }
 
+class d3StartPos : trigger_base
+{
+	[hidden] Vector3 pos;
+	d2Math::Vector2 oldCentre;
+	[hidden] bool hasInit;
+
+	scripttrigger@ self;
+	script@ script;
+	d3::d3Manager@ manager;
+
+	void init(script@ s, scripttrigger@ self)
+	{
+		@script = @s;
+		@manager = @s.manager;
+		@this.self = @self;
+		self.editor_colour_inactive(0xFFFF0000);
+
+		if (@s.startPos != null && !(s.startPos is this)&& !self.destroyed())
+		{
+			get_scene().remove_entity(s.startPos.self.as_entity());
+		}
+		if (!self.destroyed())
+		{
+			puts("setting sp");
+			@s.startPos = @this;
+		}
+
+		if (!hasInit)
+		{
+			d2Math::Vector2 camCen = manager.cam.igCoords;
+			pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
+			hasInit = true;
+		}
+		UpdateRotation();
+	}
+
+	void editor_step()
+	{
+		d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
+		d2Math::Vector2 dif = curPos - oldCentre;
+		if (dif != d2Math::Vector2())
+		{
+			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
+			oldCentre = d2Math::Vector2(self.x(), self.y());
+		}
+	}
+
+	void UpdateRotation()
+	{
+		d2Math::Vector2 camCen = manager.cam.igCoords;
+		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
+		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
+		self.x(newPos.x);
+		self.y(newPos.y);
+		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
+		if (newPos.z < 0) { self.editor_handle_size(0); }
+		else { self.editor_handle_size(10); }
+	}
+}
+
+//I don't want to delete this since it's already made idk maybe someone will have a use for
+//it but yea it fucking sucks use nodecluster instead
 class d3QuadEntity : trigger_base 
 {
 	[text] int layer;

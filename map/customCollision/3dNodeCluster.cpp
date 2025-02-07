@@ -446,8 +446,6 @@ class d3NodeCluster : trigger_base
 		{
 			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = d2Math::Vector2(self.x(), self.y());
-			if (d3pos.z < 0) { self.editor_handle_size(0); }
-			else { self.editor_handle_size(10); }
 		}
 	}
 

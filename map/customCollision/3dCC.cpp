@@ -1,4 +1,5 @@
 #include "2dCC.cpp";
+#include "3dExtras.cpp";
 #include "mathHelper.cpp";
 
 namespace d3
