@@ -29,6 +29,23 @@ class d3NodeCluster : trigger_base
 	//3d pos of trigger centre
 	[hidden] Vector3 d3pos;
 
+	bool rotating = false;
+	d2Math::Vector2 rotStart;
+	//0 = idk, 1 = x, 2 = y, 3 = z
+	int rotatingDir;
+	array<Vector3> rotStartNodes;
+	Vector3 rotCentre;
+
+	bool scaling = false;
+	d2Math::Vector2 scaleStart;
+	int scalingDir;
+	//0 = idk, 1 = x, 2 = y, 3 = z
+	array<Vector3> scaleStartNodes;
+	Vector3 scaleCentre;
+
+	//can cycle presets
+	bool canPreset = false;
+
 	scripttrigger@ self;
 	script@ script;
 	input_api@ input;
@@ -65,10 +82,6 @@ class d3NodeCluster : trigger_base
 			d3pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
 			hasInit = true;
 		}
-		else
-		{
-			
-		}
 		InitQuads();
 		UpdateRotation();
 		s.firstFrame = true;
@@ -83,11 +96,148 @@ class d3NodeCluster : trigger_base
 			&& @script.editor.get_selected_trigger() != null
 	 		&& script.editor.get_selected_trigger().is_same(self.as_entity()))
 		{
+			//rotate
+			if (!scaling && (input.key_check_pressed_vk(0x52) || (rotating && input.key_check_pressed_gvb(2))))
+			{ 
+				rotating = !rotating; 
+				if (rotating)
+				{
+					rotStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+					rotStartNodes = nodes;
+					Vector3 sum;
+					uint count = 0;
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] != Vector3()) { sum += nodes[i]; count++; }
+					}
+					rotCentre = sum/count;
+				}
+				else { rotatingDir = 0; }
+			}
+			if (rotating)
+			{
+				if (input.key_check_pressed_vk(0x58)) { rotatingDir = 1; } 
+				if (input.key_check_pressed_vk(0x59)) { rotatingDir = 2; } 
+				if (input.key_check_pressed_vk(0x5A)) { rotatingDir = 3; } 
+				if (rotatingDir == 0) { return; }
+				auto curPos = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
+				auto dif = curPos - rotStart;
+				float a = dif.x/100;
+				float s = sin(a);
+				float c = cos(a);
+				if (rotatingDir == 1)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = rotStartNodes[i];
+		 				Vector3 dir = on - rotCentre;
+						nodes[i] = Vector3(on.x, rotCentre.y+dir.y*c+dir.z*s, rotCentre.z+dir.z*c-dir.y*s);
+					}
+				}
+				if (rotatingDir == 2)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = rotStartNodes[i];
+		 				Vector3 dir = on - rotCentre;
+						nodes[i] = Vector3(rotCentre.x+dir.x*c-dir.z*s,on.y,rotCentre.z+dir.z*c+dir.x*s);
+					}
+				}
+				if (rotatingDir == 3)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = rotStartNodes[i];
+		 				Vector3 dir = on - rotCentre;
+						nodes[i] = Vector3(rotCentre.x+dir.x*c-dir.y*s,rotCentre.y+dir.y*c+dir.x*s,on.z);
+					}
+				}
+				UpdatePositions();
+				manager.UpdateLooks();
+				return;
+			}
+
+			//scaling
+			if (input.key_check_pressed_vk(0x53) || (scaling && input.key_check_pressed_gvb(2))) 
+			{ 
+				scaling = !scaling;
+				if (scaling)
+				{
+					scaleStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+					scaleStartNodes = nodes;
+					Vector3 sum;
+					uint count = 0;
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] != Vector3()) { sum += nodes[i]; count++; }
+					}
+					scaleCentre = sum/count;
+				}
+				else { scalingDir = 0; }
+			}
+			if (scaling)
+			{
+				if (input.key_check_pressed_vk(0x57)) { scalingDir = 0; } 
+				if (input.key_check_pressed_vk(0x58)) { scalingDir = 1; } 
+				if (input.key_check_pressed_vk(0x59)) { scalingDir = 2; } 
+				if (input.key_check_pressed_vk(0x5A)) { scalingDir = 3; } 
+				auto curPos = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
+				auto dif = curPos - scaleStart;
+				float m = 1+dif.x/300;
+				if (scalingDir == 0)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = scaleStartNodes[i];
+						Vector3 dir = on - scaleCentre;
+						nodes[i] = scaleCentre + dir*m;
+					}
+				}
+				if (scalingDir == 1)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = scaleStartNodes[i];
+						Vector3 dir = on - scaleCentre;
+						nodes[i] = scaleCentre + Vector3(dir.x*m,dir.y,dir.z);
+					}
+				}
+				if (scalingDir == 2)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = scaleStartNodes[i];
+						Vector3 dir = on - scaleCentre;
+						nodes[i] = scaleCentre + Vector3(dir.x,dir.y*m,dir.z);
+					}
+				}
+				if (scalingDir == 3)
+				{
+					for(uint i = 0; i < nodes.length(); i++)
+					{
+						if (nodes[i] == Vector3()) { continue; }
+						Vector3 on = scaleStartNodes[i];
+						Vector3 dir = on - scaleCentre;
+						nodes[i] = scaleCentre + Vector3(dir.x,dir.y,dir.z*m);
+					}
+				}
+				UpdatePositions();
+				manager.UpdateLooks();
+				return;
+			}
+
 			//add node
 			if (input.key_check_pressed_gvb(18) ||
 				(input.key_check_pressed_vk(0x41) && input.key_check_gvb(10) && selectedNodes.length() == 0))
 			{
 				AddNode(manager.cam.centre);
+				canPreset = false;
 			}
 			//select node
 			if (input.key_check_pressed_gvb(2) && input.key_check_gvb(10))
@@ -189,6 +339,7 @@ class d3NodeCluster : trigger_base
 				UpdatePositions();
 				SetActiveSidesAll();
 				manager.UpdateLooks();
+				canPreset = false;
 			}
 
 			//delete quad
@@ -245,18 +396,69 @@ class d3NodeCluster : trigger_base
 				UpdatePositions();
 				manager.UpdateLooks();
 			}
-		}
 
-			//trigger move
-			d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
-			d2Math::Vector2 dif = curPos - oldCentre;
-			if (dif != d2Math::Vector2())
+			//presets
+			
+			//cube
+			if (input.key_check_pressed_vk(0x31) && (GetActiveNodeCount() == 0 || canPreset))
 			{
-				d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
-				oldCentre = d2Math::Vector2(self.x(), self.y());
-				if (d3pos.z < 0) { self.editor_handle_size(0); }
-				else { self.editor_handle_size(10); }
+				nodes.resize(0);
+				AddNode(d3pos + Vector3(96,96,96));
+				AddNode(d3pos + Vector3(96,96,-96));
+				AddNode(d3pos + Vector3(96,-96,96));
+				AddNode(d3pos + Vector3(96,-96,-96));
+				AddNode(d3pos + Vector3(-96,96,96));
+				AddNode(d3pos + Vector3(-96,96,-96));
+				AddNode(d3pos + Vector3(-96,-96,96));
+				AddNode(d3pos + Vector3(-96,-96,-96));
+				canPreset = true;
 			}
+			//slope
+			if (input.key_check_pressed_vk(0x32) && (GetActiveNodeCount() == 0 || canPreset))
+			{
+				nodes.resize(0);
+				AddNode(d3pos + Vector3(96,96,96));
+				AddNode(d3pos + Vector3(96,96,-96));
+				AddNode(d3pos + Vector3(-96,96,96));
+				AddNode(d3pos + Vector3(-96,96,-96));
+				AddNode(d3pos + Vector3(-96,-96,96));
+				AddNode(d3pos + Vector3(-96,-96,-96));
+				canPreset = true;
+			}
+			//pyramid
+			if (input.key_check_pressed_vk(0x33) && (GetActiveNodeCount() == 0 || canPreset))
+			{
+				nodes.resize(0);
+				AddNode(d3pos + Vector3(96,96,96));
+				AddNode(d3pos + Vector3(96,96,-96));
+				AddNode(d3pos + Vector3(-96,96,96));
+				AddNode(d3pos + Vector3(-96,96,-96));
+				AddNode(d3pos + Vector3(0,-96,0));
+				canPreset = true;
+			}
+		}
+		else { rotating = false; }
+
+		//trigger move
+		d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
+		d2Math::Vector2 dif = curPos - oldCentre;
+		if (dif != d2Math::Vector2())
+		{
+			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
+			oldCentre = d2Math::Vector2(self.x(), self.y());
+			if (d3pos.z < 0) { self.editor_handle_size(0); }
+			else { self.editor_handle_size(10); }
+		}
+	}
+
+	uint GetActiveNodeCount()
+	{
+		uint r = 0;
+		for(uint i = 0; i < nodes.length(); i++)
+		{
+			if (nodes[i] != Vector3()) { r++; }
+		}
+		return r;
 	}
 
 	void editor_draw(float ok)
