@@ -54,6 +54,10 @@ class script : script_base
 
 	bool firstFrame = true;
 
+	//continue save mode next frame
+	bool csmnf = false;
+	float oldsh = 0;
+
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
 	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX;
@@ -137,6 +141,44 @@ class script : script_base
 					break;
 				}
 			}
+		}
+
+		if (csmnf)
+		{
+			camera@ cam = get_active_camera();
+			manager.cam.igCoords = d2Math::Vector2(0,0);
+			oldCamPos = d2Math::Vector2(0,0);
+			cam.x(0);
+			cam.y(0);
+			cam.screen_height(oldsh);
+			csmnf = false;
+		}
+
+		//fuck this game I fucking hate this why are you this shit fuck you
+		if (input.key_check_pressed_vk(0x58) && input.key_check_gvb(11))
+		{
+			camera@ cam = get_active_camera();
+			oldsh = cam.screen_height();
+			cam.screen_height(10000000);
+			if (@startPos != null)
+			{
+				startPos.self.x(0);
+				startPos.self.y(0);
+				startPos.dontMove = true;
+			}
+			for(uint i = 0; i < quadEntities.length(); i++)
+			{
+				quadEntities[i].self.x(0);
+				quadEntities[i].self.y(0);
+				quadEntities[i].dontMove = true;
+			}
+			for(uint i = 0; i < nodeClusters.length(); i++)
+			{
+				nodeClusters[i].self.x(0);
+				nodeClusters[i].self.y(0);
+				nodeClusters[i].dontMove = true;
+			}
+			csmnf = true;
 		}
 
 		HandleMiddleCommands();
@@ -486,6 +528,8 @@ class d3StartPos : trigger_base
 	script@ script;
 	d3::d3Manager@ manager;
 
+	bool dontMove = false;
+
 	void init(script@ s, scripttrigger@ self)
 	{
 		@script = @s;
@@ -517,7 +561,7 @@ class d3StartPos : trigger_base
 	{
 		d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = curPos - oldCentre;
-		if (dif != d2Math::Vector2())
+		if (dif != d2Math::Vector2() && !dontMove)
 		{
 			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = d2Math::Vector2(self.x(), self.y());
@@ -571,6 +615,8 @@ class d3QuadEntity : trigger_base
 
 	d3::d3Manager@ manager;
 	d3::d3CQuad@ quad;
+
+	bool dontMove = false;
 
 	scripttrigger@ self;
 	script@ script;
@@ -801,7 +847,7 @@ class d3QuadEntity : trigger_base
 
 		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = oldCentre - curCen;
-		if (dif.Magnitude() > 0.1/*  && selectedCorner == 0 */ &&
+		if (dif.Magnitude() > 0.1 && !dontMove &&
 			(quad.collisionBase.activeLines[0] ||
 			quad.collisionBase.activeLines[1] ||
 			quad.collisionBase.activeLines[2] ||

@@ -52,6 +52,8 @@ class d3NodeCluster : trigger_base
 	//can cycle presets
 	bool canPreset = false;
 
+	bool dontMove = false;
+
 	scripttrigger@ self;
 	script@ script;
 	input_api@ input;
@@ -543,7 +545,7 @@ class d3NodeCluster : trigger_base
 		//trigger move
 		d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
 		d2Math::Vector2 dif = curPos - oldCentre;
-		if (dif != d2Math::Vector2())
+		if (dif != d2Math::Vector2() && !dontMove)
 		{
 			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = d2Math::Vector2(self.x(), self.y());
