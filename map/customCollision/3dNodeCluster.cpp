@@ -14,6 +14,12 @@ class d3NodeCluster : trigger_base
 	[hidden] array<Vector3> nodes;
 	array<uint> selectedNodes;
 
+	//"tile entities"
+	//node triplets stored
+	[hidden] array<array<uint>> spikes;
+	[hidden] array<array<uint>> dust;
+	[hidden] array<array<uint>> deactivated;
+
 	d2Math::Vector2 oldCentre;
 
 	//for dragging nodes
@@ -161,7 +167,7 @@ class d3NodeCluster : trigger_base
 			}
 
 			//scaling
-			if (input.key_check_pressed_vk(0x53) || (scaling && input.key_check_pressed_gvb(2))) 
+			if ((input.key_check_pressed_vk(0x53) && !input.key_check_gvb(11)) || (scaling && input.key_check_pressed_gvb(2))) 
 			{ 
 				scaling = !scaling;
 				if (scaling)
@@ -397,43 +403,138 @@ class d3NodeCluster : trigger_base
 				manager.UpdateLooks();
 			}
 
+			//join nodes
+			if (input.key_check_pressed_vk(0x4A) && input.key_check_gvb(10))
+			{
+				for(uint cluster = 0; cluster < script.nodeClusters.length(); cluster++)
+				{
+					array<Vector3>@ otherNodes = script.nodeClusters[cluster].nodes;
+					if (otherNodes == nodes) { continue; }
+					for(uint otherNode = 0; otherNode < otherNodes.length(); otherNode++)
+					{
+						if (otherNodes[otherNode] == Vector3()) { continue; }
+						for(uint ownNode = 0; ownNode < nodes.length(); ownNode++)
+						{
+							if (nodes[ownNode] == Vector3()) { continue; }
+							Vector3 dir = nodes[ownNode] - otherNodes[otherNode];
+							if (dir.Magnitude() < script.joinDist)
+							{
+								nodes[ownNode] = otherNodes[otherNode];
+							}
+						}
+					}
+				}
+				UpdateSelf();
+			}
+
+			//spikes
+			bool qKey = input.key_check_pressed_vk(0x51);
+			bool wKey = input.key_check_pressed_vk(0x57);
+			bool eKey = input.key_check_pressed_vk(0x45);
+
+			if (qKey || wKey || eKey)
+			{
+				Vector3 mousePos = Vector3(input.mouse_x_world(21), input.mouse_y_world(21),0);
+				int best = -1;
+				for(uint i = 0; i < quads.length(); i++)
+				{
+					if (quads[i].base.PointRelation(mousePos) != 0)
+					{
+						if (best == -1 || quads[i].opCmp(quads[best]) == 1)
+						{
+							best = i;
+						}
+					}
+				}
+				if (best != -1)
+				{
+					d2Math::Vector2 mousePos2d = d2Math::Vector2(
+						input.mouse_x_world(21), input.mouse_y_world(21));
+					int side = quads[best].base.SideFromPoint(mousePos2d, eKey);
+					if (side != -1)
+					{
+						array<uint> n = NodesFromSide(uint(best),uint(side));
+						if (qKey)
+						{
+							int i = FindArray(spikes, n);
+							if (i == -1)
+							{
+								spikes.insertLast(n);
+							}
+							else
+							{
+								spikes.removeAt(i);
+							}
+						}
+						if (wKey)
+						{
+							int i = FindArray(dust, n);
+							if (i == -1)
+							{
+								dust.insertLast(n);
+							}
+							else
+							{
+								dust.removeAt(i);
+							}
+						}
+						if (eKey)
+						{
+							int i = FindArray(deactivated, n);
+							if (i == -1)
+							{
+								deactivated.insertLast(n);
+							}
+							else
+							{
+								deactivated.removeAt(i);
+							}
+						}
+						ResetAllSides();
+						ApplyTileEnts();
+						UpdateRotation();
+						manager.UpdateLooks();
+					}
+				}
+			}
+
 			//presets
 			
 			//cube
 			if (input.key_check_pressed_vk(0x31) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96,96));
-				AddNode(d3pos + Vector3(96,96,-96));
-				AddNode(d3pos + Vector3(96,-96,96));
-				AddNode(d3pos + Vector3(96,-96,-96));
-				AddNode(d3pos + Vector3(-96,96,96));
-				AddNode(d3pos + Vector3(-96,96,-96));
-				AddNode(d3pos + Vector3(-96,-96,96));
-				AddNode(d3pos + Vector3(-96,-96,-96));
+				AddNode(d3pos + Vector3(96,96.01,96));
+				AddNode(d3pos + Vector3(96,96.02,-96));
+				AddNode(d3pos + Vector3(96,-96.03,96));
+				AddNode(d3pos + Vector3(96,-96.04,-96));
+				AddNode(d3pos + Vector3(-96,96.05,96));
+				AddNode(d3pos + Vector3(-96,96.06,-96));
+				AddNode(d3pos + Vector3(-96,-96.07,96));
+				AddNode(d3pos + Vector3(-96,-96.08,-96));
 				canPreset = true;
 			}
 			//slope
 			if (input.key_check_pressed_vk(0x32) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96,96));
-				AddNode(d3pos + Vector3(96,96,-96));
-				AddNode(d3pos + Vector3(-96,96,96));
-				AddNode(d3pos + Vector3(-96,96,-96));
-				AddNode(d3pos + Vector3(-96,-96,96));
-				AddNode(d3pos + Vector3(-96,-96,-96));
+				AddNode(d3pos + Vector3(96,96.01,96));
+				AddNode(d3pos + Vector3(96,96.02,-96));
+				AddNode(d3pos + Vector3(-96,96.03,96));
+				AddNode(d3pos + Vector3(-96,96.04,-96));
+				AddNode(d3pos + Vector3(-96,-96.05,96));
+				AddNode(d3pos + Vector3(-96,-96.06,-96));
 				canPreset = true;
 			}
 			//pyramid
 			if (input.key_check_pressed_vk(0x33) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96,96));
-				AddNode(d3pos + Vector3(96,96,-96));
-				AddNode(d3pos + Vector3(-96,96,96));
-				AddNode(d3pos + Vector3(-96,96,-96));
-				AddNode(d3pos + Vector3(0,-96,0));
+				AddNode(d3pos + Vector3(96,96.01,96));
+				AddNode(d3pos + Vector3(96,96.02,-96));
+				AddNode(d3pos + Vector3(-96,96.03,96));
+				AddNode(d3pos + Vector3(-96,96.04,-96));
+				AddNode(d3pos + Vector3(0,-96.05,0));
 				canPreset = true;
 			}
 		}
@@ -520,6 +621,7 @@ class d3NodeCluster : trigger_base
 			quads[i].base.colour = d3col;
 		}
 		UpdatePositions();
+		ApplyTileEnts();
 		d2Math::Vector2 camCen = manager.cam.igCoords;
 		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
 		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
@@ -574,6 +676,7 @@ class d3NodeCluster : trigger_base
 		}
 		UpdatePositions();
 		SetActiveSidesAll();
+		ApplyTileEnts();
 		// puts("quads " + quads.length());
 	}
 
@@ -591,6 +694,7 @@ class d3NodeCluster : trigger_base
 			//shrinking the quads slightly so that layering can work
 			Vector3 c = q.base.Find3dCentre();
 			int shrinkAmount = 10000;
+			if (script.quadDebug) { shrinkAmount = 10; }
 			q.base.p1 += (c-q.base.p1)/shrinkAmount;
 			q.base.p2 += (c-q.base.p2)/shrinkAmount;
 			q.base.p3 += (c-q.base.p3)/shrinkAmount;
@@ -602,14 +706,51 @@ class d3NodeCluster : trigger_base
 	{
 		// puts("quad 0: " + quadNodes[0][0]+","+quadNodes[0][1]+","+quadNodes[0][2]+","+quadNodes[0][3]);
 		// puts("quad 1: " + quadNodes[1][0]+","+quadNodes[1][1]+","+quadNodes[1][2]+","+quadNodes[1][3]);
-		ActivateAllSides();
-		// return;
+		ResetAllSides();
+		if (script.extraQuadDebug) { return; }
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
 			// puts("");
 			// puts("");
 			// puts("doing quad " + i + "!!!!");
 			DealWithSharedTrigs(i);
+		}
+	}
+
+	//resets dust, only do at init
+	void ApplyTileEnts()
+	{
+		//don't feel like copypasting rn so just gonna do this
+		array<array<array<uint>>> things;
+		things.insertLast(spikes);
+		things.insertLast(dust);
+		things.insertLast(deactivated);
+		for(uint thing = 0; thing < things.length(); thing++)
+		{
+			array<array<uint>>@ objects = things[thing];
+			for(uint object = 0; object < objects.length(); object++)
+			{
+				array<uint>@ triplet = objects[object];
+				array<uint> qs = FindSharedTrig(triplet[0], triplet[1], triplet[2]);
+				for(uint q = 0; q < qs.length(); q++)
+				{
+					int side = SideFromNodes(qs[q], triplet[0], triplet[1], triplet[2]);
+					if (side < 0) { continue; }
+					switch (thing)
+					{
+						case 0:
+							quads[qs[q]].spikeSides[side-1] = true;
+							break;
+						case 1:
+							quads[qs[q]].dustSides[side-1] = true;
+							break;
+						case 2:
+							quads[qs[q]].activeSides[side-1] = false;
+							quads[qs[q]].base.drawnSides[side-1] = false;
+							break;
+					}
+				}
+			}
 		}
 	}
 
@@ -696,25 +837,28 @@ class d3NodeCluster : trigger_base
 				quads[m4[i]].activeSides[side-1] = false;
 				if (quads[m4[i]].base.behind) { draw = true; }
 			}
-				if (!draw)
+			if (!draw)
 			{
 				for (uint i = 0; i < m4.length(); i++)
 				{
 					int side = SideFromNodes(m4[i], q[1], q[2], q[3]);
 					quads[m4[i]].base.drawnSides[side-1] = false;
 				}
-				}
+			}
 		}
 	}
 
-	void ActivateAllSides()
+	void ResetAllSides()
 	{
 		array<bool> a = {true, true, true, true};
+		array<bool> b = {false, false, false, false};
 		for (uint i = 0; i < quads.length(); i++)
 		{
 	   		d3::d3CQuad@ q = quads[i];
 			q.activeSides = a;
 			q.base.drawnSides = a;
+			q.spikeSides = b;
+			q.dustSides = b;
 		}
 	}
 
@@ -733,6 +877,28 @@ class d3NodeCluster : trigger_base
 		return -1;
 	}
 
+	array<uint> NodesFromSide(uint quad, uint side)
+	{
+		array<uint>@ qs = quadNodes[quad];
+		array<uint> s1 = {qs[0], qs[1], qs[2]};
+		array<uint> s2 = {qs[0], qs[1], qs[3]};
+		array<uint> s3 = {qs[0], qs[2], qs[3]};
+		array<uint> s4 = {qs[1], qs[2], qs[3]};
+		switch(side)
+		{
+			case 1:
+				return s1;
+			case 2:
+				return s2;
+			case 3:
+				return s3;
+			case 4:
+				return s4;
+		}
+		array<uint> ret;
+		return ret;
+	}
+
 	bool IsSameArr(array<uint> a1, array<uint> a2)
 	{
 		// puts("is same");
@@ -742,6 +908,18 @@ class d3NodeCluster : trigger_base
 		a2.sortAsc();
 		// puts("same? " + (a1 == a2));
 		return a1 == a2;
+	}
+
+	int FindArray(array<array<uint>> arr, array<uint> item)
+	{
+		for(uint i = 0; i < arr.length(); i++)
+		{
+			if (IsSameArr(arr[i], item))
+			{
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	array<uint> FindSharedTrig(uint n1, uint n2, uint n3)

@@ -14,8 +14,8 @@ bool PointInTriangle(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3)
     float d2 = sign(pt, v2, v3);
     float d3 = sign(pt, v3, v1);
 
-    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    bool has_neg = (d1 <= 0) || (d2 <= 0) || (d3 <= 0);
+    bool has_pos = (d1 >= 0) || (d2 >= 0) || (d3 >= 0);
 
     return !(has_neg && has_pos);
 }

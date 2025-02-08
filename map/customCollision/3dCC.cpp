@@ -395,6 +395,48 @@ class d3Quad
 		// puts("upstream 0");
 		return 0;
 	}
+
+	//which active side is this screen point on?
+	int SideFromPoint(d2Math::Vector2 pos, bool allowDeactive = false)
+	{
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp3.x, csp3.y))
+				&& (drawnSides[0] || allowDeactive) && fac1 > 0)
+		{
+			return 1;
+		}
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp4.x, csp4.y))
+				&& (drawnSides[1] || allowDeactive) && fac2 > 0)
+		{
+			return 2;
+		}
+			if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp1.x, csp1.y),
+				d2Math::Vector2(csp3.x, csp3.y),
+				d2Math::Vector2(csp4.x, csp4.y))
+				&& (drawnSides[2] || allowDeactive) && fac3 > 0)
+		{
+			return 3;
+		}
+		if (d2Math::PointInTriangle(
+				d2Math::Vector2(pos.x, pos.y),
+				d2Math::Vector2(csp2.x, csp2.y),
+				d2Math::Vector2(csp3.x, csp3.y),
+				d2Math::Vector2(csp4.x, csp4.y))
+				&& (drawnSides[3] || allowDeactive) && fac4 > 0)
+		{
+			return 4;
+		}
+		return -1;
+	}
 }
 
 class nothing3{} //this tricks my lsp to obey
@@ -520,8 +562,8 @@ class d3CQuad
 	{
 		//I could make a loop and stuff but like this is literally easier so whatever
 		base.Draw(s, layer, sub_layer, manager.script);
-		uint sc = manager.script.spikeColour;
-		uint dc = manager.script.dustColour;
+		uint sc = manager.script.spikeColour3d;
+		uint dc = manager.script.dustColour3d;
 		if (spikeSides[0] && base.fac1 > 0)
 		{
 			s.draw_quad_world(layer, sub_layer, false, 

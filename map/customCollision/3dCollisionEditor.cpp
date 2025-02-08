@@ -18,6 +18,8 @@ class script : script_base
 
 	[colour,alpha] uint spikeColour = 0xFFFF0000;
 	[colour,alpha] uint dustColour = 0xFF00FF00;
+	[colour,alpha] uint spikeColour3d = 0xCCFF0000;
+	[colour,alpha] uint dustColour3d = 0xCC00FF00;
 	[colour,alpha] uint edgeColour = 0x11000000;
 	[colour,alpha] uint fogColour = 0x66000000;
 	//more = fog is further
@@ -37,11 +39,12 @@ class script : script_base
 	array<d3QuadEntity@> quadEntities;
 	array<d3NodeCluster@> nodeClusters;
 
-	[hidden] d3StartPos@ startPos;
+	d3StartPos@ startPos;
+	[hidden] Vector3 startCoords;
 
 	d2Math::Vector2 middleDragStart;
 	float middleDragStartRot;
-	[label:"middle mouse hotkeys"] bool middleDragEnable;
+	[label:"middle mouse hotkeys"] bool middleDragEnable = true;
 
 	bool wasRotating = false;
 	//bools for up/down keys cause reasons
@@ -57,7 +60,11 @@ class script : script_base
 	[hidden] float compassPosY;
 	[slider,min:0,max:1000|label:"compass size"] float compassSize;
 
+	[text|label:"join distance"] float joinDist = 40;
+
 	//debug
+	[text] bool quadDebug = false;
+	[text] bool extraQuadDebug = false;
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugY] int debugX;
 	[hidden] int debugY;
@@ -96,6 +103,9 @@ class script : script_base
 		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		get_active_camera().controller_mode(4);
+		// puts("setting start coords!");
+		// puts(startCoords);
+		manager.cam.centre = startCoords;
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -182,10 +192,6 @@ class script : script_base
 	{
 		if (firstFrame)
 		{
-			if (@startPos != null)
-			{
-				manager.cam.centre = startPos.pos;
-			}
 			firstFrame = false;
 			UpdateRotation(true);
 			manager.UpdateCollision();
@@ -503,6 +509,7 @@ class d3StartPos : trigger_base
 			hasInit = true;
 		}
 		UpdateRotation();
+		script.startCoords = pos;
 		s.firstFrame = true;
 	}
 
@@ -514,6 +521,7 @@ class d3StartPos : trigger_base
 		{
 			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = d2Math::Vector2(self.x(), self.y());
+			script.startCoords = pos;
 		}
 	}
 
