@@ -618,6 +618,7 @@ class d3CQuad
 	{
 		//I could make a loop and stuff but like this is literally easier so whatever
 		base.Draw(s, layer, sub_layer, manager.script);
+		if (base.behind) { return; }
 		uint sc = manager.script.spikeColour3d;
 		uint dc = manager.script.dustColour3d;
 		if (spikeSides[0] && base.fac1 > 0)
