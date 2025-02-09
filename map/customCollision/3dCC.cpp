@@ -658,6 +658,7 @@ class d3CQuad
 
 	int opCmp(d3CQuad@ o)
 	{
+		if (base.behind) { return -1; }
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		return o.AnyPointUnder(this);

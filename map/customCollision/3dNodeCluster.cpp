@@ -52,11 +52,11 @@ class d3NodeCluster : trigger_base
 	//can cycle presets
 	bool canPreset = false;
 
-	bool dontMove = false;
-
 	scripttrigger@ self;
 	script@ script;
 	input_api@ input;
+
+	FakeTrigger@ fakeTrigger;
 
 	void init(script@ s, scripttrigger@ self)
 	{
@@ -90,6 +90,8 @@ class d3NodeCluster : trigger_base
 			d3pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
 			hasInit = true;
 		}
+		@fakeTrigger = @FakeTrigger(s, self.as_entity(), d2Math::Vector2());
+		self.editor_handle_size(0);
 		InitQuads();
 		UpdateRotation();
 		s.firstFrame = true;
@@ -543,12 +545,12 @@ class d3NodeCluster : trigger_base
 		else { rotating = false; }
 
 		//trigger move
-		d2Math::Vector2 curPos = d2Math::Vector2(self.x(), self.y());
+		d2Math::Vector2 curPos = fakeTrigger.pos;
 		d2Math::Vector2 dif = curPos - oldCentre;
-		if (dif != d2Math::Vector2() && !dontMove)
+		if (dif != d2Math::Vector2())
 		{
 			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
-			oldCentre = d2Math::Vector2(self.x(), self.y());
+			oldCentre = fakeTrigger.pos;
 		}
 	}
 
@@ -627,11 +629,10 @@ class d3NodeCluster : trigger_base
 		d2Math::Vector2 camCen = manager.cam.igCoords;
 		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
 		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
-		self.x(newPos.x);
-		self.y(newPos.y);
+		fakeTrigger.pos = d2Math::Vector2(newPos.x, newPos.y);
 		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
-		if (newPos.z < 0) { self.editor_handle_size(0); }
-		else { self.editor_handle_size(10); }
+		if (newPos.z < 0) { fakeTrigger.size = 0; }
+		else { fakeTrigger.size = 10; }
 	}
 
 	//finds first available spot and adds the node, returns index of node
@@ -947,6 +948,11 @@ class d3NodeCluster : trigger_base
 		{
 			//error safety is overrated
 			manager.RemoveQuad(quads[i]);
+		}
+		int i = script.fakeTriggers.findByRef(fakeTrigger);
+		if (i != -1)
+		{
+			script.fakeTriggers.removeAt(i);
 		}
 	}
 }
