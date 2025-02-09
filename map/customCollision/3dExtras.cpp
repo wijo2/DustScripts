@@ -1,7 +1,25 @@
-//here goes stuff like enemies and banner props once I get around to it
 #include "mathHelper.cpp";
 
 class nthggg{}
+namespace d3e
+{
+
+class d3Enemy
+{
+	d2Math::Rect drawRect;
+	float depth;
+	void Draw(scene@ s){}
+}
+
+class d3PropBanner
+{
+	d2Math::Rect drawRect;
+	float depth;
+	void Draw(scene@ s){}
+}
+
+}
+
 class FakeTrigger
 {
 	d2Math::Vector2 pos;

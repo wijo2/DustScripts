@@ -110,6 +110,8 @@ class d3Quad
 	//1 = front
 	array<bool> sides(4);
 
+	Renderable@ renderable;
+
 	d3Quad()
 	{
 		p1 = Vector3();
@@ -713,6 +715,7 @@ class d3CQuad
 		return i;
 	}
 
+	//return -1 if behind o
 	int opCmp(d3CQuad@ o)
 	{
 		if (base.behind) { return -1; }
@@ -722,9 +725,122 @@ class d3CQuad
 	}
 }	
 
+class gluggligjdh{}
+
+class Renderable
+{
+	//0 = quad, 1 = enemy, 2 = prob banner
+	uint type;
+	d3CQuad@ quad;
+	d3e::d3Enemy@ enemy;
+	d3e::d3PropBanner@ propBanner;
+
+	Renderable(){}
+	Renderable(uint type) { this.type = type; }
+
+	int opCmp(Renderable@ o)
+	{
+		//both quads
+		if (type == 0 && o.type == 0)
+		{
+			return quad.opCmp(o.quad);
+		}
+		if (type == 0)
+		{
+			return o.opCmp(this);
+		}
+		//both not quads
+		if (o.type != 0)
+		{
+			float d = 0;
+			float od = 0;
+			if (type == 1) { d = enemy.depth; }
+			else if (type == 2) { d = propBanner.depth; }
+			if (o.type == 1) { od = o.enemy.depth; }
+			else if (o.type == 2) { od = o.propBanner.depth; }
+
+			if (d < od) { return 1; }
+			if (d > od) { return -1; }
+			return 0;
+		}
+		//other quad, this one not
+		d2Math::Rect drect;
+		float depth = 0;
+		if (type == 1) { drect = enemy.drawRect; depth = enemy.depth; }
+		else { drect = propBanner.drawRect; depth = propBanner.depth; }
+		
+		int i = AnyPointQUnderR(o.quad, drect, depth);
+		if (i != 0) { return i; }
+		i = AnyPointRUnderQ(o.quad, drect, depth);
+		return -i;
+	}
+
+	//is any point of rect under quad
+	//-1 = r in front, 0 = idk, 1 = r behind
+	int AnyPointRUnderQ(d3CQuad@ q, d2Math::Rect r, float depth)
+	{
+		int i;
+		i = q.base.PointRelation(Vector3(r.x1, r.y1, depth));
+		if (i != 0) { return i; }
+		i = q.base.PointRelation(Vector3(r.x2, r.y2, depth));
+		if (i != 0) { return i; }
+		i = q.base.PointRelation(Vector3(r.x1, r.y2, depth));
+		if (i != 0) { return i; }
+		i = q.base.PointRelation(Vector3(r.x2, r.y1, depth));
+		return i;
+	}
+	//is any point of quad under rect
+	//-1 = q in front, 0 = idk, 1 = q behind
+	int AnyPointQUnderR(d3CQuad@ q, d2Math::Rect r, float depth)
+	{
+		Vector3@ p1 = q.base.p1;
+		Vector3@ p2 = q.base.p2;
+		Vector3@ p3 = q.base.p3;
+		Vector3@ p4 = q.base.p4;
+		if (r.PointInside(d2Math::Vector2(p1.x,p1.y)))
+		{
+			if (p1.z < depth) { return -1; }
+			return 1;
+		}
+		if (r.PointInside(d2Math::Vector2(p2.x,p2.y)))
+		{
+			if (p2.z < depth) { return -1; }
+			return 1;
+		}
+		if (r.PointInside(d2Math::Vector2(p3.x,p3.y)))
+		{
+			if (p3.z < depth) { return -1; }
+			return 1;
+		}
+		if (r.PointInside(d2Math::Vector2(p4.x,p4.y)))
+		{
+			if (p4.z < depth) { return -1; }
+			return 1;
+		}
+		return 0;
+	}
+
+	void Draw(scene@ s)
+	{
+		switch (type)
+		{
+			case 0:
+				quad.DrawBase(s);
+				break;
+			case 1:
+				enemy.Draw(s);
+				break;
+			case 2:
+				propBanner.Draw(s);
+				break;
+		}
+	}
+}
+
 class d3Manager
 {
 	array<d3CQuad@> allQuads;
+	array<Renderable@> renderables;
 	d2::CollisionManager@ manager;
 	d3Cam@ cam;
 
@@ -743,7 +859,7 @@ class d3Manager
 			allQuads[i].base.ApplyProjection(cam);
 			allQuads[i].UpdateIntersectQuad(cam);
 		}
-		SortQuadList();
+		SortRenderList();
 	}
 
 	void UpdateCollision()
@@ -755,20 +871,23 @@ class d3Manager
 
 	}
 
-	void SortQuadList()
+	void SortRenderList()
 	{
-		allQuads.sortAsc();
+		renderables.sortAsc();
 	}
 
 	void Draw()
 	{
-		for (uint i = 0; i < allQuads.length(); i++)
+		scene@ s = get_scene();
+		// puts("renderables: " + renderables.length());
+		for (uint i = 0; i < renderables.length(); i++)
 		{
-			allQuads[i].DrawBase(get_scene());
+			renderables[i].Draw(s);
 		}
+		//intersects unlayered
 		for (uint i = 0; i < allQuads.length(); i++)
 		{
-			allQuads[i].DrawIntersect(get_scene());
+			allQuads[i].DrawIntersect(s);
 		}
 	}
 
@@ -788,6 +907,16 @@ class d3Manager
 			if (allQuads[i] is q)
 			{
 				allQuads.removeAt(i);
+			}
+		}
+	}
+	void RemoveRenderable(Renderable@ r)
+	{
+		for (uint i = 0; i < renderables.length(); i++)
+		{
+			if (renderables[i] is r)
+			{
+				renderables.removeAt(i);
 			}
 		}
 	}

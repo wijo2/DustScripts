@@ -314,7 +314,6 @@ class script : script_base
 		{
 			oldRotation = rotation;
 			manager.cam.rotation = rotation;
-			manager.UpdateLooks();
 			for (uint i = 0; i < nodeClusters.length(); i++)
 			{
 				nodeClusters[i].UpdateRotation();
@@ -323,7 +322,7 @@ class script : script_base
 			{
 				startPos.UpdateRotation();
 			}
-			manager.SortQuadList();
+			manager.UpdateLooks();
 		}
 	}
 

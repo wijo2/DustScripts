@@ -321,6 +321,7 @@ class d3NodeCluster : trigger_base
 						{
 							puts("removing!");
 							manager.RemoveQuad(quads[uint(q)]);
+							manager.RemoveRenderable(quads[uint(q)].base.renderable);
 							quads.removeAt(q);
 							quadNodes.removeAt(q);
 						}
@@ -346,6 +347,10 @@ class d3NodeCluster : trigger_base
 				@nq.manager = @manager;
 				quads.insertLast(@nq);
 				manager.allQuads.insertLast(@nq);
+				d3::Renderable r = d3::Renderable(0);
+				@r.quad = @nq;
+				@nq.base.renderable = @r;
+				manager.renderables.insertLast(r);
 				UpdatePositions();
 				SetActiveSidesAll();
 				manager.UpdateLooks();
@@ -368,6 +373,7 @@ class d3NodeCluster : trigger_base
 				if (bq != -1)
 				{
 					manager.RemoveQuad(quads[bq]);
+					manager.RemoveRenderable(quads[bq].base.renderable);
 					quads.removeAt(bq);
 					quadNodes.removeAt(bq);
 					SetActiveSidesAll();
@@ -673,6 +679,10 @@ class d3NodeCluster : trigger_base
 	   		@nq.collisionBase.manager = @manager.manager;
 	   		@nq.collisionBase.script = @script;
 			@nq.manager = @manager;
+			d3::Renderable r = d3::Renderable(0);
+			@r.quad = @nq;
+			@nq.base.renderable = @r;
+			manager.renderables.insertLast(r);
 	   		quads.insertLast(@nq);
 			manager.allQuads.insertLast(@nq);
 		}
@@ -946,6 +956,7 @@ class d3NodeCluster : trigger_base
 		for (uint i = 0; i < quads.length(); i++)
 		{
 			manager.RemoveQuad(quads[i]);
+			manager.RemoveRenderable(quads[i].base.renderable);
 		}
 		fakeTrigger.DeleteSelf();
 	}

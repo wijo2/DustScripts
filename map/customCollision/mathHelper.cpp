@@ -375,6 +375,11 @@ class Rect
 		return false;
 	}
 
+	bool PointInside(Vector2 point)
+	{
+		return ((point.x - x1)*(point.x - x2) <= 0) && ((point.y - y1)*(point.y - y2) <= 0);
+	}
+
 	void Draw(scene@ s, int layer, int sub_layer)
 	{
 		s.draw_rectangle_world(layer, sub_layer, 
