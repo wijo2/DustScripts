@@ -28,7 +28,7 @@ class FakeTrigger
 		@this.trigger = @trigger;
 	}
 
-	~FakeTrigger()
+	void DeleteSelf()
 	{
 		int i = script.fakeTriggers.findByRef(this);
 		if (i != -1)

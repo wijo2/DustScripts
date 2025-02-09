@@ -247,7 +247,8 @@ class CollisionOverride : callback_base
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 
 				d2Math::Vector2 hitPos;
-				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos)) { continue; }
+				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos) 
+					&& !CIR.PointInside(edges[li].bound1)) { continue; }
 
 				//hit a collider!
 				colliders[i].SideAttacked(li+1, player.as_dustman());

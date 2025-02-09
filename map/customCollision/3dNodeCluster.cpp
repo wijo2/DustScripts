@@ -495,6 +495,7 @@ class d3NodeCluster : trigger_base
 							}
 						}
 						ResetAllSides();
+						SetActiveSidesAll();
 						ApplyTileEnts();
 						UpdateRotation();
 						manager.UpdateLooks();
@@ -595,7 +596,6 @@ class d3NodeCluster : trigger_base
 
 	void UpdateRotation()
 	{
-		SetActiveSidesAll();
 		UpdateSelf();
 	}
 
@@ -625,7 +625,6 @@ class d3NodeCluster : trigger_base
 			quads[i].base.colour = d3col;
 		}
 		UpdatePositions();
-		ApplyTileEnts();
 		d2Math::Vector2 camCen = manager.cam.igCoords;
 		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
 		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
@@ -946,13 +945,8 @@ class d3NodeCluster : trigger_base
 	{
 		for (uint i = 0; i < quads.length(); i++)
 		{
-			//error safety is overrated
 			manager.RemoveQuad(quads[i]);
 		}
-		int i = script.fakeTriggers.findByRef(fakeTrigger);
-		if (i != -1)
-		{
-			script.fakeTriggers.removeAt(i);
-		}
+		fakeTrigger.DeleteSelf();
 	}
 }

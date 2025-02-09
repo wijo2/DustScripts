@@ -195,7 +195,7 @@ class script : script_base
 		}
 		debugDraw = array<d2Math::Rect>(0);
 		HandleGameplayRotation();
-		manager.manager.step();
+		manager.Step();
 		UpdateCamPos();
 		UpdateRotation();
 		UpdatePlayArea();
@@ -552,12 +552,9 @@ class d3StartPos : trigger_base
 		if (newPos.z < 0) { fakeTrigger.size = 0; }
 		else { fakeTrigger.size = 10; }
 	}
+
 	void on_remove()
 	{
-		int i = script.fakeTriggers.findByRef(fakeTrigger);
-		if (i != -1)
-		{
-			script.fakeTriggers.removeAt(i);
-		}
+		fakeTrigger.DeleteSelf();
 	}
 }

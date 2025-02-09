@@ -463,6 +463,9 @@ class d3CQuad
 	array<bool> spikeSides(4);
 	array<bool> dustSides(4);
 
+	//stores dust sides of collisionbase, [cbase side, 3dside], 1 indexed
+	array<array<uint>> cbaseDust;
+
 	//given 2 sides, what are the 2 points that they share (points 1 indexed)
 	//for x,x pairs it's empty array
 	array<array<array<int>>> sideLookup = {
@@ -528,6 +531,24 @@ class d3CQuad
 			collisionBase.activeLines[3] = activeSides[side1-1];
 			collisionBase.spikeLines[3] = spikeSides[side1-1];
 			collisionBase.dustLines[3] = dustSides[side1-1];
+
+			//cbaseDust
+			cbaseDust.resize(0);
+			if (dustSides[side1-1])
+			{
+				array<uint> narr = { 4, side1 };
+				cbaseDust.insertLast(narr);
+			}
+			if (dustSides[side2-1])
+			{
+				array<uint> narr = { 1, side2 };
+				cbaseDust.insertLast(narr);
+			}
+			if (dustSides[side3-1])
+			{
+				array<uint> narr = { 2, side3 };
+				cbaseDust.insertLast(narr);
+			}
 		}
 		//2-2 = quad
 		else
@@ -555,7 +576,42 @@ class d3CQuad
 			collisionBase.activeLines[3] = activeSides[side1-1];
 			collisionBase.spikeLines[3] = spikeSides[side1-1];
 			collisionBase.dustLines[3] = dustSides[side1-1];
+
+			//cbaseDust
+			cbaseDust.resize(0);
+			if (dustSides[side1-1])
+			{
+				array<uint> narr = { 4, side1 };
+				cbaseDust.insertLast(narr);
+			}
+			if (dustSides[side2-1])
+			{
+				array<uint> narr = { 1, side2 };
+				cbaseDust.insertLast(narr);
+			}
+			if (dustSides[side3-1])
+			{
+				array<uint> narr = { 2, side3 };
+				cbaseDust.insertLast(narr);
+			}
+			if (dustSides[side4-1])
+			{
+				array<uint> narr = { 3, side4 };
+				cbaseDust.insertLast(narr);
+			}
 		}
+	}
+
+	void CheckCbaseDust()
+	{
+		for(uint pair = 0; pair < cbaseDust.length(); pair++)
+		{
+			if (!collisionBase.dustLines[cbaseDust[pair][0]-1])
+			{
+				dustSides[cbaseDust[pair][1]-1] = false;
+			}
+		}
+		UpdateIntersectQuad(manager.cam);
 	}
 
 	void DrawBase(scene@ s)
@@ -712,6 +768,15 @@ class d3Manager
 		for (uint i = 0; i < allQuads.length(); i++)
 		{
 			allQuads[i].DrawIntersect(get_scene());
+		}
+	}
+
+	void Step()
+	{
+		manager.step();
+		for(uint i = 0; i < allQuads.length(); i++)
+		{
+			allQuads[i].CheckCbaseDust();
 		}
 	}
 
