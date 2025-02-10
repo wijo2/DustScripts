@@ -52,6 +52,14 @@ class script : script_base
 
 	bool firstFrame = true;
 
+	//warning light system
+	float yellowTreshold = 8000;
+	//interestingly there seems to be more leniency to the right, 13k is fine for right but
+	//this is about the limit for left
+	float redTreshold = 11500;
+	//0 = green, 1 = yellow, 2 = red
+	int currentDistCol = 0;
+
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
 	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX;
@@ -120,11 +128,27 @@ class script : script_base
 			fakeTriggers[i].EditorStep();
 		}
 
+		camera@ cam = get_active_camera();
+		if (abs(cam.x()) > yellowTreshold || abs(cam.y()) > yellowTreshold)
+		{
+			if (abs(cam.x()) > redTreshold || abs(cam.y()) > redTreshold)
+			{
+				currentDistCol = 2;
+			}
+			else
+			{
+				currentDistCol = 1;
+			}
+		}
+		else
+		{
+			currentDistCol = 0;
+		}
+
 		//fuck this game I fucking hate this why are you this shit fuck you
-		if (input.key_check_pressed_vk(0x58) && input.key_check_gvb(11))
+		if (input.key_check_pressed_vk(0x58) && input.key_check_gvb(11) && currentDistCol != 2)
 		{
 			oldCamPos = d2Math::Vector2(0,0);
-			camera@ cam = get_active_camera();
 			cam.x(0);
 			cam.y(0);
 			manager.cam.igCoords = d2Math::Vector2(0,0);
@@ -404,6 +428,26 @@ class script : script_base
 				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
 			}
 		}
+		
+		float squareSize = 0;
+		uint squareCol = 0;
+		switch (currentDistCol)
+		{
+			case 0:
+				squareSize = 20;
+				squareCol = 0xFF00FF00;
+			break;
+			case 1:
+				squareSize = 30;
+				squareCol = 0xFFFFFF00;
+			break;
+			case 2:
+				squareSize = 40;
+				squareCol = 0xFFFF0000;
+			break;
+		}
+		d2Math::Vector2 pos = d2Math::Vector2(750, 400);
+		s.draw_rectangle_hud(21, 1, pos.x-squareSize, pos.y-squareSize, pos.x+squareSize, pos.y+squareSize, 0, squareCol);
 	}
 
 	void draw(float idkAnymore) 
