@@ -602,6 +602,7 @@ class d3NodeCluster : trigger_base
 
 	void UpdateRotation()
 	{
+		SetActiveSidesAll();
 		UpdateSelf();
 	}
 
@@ -718,7 +719,6 @@ class d3NodeCluster : trigger_base
 	{
 		// puts("quad 0: " + quadNodes[0][0]+","+quadNodes[0][1]+","+quadNodes[0][2]+","+quadNodes[0][3]);
 		// puts("quad 1: " + quadNodes[1][0]+","+quadNodes[1][1]+","+quadNodes[1][2]+","+quadNodes[1][3]);
-		ResetAllSides();
 		if (script.extraQuadDebug) { return; }
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
@@ -732,6 +732,7 @@ class d3NodeCluster : trigger_base
 	//resets dust, only do at init
 	void ApplyTileEnts()
 	{
+		ResetAllSides();
 		//don't feel like copypasting rn so just gonna do this
 		array<array<array<uint>>> things;
 		things.insertLast(spikes);
