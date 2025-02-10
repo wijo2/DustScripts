@@ -409,24 +409,7 @@ class script : script_base
 		}
 		if (showCompass)
 		{
-			Vector3 dx = manager.cam.WorldToCamDir(Vector3(1,0,0)) * compassSize;
-			Vector3 dz = manager.cam.WorldToCamDir(Vector3(0,0,1)) * compassSize;
-			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX,compassPosY-compassSize, 5, 0xFF00FF00);
-			if (d2Math::sign(dx.x) != d2Math::sign(dz.x))
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-			}
-			else if (dx.z < dz.z)
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-			}
-			else
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-			}
+			DrawCompass();
 		}
 		
 		float squareSize = 0;
@@ -468,26 +451,49 @@ class script : script_base
 		}
 		if (showCompassGame)
 		{
-			Vector3 dx = manager.cam.WorldToCamDir(Vector3(1,0,0)) * compassSize;
-			Vector3 dz = manager.cam.WorldToCamDir(Vector3(0,0,1)) * compassSize;
-			scene@ s = get_scene();
-			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX,compassPosY-compassSize, 5, 0xFF00FF00);
-			if (d2Math::sign(dx.x) != d2Math::sign(dz.x))
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-			}
-			else if (dx.z < dz.z)
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-			}
-			else
-			{
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, 0xFFFF0000);
-				s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, 0xFF0000FF);
-			}
+			DrawCompass();
 		}
+	}
+	void DrawCompass()
+	{
+		scene@ s = get_scene();
+		Vector3 dx = manager.cam.WorldToCamDir(Vector3(1,0,0)) * compassSize;
+		Vector3 dz = manager.cam.WorldToCamDir(Vector3(0,0,1)) * compassSize;
+		uint col1 = 0;
+		uint col2 = 0;
+		if (dx.z > 0)
+		{
+			col1 = 0xFF990000;
+		}
+		else
+		{
+			col1 = 0xFFFF0000;
+		}
+		if (dz.z > 0)
+		{
+			col2 = 0xFF000099;
+		}
+		else
+		{
+			col2 = 0xFF0000FF;
+		}
+		s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX,compassPosY-compassSize, 5, 0xFF00FF00);
+		if (d2Math::sign(dx.x) != d2Math::sign(dz.x))
+		{
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, col1);
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, col2);
+		}
+		else if (dx.z < dz.z)
+		{
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, col2);
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, col1);
+		}
+		else
+		{
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, col1);
+			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, col2);
+		}
+
 	}
 
 	// void on_level_end() 
