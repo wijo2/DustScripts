@@ -20,8 +20,6 @@ class d3NodeCluster : trigger_base
 	[hidden] array<array<uint>> dust;
 	[hidden] array<array<uint>> deactivated;
 
-	Vector2 oldCentre;
-
 	//for dragging nodes
 	Vector2 oldMousePos;
 	bool heldLastFrame = false;
@@ -31,9 +29,6 @@ class d3NodeCluster : trigger_base
 	//each int array should be 4 indecies long
 	[hidden] array<array<uint>> quadNodes;
 	array<d3::d3CQuad@> quads;
-
-	//3d pos of trigger centre
-	[hidden] Vector3 d3pos;
 
 	bool rotating = false;
 	Vector2 rotStart;
@@ -56,7 +51,7 @@ class d3NodeCluster : trigger_base
 	script@ script;
 	input_api@ input;
 
-	FakeTrigger@ fakeTrigger;
+	[hidden] d3FakeTrigger fakeTrigger;
 
 	void init(script@ s, scripttrigger@ self)
 	{
@@ -86,11 +81,10 @@ class d3NodeCluster : trigger_base
 			{
 				sub_layer = 1;
 			}
-			Vector2 camCen = manager.cam.igCoords;
-			d3pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
+			fakeTrigger = d3FakeTrigger();
 			hasInit = true;
 		}
-		@fakeTrigger = @FakeTrigger(s, self.as_entity(), Vector2());
+		fakeTrigger.Init(self.as_entity(), s, manager);
 		self.editor_handle_size(0);
 		InitQuads();
 		UpdateRotation();
@@ -515,50 +509,42 @@ class d3NodeCluster : trigger_base
 			if (input.key_check_pressed_vk(0x31) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96.01,96));
-				AddNode(d3pos + Vector3(96,96.02,-96));
-				AddNode(d3pos + Vector3(96,-96.03,96));
-				AddNode(d3pos + Vector3(96,-96.04,-96));
-				AddNode(d3pos + Vector3(-96,96.05,96));
-				AddNode(d3pos + Vector3(-96,96.06,-96));
-				AddNode(d3pos + Vector3(-96,-96.07,96));
-				AddNode(d3pos + Vector3(-96,-96.08,-96));
+				AddNode(fakeTrigger.pos + Vector3(96,96.01,96));
+				AddNode(fakeTrigger.pos + Vector3(96,96.02,-96));
+				AddNode(fakeTrigger.pos + Vector3(96,-96.03,96));
+				AddNode(fakeTrigger.pos + Vector3(96,-96.04,-96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.05,96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.06,-96));
+				AddNode(fakeTrigger.pos + Vector3(-96,-96.07,96));
+				AddNode(fakeTrigger.pos + Vector3(-96,-96.08,-96));
 				canPreset = true;
 			}
 			//slope
 			if (input.key_check_pressed_vk(0x32) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96.01,96));
-				AddNode(d3pos + Vector3(96,96.02,-96));
-				AddNode(d3pos + Vector3(-96,96.03,96));
-				AddNode(d3pos + Vector3(-96,96.04,-96));
-				AddNode(d3pos + Vector3(-96,-96.05,96));
-				AddNode(d3pos + Vector3(-96,-96.06,-96));
+				AddNode(fakeTrigger.pos + Vector3(96,96.01,96));
+				AddNode(fakeTrigger.pos + Vector3(96,96.02,-96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.03,96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.04,-96));
+				AddNode(fakeTrigger.pos + Vector3(-96,-96.05,96));
+				AddNode(fakeTrigger.pos + Vector3(-96,-96.06,-96));
 				canPreset = true;
 			}
 			//pyramid
 			if (input.key_check_pressed_vk(0x33) && (GetActiveNodeCount() == 0 || canPreset))
 			{
 				nodes.resize(0);
-				AddNode(d3pos + Vector3(96,96.01,96));
-				AddNode(d3pos + Vector3(96,96.02,-96));
-				AddNode(d3pos + Vector3(-96,96.03,96));
-				AddNode(d3pos + Vector3(-96,96.04,-96));
-				AddNode(d3pos + Vector3(0,-96.05,0));
+				AddNode(fakeTrigger.pos + Vector3(96,96.01,96));
+				AddNode(fakeTrigger.pos + Vector3(96,96.02,-96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.03,96));
+				AddNode(fakeTrigger.pos + Vector3(-96,96.04,-96));
+				AddNode(fakeTrigger.pos + Vector3(0,-96.05,0));
 				canPreset = true;
 			}
 		}
 		else { rotating = false; }
-
-		//trigger move
-		Vector2 curPos = fakeTrigger.pos;
-		Vector2 dif = curPos - oldCentre;
-		if (dif != Vector2())
-		{
-			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
-			oldCentre = fakeTrigger.pos;
-		}
+		fakeTrigger.EditorStep();
 	}
 
 	uint GetActiveNodeCount()
@@ -604,6 +590,7 @@ class d3NodeCluster : trigger_base
 	{
 		SetActiveSidesAll();
 		UpdateSelf();
+		fakeTrigger.UpdateRotation();
 	}
 
 	void editor_var_changed(var_info@ info)
@@ -632,13 +619,6 @@ class d3NodeCluster : trigger_base
 			quads[i].base.colour = d3col;
 		}
 		UpdatePositions();
-		Vector2 camCen = manager.cam.igCoords;
-		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
-		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
-		fakeTrigger.pos = Vector2(newPos.x, newPos.y);
-		oldCentre = Vector2(newPos.x, newPos.y);
-		if (newPos.z < 0) { fakeTrigger.size = 0; }
-		else { fakeTrigger.size = 10; }
 	}
 
 	//finds first available spot and adds the node, returns index of node
@@ -717,6 +697,7 @@ class d3NodeCluster : trigger_base
 
 	void SetActiveSidesAll()
 	{
+		ResetDeactivatedOnly();
 		// puts("quad 0: " + quadNodes[0][0]+","+quadNodes[0][1]+","+quadNodes[0][2]+","+quadNodes[0][3]);
 		// puts("quad 1: " + quadNodes[1][0]+","+quadNodes[1][1]+","+quadNodes[1][2]+","+quadNodes[1][3]);
 		if (script.extraQuadDebug) { return; }
@@ -727,6 +708,7 @@ class d3NodeCluster : trigger_base
 			// puts("doing quad " + i + "!!!!");
 			DealWithSharedTrigs(i);
 		}
+		ApplyDeactivatedOnly();
 	}
 
 	//resets dust, only do at init
@@ -764,6 +746,33 @@ class d3NodeCluster : trigger_base
 					}
 				}
 			}
+		}
+	}
+
+	void ApplyDeactivatedOnly()
+	{
+		for(uint object = 0; object < deactivated.length(); object++)
+		{
+	  		array<uint>@ triplet = deactivated[object];
+			array<uint> qs = FindSharedTrig(triplet[0], triplet[1], triplet[2]);
+			for(uint q = 0; q < qs.length(); q++)
+			{
+				int side = SideFromNodes(qs[q], triplet[0], triplet[1], triplet[2]);
+				if (side < 0) { continue; }
+				quads[qs[q]].activeSides[side-1] = false;
+				quads[qs[q]].base.drawnSides[side-1] = false;
+			}
+		}
+	}
+
+	void ResetDeactivatedOnly()
+	{
+		array<bool> a = {true, true, true, true};
+		for (uint i = 0; i < quads.length(); i++)
+		{
+	   		d3::d3CQuad@ q = quads[i];
+			q.activeSides = a;
+			q.base.drawnSides = a;
 		}
 	}
 
