@@ -1,25 +1,13 @@
 #include "mathHelper.cpp";
 
 class nthggg{}
-namespace d3e
+class d3FlatDrawable
 {
-
-	class d3Enemy
-	{
-		d2Math::Rect drawRect;
-		float depth;
-		void Draw(scene@ s){}
-	}
-
-	class d3PropBanner
-	{
-		d2Math::Rect drawRect;
-		float depth;
-		void Draw(scene@ s){}
-	}
+	d2Math::Rect drawRect;
+	float depth;
+	void Draw(scene@ s){}
 }
 
-//not in d3e cause of the whole namespaces don't persist thing.
 class d3FakeTrigger
 {
 	[hidden] Vector3 pos;

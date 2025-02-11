@@ -727,13 +727,15 @@ class d3CQuad
 
 class gluggligjdh{}
 
+//this was originally written for quad/enemy/prop before
+//I realised how that was kinda pointless so that's why it
+//reads a bit weird :p
 class Renderable
 {
-	//0 = quad, 1 = enemy, 2 = prob banner
+	//0 = quad, 1 = flat
 	uint type;
 	d3CQuad@ quad;
-	d3e::d3Enemy@ enemy;
-	d3e::d3PropBanner@ propBanner;
+	d3FlatDrawable@ flat;
 
 	Renderable(){}
 	Renderable(uint type) { this.type = type; }
@@ -749,25 +751,19 @@ class Renderable
 		{
 			return o.opCmp(this);
 		}
-		//both not quads
+		//both flat
 		if (o.type != 0)
 		{
-			float d = 0;
-			float od = 0;
-			if (type == 1) { d = enemy.depth; }
-			else if (type == 2) { d = propBanner.depth; }
-			if (o.type == 1) { od = o.enemy.depth; }
-			else if (o.type == 2) { od = o.propBanner.depth; }
+			float d = flat.depth;
+			float od = o.flat.depth;
 
 			if (d < od) { return 1; }
 			if (d > od) { return -1; }
 			return 0;
 		}
 		//other quad, this one not
-		d2Math::Rect drect;
-		float depth = 0;
-		if (type == 1) { drect = enemy.drawRect; depth = enemy.depth; }
-		else { drect = propBanner.drawRect; depth = propBanner.depth; }
+		d2Math::Rect drect = flat.drawRect; 
+		float depth = flat.depth; 
 		
 		int i = AnyPointQUnderR(o.quad, drect, depth);
 		if (i != 0) { return i; }
@@ -828,10 +824,7 @@ class Renderable
 				quad.DrawBase(s);
 				break;
 			case 1:
-				enemy.Draw(s);
-				break;
-			case 2:
-				propBanner.Draw(s);
+				flat.Draw(s);
 				break;
 		}
 	}
