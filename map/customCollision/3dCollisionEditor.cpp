@@ -145,6 +145,11 @@ class script : script_base
 			currentDistCol = 0;
 		}
 
+		for(uint i = 0; i < fakeTriggers.length(); i++)
+		{
+			fakeTriggers[i].EditorStep();
+		}
+
 		//fuck this game I fucking hate this why are you this shit fuck you
 		if (input.key_check_pressed_vk(0x58) && input.key_check_gvb(11) && currentDistCol != 2)
 		{
@@ -545,7 +550,6 @@ class d3StartPos : trigger_base
 	d3::d3Manager@ manager;
 
 	[hidden] d3FakeTrigger fakeTrigger;
-	FakeTrigger@ d2FakeTrigger;
 	[hidden] bool hasInit = false;
 
 	void init(script@ s, scripttrigger@ self)
@@ -566,15 +570,10 @@ class d3StartPos : trigger_base
 		{
 			puts("start pos init!");
 			fakeTrigger = d3FakeTrigger();
+			fakeTrigger.colour = 0xFFFF0000;
 			hasInit = true;
 		}
-		if (@fakeTrigger == null)
-		{
-			puts("ft null in startPos!!!!!!!");
-		}
-
-		@d2FakeTrigger = @fakeTrigger.Init(self.as_entity(), s, manager);
-		fakeTrigger.colour = 0xFFFF0000;
+		fakeTrigger.Init(self.as_entity(), s, manager);
 		self.editor_handle_size(0);
 		UpdateRotation();
 		script.startCoords = fakeTrigger.pos;
@@ -583,17 +582,17 @@ class d3StartPos : trigger_base
 
 	void editor_step()
 	{
-		fakeTrigger.EditorStep(manager, d2FakeTrigger);
+		fakeTrigger.EditorStep();
 		script.startCoords = fakeTrigger.pos;
 	}
 
 	void UpdateRotation()
 	{
-		fakeTrigger.UpdateRotation(manager, d2FakeTrigger);
+		fakeTrigger.UpdateRotation();
 	}
 
 	void on_remove()
 	{
-		fakeTrigger.DeleteSelf(d2FakeTrigger);
+		fakeTrigger.DeleteSelf();
 	}
 }

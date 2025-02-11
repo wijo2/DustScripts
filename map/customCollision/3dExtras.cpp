@@ -22,32 +22,33 @@ namespace d3e
 //not in d3e cause of the whole namespaces don't persist thing.
 class d3FakeTrigger
 {
-	Vector3 pos;
-	uint colour = 0xFF490f70;
+	[hidden] Vector3 pos;
+	[hidden] uint colour = 0xFF490f70;
 
-	Vector2 oldCentre;
-	bool hasInit = false;
+	[hidden] Vector2 oldCentre;
+	[hidden] bool hasInit = false;
 
-	FakeTrigger Init(entity@ trigger, script@ s, d3::d3Manager manager)
+	FakeTrigger@ fakeTrigger;
+	d3::d3Manager@ manager;
+
+	void Init(entity@ trigger, script@ s, d3::d3Manager@ manager)
 	{
-		FakeTrigger fakeTrigger = FakeTrigger(s, trigger, Vector2(trigger.x(), trigger.y()));
+		@fakeTrigger = @FakeTrigger(s, trigger, Vector2(trigger.x(), trigger.y()));
+		@this.manager = @manager;
 		fakeTrigger.colour = colour;
 		if (!hasInit)
 		{
-			puts("fake trigger init!");
-			puts(pos);
 			Vector2 camCen = manager.cam.igCoords;
 			Vector2 ipos = fakeTrigger.pos - camCen;
 			pos = manager.cam.CamToWorldPos(Vector3(ipos.x, ipos.y, 0));
 			hasInit = true;
-			puts("hasInit = true");
 		}
-		UpdateRotation(manager, fakeTrigger);
-		return fakeTrigger;
+		UpdateRotation();
 	}
 
-	void EditorStep(d3::d3Manager manager, FakeTrigger@ fakeTrigger)
+	void EditorStep()
 	{
+		fakeTrigger.colour = colour;
 		Vector2 curPos = fakeTrigger.pos;
 		Vector2 dif = curPos - oldCentre;
 		if (dif != Vector2())
@@ -57,18 +58,18 @@ class d3FakeTrigger
 		}
 	}
 
-	void UpdateRotation(d3::d3Manager manager, FakeTrigger@ fakeTrigger)
+	void UpdateRotation()
 	{
 		Vector2 camCen = manager.cam.igCoords;
 		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
 		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
 		fakeTrigger.pos = Vector2(newPos.x, newPos.y);
 		oldCentre = Vector2(newPos.x, newPos.y);
-		if (newPos.z < 0) { fakeTrigger.size = 0; }
-		else { fakeTrigger.size = 10; }
+		// if (newPos.z < 0) { fakeTrigger.size = 0; }
+		// else { fakeTrigger.size = 10; }
 	}
 
-	void DeleteSelf(FakeTrigger@ fakeTrigger)
+	void DeleteSelf()
 	{
 		fakeTrigger.DeleteSelf();
 	}
@@ -101,22 +102,21 @@ class FakeTrigger
 		@this.trigger = @trigger;
 	}
 
-
-FakeTrigger& opAssign(const FakeTrigger &inout o)
-{
-	pos = o.pos;
-	colour = o.colour;
-	size = o.size;
-	@script = @o.script;
-	@input = @o.input;
-	@trigger = @o.trigger;
-	holdTime = o.holdTime;
-	holdTimeR = o.holdTimeR;
-	isHeld = o.isHeld;
-	isHeldR = o.isHeldR;
-	oldPos = o.oldPos;
-	return this;
-}
+	FakeTrigger& opAssign(const FakeTrigger &inout o)
+	{
+		pos = o.pos;
+		colour = o.colour;
+		size = o.size;
+		@script = @o.script;
+		@input = @o.input;
+		@trigger = @o.trigger;
+		holdTime = o.holdTime;
+		holdTimeR = o.holdTimeR;
+		isHeld = o.isHeld;
+		isHeldR = o.isHeldR;
+		oldPos = o.oldPos;
+		return this;
+	}
 
 	void DeleteSelf()
 	{
