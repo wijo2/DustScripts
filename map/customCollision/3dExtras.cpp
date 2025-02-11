@@ -1,11 +1,57 @@
 #include "mathHelper.cpp";
+#include "3dCC.cpp";
+
+//this file contains basic tools useful for any editor implementation of the 3d custom collision.
 
 class nthggg{}
-class d3FlatDrawable
+class d3FlatObjectBase : d3::d3FlatDrawable
 {
-	d2Math::Rect drawRect;
-	float depth;
-	void Draw(scene@ s){}
+	// d2Math::Rect drawRect;
+	// float depth;
+
+	scripttrigger@ self;
+	d3::d3Manager@ manager;
+	d3::Renderable@ renderable;
+
+	[hidden] d3FakeTrigger fakeTrigger;
+	[hidden] bool hasInit = false;
+
+	void init(script@ s, scripttrigger@ self) 
+	{
+		@this.manager = @s.manager;
+		@this.self = @self;
+		if (!hasInit)
+		{
+			fakeTrigger = d3FakeTrigger();
+			hasInit = true;
+		}
+		fakeTrigger.Init(self.as_entity(), s, manager);
+		UpdateRotation();
+		@renderable = @d3::Renderable(1);
+		@renderable.flat = @this;
+		manager.renderables.insertLast(renderable);
+	}
+
+	void EditorStep()
+	{
+		fakeTrigger.EditorStep();
+	}
+
+	void UpdateRotation()
+	{
+		fakeTrigger.UpdateRotation();
+	}
+
+	void DestroySelf()
+	{
+		int i = manager.renderables.findByRef(renderable);
+		if (i != -1)
+		{
+			manager.renderables.removeAt(i);
+		}
+	}
+
+	void Draw(scene@ s) {}
 }
 
 class d3FakeTrigger

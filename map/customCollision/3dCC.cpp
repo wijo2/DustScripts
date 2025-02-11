@@ -1,6 +1,7 @@
 #include "2dCC.cpp";
-#include "3dExtras.cpp";
 #include "mathHelper.cpp";
+
+//this file contains a pure basis (other than drawing) for 3d custom collision.
 
 namespace d3
 {
@@ -726,6 +727,16 @@ class d3CQuad
 }	
 
 class gluggligjdh{}
+
+
+//interface for 2d renderables
+abstract class d3FlatDrawable
+{
+	d2Math::Rect drawRect;
+	float depth;
+	
+	void Draw(scene@ s){}
+}
 
 //this was originally written for quad/enemy/prop before
 //I realised how that was kinda pointless so that's why it

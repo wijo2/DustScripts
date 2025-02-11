@@ -1,4 +1,3 @@
-//WIP!
 #include "mathHelper.cpp";
 #include "2dCollisionOverride.cpp";
 

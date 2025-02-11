@@ -568,7 +568,6 @@ class d3StartPos : trigger_base
 		}
 		if (!hasInit)
 		{
-			puts("start pos init!");
 			fakeTrigger = d3FakeTrigger();
 			fakeTrigger.colour = 0xFFFF0000;
 			hasInit = true;

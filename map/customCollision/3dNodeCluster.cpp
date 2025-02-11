@@ -1,4 +1,5 @@
 #include "3dCC.cpp";
+#include "3dExtras.cpp";
 
 class fuckThis{}
 class d3NodeCluster : trigger_base 
