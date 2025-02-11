@@ -4,10 +4,14 @@
 //this file contains basic tools useful for any editor implementation of the 3d custom collision.
 
 class nthggg{}
+
+//usually I don't like inheritance but this seems like a good place to use it
+//since all enemies need an unique implementation anyways, this will also work for props
 class d3FlatObjectBase : d3::d3FlatDrawable
 {
-	// d2Math::Rect drawRect;
-	// float depth;
+	//from interface:
+	//d2Math::Rect drawRect;
+	//float depth;
 
 	scripttrigger@ self;
 	d3::d3Manager@ manager;
@@ -32,7 +36,7 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 		manager.renderables.insertLast(renderable);
 	}
 
-	void EditorStep()
+	void editor_step()
 	{
 		fakeTrigger.EditorStep();
 	}
@@ -40,6 +44,7 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 	void UpdateRotation()
 	{
 		fakeTrigger.UpdateRotation();
+		depth = fakeTrigger.pos.z;
 	}
 
 	void DestroySelf()
