@@ -4,20 +4,77 @@ class nthggg{}
 namespace d3e
 {
 
-class d3Enemy
-{
-	d2Math::Rect drawRect;
-	float depth;
-	void Draw(scene@ s){}
+	class d3Enemy
+	{
+		d2Math::Rect drawRect;
+		float depth;
+		void Draw(scene@ s){}
+	}
+
+	class d3PropBanner
+	{
+		d2Math::Rect drawRect;
+		float depth;
+		void Draw(scene@ s){}
+	}
 }
 
-class d3PropBanner
+//not in d3e cause of the whole namespaces don't persist thing.
+class d3FakeTrigger
 {
-	d2Math::Rect drawRect;
-	float depth;
-	void Draw(scene@ s){}
-}
+	Vector3 pos;
+	uint colour = 0xFF490f70;
+	FakeTrigger fakeTrigger;
 
+	d3::d3Manager@ manager;
+
+	d2Math::Vector2 oldCentre;
+	bool hasInit = false;
+
+	void Init(entity@ trigger, script@ s, d3::d3Manager manager)
+	{
+		@this.manager = @manager;
+		fakeTrigger = FakeTrigger(s, trigger, d2Math::Vector2(trigger.x(), trigger.y()));
+		fakeTrigger.colour = colour;
+		if (!hasInit)
+		{
+			puts("fake trigger init!");
+			puts(pos);
+			d2Math::Vector2 camCen = manager.cam.igCoords;
+			d2Math::Vector2 ipos = fakeTrigger.pos - camCen;
+			pos = manager.cam.CamToWorldPos(Vector3(ipos.x, ipos.y, 0));
+			hasInit = true;
+			puts("hasInit = true");
+		}
+		UpdateRotation();
+	}
+
+	void EditorStep()
+	{
+		d2Math::Vector2 curPos = fakeTrigger.pos;
+		d2Math::Vector2 dif = curPos - oldCentre;
+		if (dif != d2Math::Vector2())
+		{
+			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
+			oldCentre = fakeTrigger.pos;
+		}
+	}
+
+	void UpdateRotation()
+	{
+		d2Math::Vector2 camCen = manager.cam.igCoords;
+		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
+		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
+		fakeTrigger.pos = d2Math::Vector2(newPos.x, newPos.y);
+		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
+		if (newPos.z < 0) { fakeTrigger.size = 0; }
+		else { fakeTrigger.size = 10; }
+	}
+
+	void DeleteSelf()
+	{
+		fakeTrigger.DeleteSelf();
+	}
 }
 
 class FakeTrigger
@@ -37,6 +94,7 @@ class FakeTrigger
 
 	d2Math::Vector2 oldPos;
 
+	FakeTrigger(){}
 	FakeTrigger(script@ s, entity@ trigger, d2Math::Vector2 pos)
 	{
 		@script = @s;
@@ -45,6 +103,23 @@ class FakeTrigger
 		s.fakeTriggers.insertLast(this);
 		@this.trigger = @trigger;
 	}
+
+
+FakeTrigger& opAssign(const FakeTrigger &inout o)
+{
+	pos = o.pos;
+	colour = o.colour;
+	size = o.size;
+	@script = @o.script;
+	@input = @o.input;
+	@trigger = @o.trigger;
+	holdTime = o.holdTime;
+	holdTimeR = o.holdTimeR;
+	isHeld = o.isHeld;
+	isHeldR = o.isHeldR;
+	oldPos = o.oldPos;
+	return this;
+}
 
 	void DeleteSelf()
 	{
@@ -137,3 +212,4 @@ class FakeTrigger
 		}
 	}
 }
+

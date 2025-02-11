@@ -463,7 +463,7 @@ class script : script_base
 		uint col2 = 0;
 		if (dx.z > 0)
 		{
-			col1 = 0xFF990000;
+			col1 = 0xFF550000;
 		}
 		else
 		{
@@ -471,7 +471,7 @@ class script : script_base
 		}
 		if (dz.z > 0)
 		{
-			col2 = 0xFF000099;
+			col2 = 0xFF000055;
 		}
 		else
 		{
@@ -540,15 +540,12 @@ class script : script_base
 
 class d3StartPos : trigger_base
 {
-	[hidden] Vector3 pos;
-	d2Math::Vector2 oldCentre;
-	[hidden] bool hasInit;
-
 	scripttrigger@ self;
 	script@ script;
 	d3::d3Manager@ manager;
 
-	FakeTrigger@ fakeTrigger;
+	[hidden] d3FakeTrigger fakeTrigger;
+	[hidden] bool hasInit = false;
 
 	void init(script@ s, scripttrigger@ self)
 	{
@@ -564,42 +561,34 @@ class d3StartPos : trigger_base
 		{
 			@s.startPos = @this;
 		}
-
 		if (!hasInit)
 		{
-			d2Math::Vector2 camCen = manager.cam.igCoords;
-			pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
+			puts("start pos init!");
+			fakeTrigger = d3FakeTrigger();
 			hasInit = true;
 		}
-		@fakeTrigger = @FakeTrigger(s, self.as_entity(), d2Math::Vector2());
+		if (@fakeTrigger == null)
+		{
+			puts("ft null in startPos!!!!!!!");
+		}
+
+		fakeTrigger.Init(self.as_entity(), s, manager);
 		fakeTrigger.colour = 0xFFFF0000;
 		self.editor_handle_size(0);
 		UpdateRotation();
-		script.startCoords = pos;
+		script.startCoords = fakeTrigger.pos;
 		s.firstFrame = true;
 	}
 
 	void editor_step()
 	{
-		d2Math::Vector2 curPos = fakeTrigger.pos;
-		d2Math::Vector2 dif = curPos - oldCentre;
-		if (dif != d2Math::Vector2())
-		{
-			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
-			oldCentre = fakeTrigger.pos;
-			script.startCoords = pos;
-		}
+		fakeTrigger.EditorStep();
+		script.startCoords = fakeTrigger.pos;
 	}
 
 	void UpdateRotation()
 	{
-		d2Math::Vector2 camCen = manager.cam.igCoords;
-		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
-		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
-		fakeTrigger.pos = d2Math::Vector2(newPos.x, newPos.y);
-		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
-		if (newPos.z < 0) { fakeTrigger.size = 0; }
-		else { fakeTrigger.size = 10; }
+		fakeTrigger.UpdateRotation();
 	}
 
 	void on_remove()
