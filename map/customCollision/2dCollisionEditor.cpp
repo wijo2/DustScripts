@@ -45,7 +45,7 @@ class script : script_base
 	void on_editor_start() 
 	{
 		quadManager.manager.collisionOrder = collisionOrder;
-		quadManager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+		quadManager.manager.Init(d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 	}
 
 	void PlayInit()
@@ -59,7 +59,7 @@ class script : script_base
 			if (@c == null) { continue; }
 			quadManager.manager.additionalControllables.insertLast(c);
 		}
-		quadManager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+		quadManager.manager.PlayInit(this, d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -72,7 +72,7 @@ class script : script_base
 			&& editor.editor_tab() == "Triggers"
 			&& @editor.get_selected_trigger() == null)
 		{
-			d2Math::Vector2 mousePos = d2Math::Vector2();
+			Vector2 mousePos = Vector2();
 			mousePos.x = input.mouse_x_world(21);
 			mousePos.y = input.mouse_y_world(21);
 			for (uint i = 0; i < quadManager.quads.length(); i++)
@@ -136,7 +136,7 @@ class script : script_base
 
 	void MakeDust(int n) 
 	{
-		d2Math::Vector2 pos = d2Math::Vector2(dustPosX, dustPosY);
+		Vector2 pos = Vector2(dustPosX, dustPosY);
 		int width = int(sqrt(n));
 		if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
 		int height = n/width;
@@ -220,7 +220,7 @@ class QuadEntity : trigger_base
 
 	int selectedCorner = 0;
 
-	d2Math::Vector2 oldCentre;
+	Vector2 oldCentre;
 
 	QuadManager@ quadManager;
 	d2::d2CQuad@ quad;
@@ -249,14 +249,14 @@ class QuadEntity : trigger_base
 			p4x = self.x() - 48;
 			p4y = self.y() + 48;
 		}
-		oldCentre = d2Math::Vector2(self.x(), self.y());
+		oldCentre = Vector2(self.x(), self.y());
 		@this.self = @self;
 		@this.quadManager = @s.quadManager; 
 		@quad = @d2::d2CQuad(
-			d2Math::Vector2(p1x, p1y),
-			d2Math::Vector2(p2x, p2y),
-			d2Math::Vector2(p3x, p3y),
-			d2Math::Vector2(p4x, p4y),
+			Vector2(p1x, p1y),
+			Vector2(p2x, p2y),
+			Vector2(p3x, p3y),
+			Vector2(p4x, p4y),
 			colour,
 			quadManager.manager);
 		@quad.script = @quadManager.s;
@@ -299,12 +299,12 @@ class QuadEntity : trigger_base
 	void UpdateSelf()
 	{
 		quad.base.colour = colour; 
-		quad.base.p1 = d2Math::Vector2(p1x, p1y);
-		quad.base.p2 = d2Math::Vector2(p2x, p2y);
-		quad.base.p3 = d2Math::Vector2(p3x, p3y);
-		quad.base.p4 = d2Math::Vector2(p4x, p4y);
+		quad.base.p1 = Vector2(p1x, p1y);
+		quad.base.p2 = Vector2(p2x, p2y);
+		quad.base.p3 = Vector2(p3x, p3y);
+		quad.base.p4 = Vector2(p4x, p4y);
 		quad.UpdateCollision();
-		d2Math::Vector2 centre = quad.base.FindCentre();
+		Vector2 centre = quad.base.FindCentre();
 		oldCentre = centre;
 		self.set_centre(centre.x, centre.y);
 		self.x(centre.x);
@@ -333,8 +333,8 @@ class QuadEntity : trigger_base
 	{
 		scene@ s = get_scene();
 
-		d2Math::Vector2 mousePosWorld = d2Math::Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
-		d2Math::Vector2 mousePosHud = d2Math::Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
+		Vector2 mousePosWorld = Vector2(s.mouse_x_world(0,20), s.mouse_y_world(0,20));
+		Vector2 mousePosHud = Vector2(s.mouse_x_hud(0), s.mouse_y_hud(0));
 
 		if (script.input.mouse_state() & 0x20 != 0 
 			&& script.editor.editor_tab() == "Triggers"
@@ -345,10 +345,10 @@ class QuadEntity : trigger_base
 
 			if (selectedCorner == 0) 
 			{
-				array<d2Math::Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
+				array<Vector2> corners = { quad.base.p1, quad.base.p2, quad.base.p3, quad.base.p4 };
 				for (uint i = 0; i < corners.length(); i++)
 				{
-					d2Math::Vector2 pos = d2Math::WorldToScreenPos(d2Math::Vector2(corners[i].x, corners[i].y));
+					Vector2 pos = d2Math::WorldToScreenPos(Vector2(corners[i].x, corners[i].y));
 					if (pos.Distance(mousePosHud) < 50) 
 					{
 						selectedCorner = i + 1;
@@ -410,8 +410,8 @@ class QuadEntity : trigger_base
 			UpdateSelf();
 		}
 
-		d2Math::Vector2 curCen = d2Math::Vector2(self.x(), self.y());
-		d2Math::Vector2 dif = oldCentre - curCen;
+		Vector2 curCen = Vector2(self.x(), self.y());
+		Vector2 dif = oldCentre - curCen;
 		if (dif.Magnitude() > 0.1 && selectedCorner == 0)
 		{
 			p1x -= dif.x;
