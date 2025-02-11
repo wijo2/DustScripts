@@ -7,21 +7,21 @@ namespace d2
 
 class d2Quad
 {
-	d2Math::Vector2 p1;
-	d2Math::Vector2 p2;
-	d2Math::Vector2 p3;
-	d2Math::Vector2 p4;
+	Vector2 p1;
+	Vector2 p2;
+	Vector2 p3;
+	Vector2 p4;
 	uint colour;
 
 	d2Quad()
 	{
-		p1 = d2Math::Vector2();
-		p2 = d2Math::Vector2();
-		p3 = d2Math::Vector2();
-		p4 = d2Math::Vector2();
+		p1 = Vector2();
+		p2 = Vector2();
+		p3 = Vector2();
+		p4 = Vector2();
 	}
 
-	d2Quad(d2Math::Vector2 p1, d2Math::Vector2 p2, d2Math::Vector2 p3, d2Math::Vector2 p4, uint colour)
+	d2Quad(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, uint colour)
 	{
 		this.p1 = p1;
 		this.p2 = p2;
@@ -37,27 +37,27 @@ class d2Quad
 	}
 
 	//does not work me dumb
-	bool IsInside(d2Math::Vector2 pos)
+	bool IsInside(Vector2 pos)
 	{
 		array<float> intersections;
 
 		d2Math::LineFunc l1 = d2Math::LineFunc(p1, p2);
 		l1.SetBounds(p1, p2);
-		if (l1.IsWithinBounds(d2Math::Vector2(l1.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l1.GetRevValue(pos.y)); }
+		if (l1.IsWithinBounds(Vector2(l1.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l1.GetRevValue(pos.y)); }
 		d2Math::LineFunc l2 = d2Math::LineFunc(p2, p3);
 		l2.SetBounds(p2, p3);
-		if (l2.IsWithinBounds(d2Math::Vector2(l2.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l2.GetRevValue(pos.y)); }
+		if (l2.IsWithinBounds(Vector2(l2.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l2.GetRevValue(pos.y)); }
 		d2Math::LineFunc l3 = d2Math::LineFunc(p3, p4);
 		l3.SetBounds(p3, p4);
-		if (l3.IsWithinBounds(d2Math::Vector2(l3.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l3.GetRevValue(pos.y)); }
+		if (l3.IsWithinBounds(Vector2(l3.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l3.GetRevValue(pos.y)); }
 		d2Math::LineFunc l4 = d2Math::LineFunc(p4, p1);
 		l4.SetBounds(p4, p1);
-		if (l4.IsWithinBounds(d2Math::Vector2(l4.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l4.GetRevValue(pos.y)); }
+		if (l4.IsWithinBounds(Vector2(l4.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l4.GetRevValue(pos.y)); }
 		if (intersections.length() < 2) { return false; }
 		return (intersections[0] - pos.x) * (intersections[1] - pos.x) < 0;
 	}
 
-	d2Math::Vector2@ PointByNumber(int n)
+	Vector2@ PointByNumber(int n)
 	{
 		int n2 = n;
 		if (n2 > 4) { n2 -= 4; }
@@ -73,12 +73,12 @@ class d2Quad
 			case 4:
 				return @p4;
 		}
-		return d2Math::Vector2();
+		return Vector2();
 	}
 
-	d2Math::Vector2 FindCentre()
+	Vector2 FindCentre()
 	{
-		return d2Math::Vector2(
+		return Vector2(
 			(p1.x + p2.x + p3.x + p4.x) / 4,
 			(p1.y + p2.y + p3.y + p4.y) / 4);
 	}
@@ -90,7 +90,7 @@ class d2Quad
 		return r;
 	}
 	
-	int GetNodeFromPoint(d2Math::Vector2 pos)
+	int GetNodeFromPoint(Vector2 pos)
 	{
 		if (pos == p1) { return 1; }
 		if (pos == p2) { return 2; }
@@ -130,7 +130,7 @@ class d2CQuad
 	script@ script;
 
 	d2CQuad() { @base = @d2Quad(); @manager = null; }
-	d2CQuad(d2Math::Vector2 p1, d2Math::Vector2 p2, d2Math::Vector2 p3, d2Math::Vector2 p4, uint colour, CollisionManager@ manager)
+	d2CQuad(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, uint colour, CollisionManager@ manager)
 	{
 		@base = @d2Quad(p1, p2, p3, p4, colour);
 		@this.manager = @manager;
@@ -146,14 +146,14 @@ class d2CQuad
 			ClearOldCache();
 		}
 
-		d2Math::Vector2 c = base.FindCentre();
+		Vector2 c = base.FindCentre();
 		maxDist = max(max((base.p1 - c).Magnitude(), (base.p2 - c).Magnitude()), max((base.p3 - c).Magnitude(), (base.p4 - c).Magnitude()));
 
-		array<d2Math::Vector2> arr;
+		array<Vector2> arr;
 		for (uint i = 0; i < 4; i++)
 		{
 			if (!activeLines[i]) { continue; }
-			array<d2Math::Vector2> arr1 = base.GetLineFunc(i+1)
+			array<Vector2> arr1 = base.GetLineFunc(i+1)
 				.IterateOverLine(manager.collisionOrder, base.PointByNumber(i+1), base.PointByNumber(i+2));
 			arr = AddArrays(arr, arr1);
 		}
@@ -179,9 +179,9 @@ class d2CQuad
 		oldCollision = array<array<int>>(0);
 	}
 
-	array<d2Math::Vector2> AddArrays(array<d2Math::Vector2> a1, array<d2Math::Vector2> a2)
+	array<Vector2> AddArrays(array<Vector2> a1, array<Vector2> a2)
 	{
-		array<d2Math::Vector2> ret;
+		array<Vector2> ret;
 		for (uint i = 0; i < a1.length(); i++)
 		{
 			ret.insertLast(a1[i]);
@@ -196,7 +196,7 @@ class d2CQuad
 	array<d2Math::LineFunc> GetSideEdges(int side)
 	{
 		array<d2Math::LineFunc> result;
-		d2Math::Vector2 centre = base.FindCentre();
+		Vector2 centre = base.FindCentre();
 		for (int l = 1; l <= 4; l++)
 		{
 			d2Math::LineFunc f = base.GetLineFunc(l);
@@ -258,9 +258,9 @@ class d2CQuad
 	   	float hw = 3;
 		for (int side = 0; side < 4; side++)
 		{
-			d2Math::Vector2 p1 = base.PointByNumber(side + 1);
-			d2Math::Vector2 p2 = base.PointByNumber(side + 2);
-	   		d2Math::Vector2 centre = d2Math::Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+			Vector2 p1 = base.PointByNumber(side + 1);
+			Vector2 p2 = base.PointByNumber(side + 2);
+	   		Vector2 centre = Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 			float hl = p1.Distance(p2)/2;
 			if (@script == null) { continue; }
 			if (dustLines[side])
@@ -303,9 +303,9 @@ class d2CQuad
 
 	void DrawDebug(scene@ s, uint layer, uint sub_layer)
 	{
-		array<d2Math::Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
+		array<Vector2> arr = d2Math::LineFunc(base.p1, base.p2)
 			.IterateOverLine(6, base.p1, base.p2);
-		array<d2Math::Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
+		array<Vector2> arr1 = d2Math::LineFunc(base.p2, base.p3)
 			.IterateOverLine(6, base.p2, base.p3);
 		arr = AddArrays(arr, arr1);
 		arr1 = d2Math::LineFunc(base.p3, base.p4)

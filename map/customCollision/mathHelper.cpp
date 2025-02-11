@@ -20,83 +20,6 @@ bool PointInTriangle(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3)
     return !(has_neg && has_pos);
 }
 
-class Vector2
-{
-	float x;
-	float y;
-
-	Vector2()
-	{
-		x = 0;
-		y = 0;
-	}
-
-	Vector2(float x, float y)
-	{
-		this.x = x;
-		this.y = y;
-	}
-
-
-	float Distance(Vector2@ o)
-	{
-		return sqrt((x-o.x)**2 + (y-o.y)**2);
-	}
-	float Magnitude()
-	{
-		return sqrt(x**2 + y**2);
-	}
-
-	Vector2 opNeg()
-	{
-		return Vector2(-x, -y);
-	}
-	Vector2 opAdd(Vector2 o)
-	{
-		return Vector2(x + o.x, y + o.y);
-	}
-	Vector2 opSub(Vector2 o)
-	{
-		return Vector2(x - o.x, y - o.y);
-	}
-	Vector2 opMul(float o)
-	{
-		return Vector2(o*x, o*y);
-	}
-	Vector2 opMul_r(float o) { return opMul(o); }
-	Vector2 opDiv(float o)
-	{
-		return Vector2(x/o, y/o);
-	}
-	Vector2 opAddAssign(Vector2 o) 
-	{
-		x += o.x;
-		y += o.y;
-		return this;
-	}
-	Vector2 opSubAssign(Vector2 o) 
-	{
-		x -= o.x;
-		y -= o.y;
-		return this;
-	}
-	Vector2 opMulAssign(float o) 
-	{
-		x *= o;
-		y *= o;
-		return this;
-	}
-	string opImplConv()
-	{
-		return "(" + formatFloat(x, "", 0, 3) + ", " + formatFloat(y, "", 0, 3) + ")";
-
-	}
-	bool opEquals(Vector2 o)
-	{
-		return x == o.x && y == o.y;
-	}
-}
-	
 class LineFunc
 {
 	float k = 0;
@@ -572,6 +495,84 @@ Vector2 WorldToScreenPos(Vector2 pos)
 }
 
 }
+
+class Vector2
+{
+	float x;
+	float y;
+
+	Vector2()
+	{
+		x = 0;
+		y = 0;
+	}
+
+	Vector2(float x, float y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+
+
+	float Distance(Vector2@ o)
+	{
+		return sqrt((x-o.x)**2 + (y-o.y)**2);
+	}
+	float Magnitude()
+	{
+		return sqrt(x**2 + y**2);
+	}
+
+	Vector2 opNeg()
+	{
+		return Vector2(-x, -y);
+	}
+	Vector2 opAdd(Vector2 o)
+	{
+		return Vector2(x + o.x, y + o.y);
+	}
+	Vector2 opSub(Vector2 o)
+	{
+		return Vector2(x - o.x, y - o.y);
+	}
+	Vector2 opMul(float o)
+	{
+		return Vector2(o*x, o*y);
+	}
+	Vector2 opMul_r(float o) { return opMul(o); }
+	Vector2 opDiv(float o)
+	{
+		return Vector2(x/o, y/o);
+	}
+	Vector2 opAddAssign(Vector2 o) 
+	{
+		x += o.x;
+		y += o.y;
+		return this;
+	}
+	Vector2 opSubAssign(Vector2 o) 
+	{
+		x -= o.x;
+		y -= o.y;
+		return this;
+	}
+	Vector2 opMulAssign(float o) 
+	{
+		x *= o;
+		y *= o;
+		return this;
+	}
+	string opImplConv()
+	{
+		return "(" + formatFloat(x, "", 0, 3) + ", " + formatFloat(y, "", 0, 3) + ")";
+
+	}
+	bool opEquals(Vector2 o)
+	{
+		return x == o.x && y == o.y;
+	}
+}
+	
 
 class Vector3
 {

@@ -30,7 +30,7 @@ class script : script_base
 	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
 	[hidden] int dustPosY;
 
-	d2Math::Vector2 oldCamPos;
+	Vector2 oldCamPos;
 	[hidden] float rotation;
 	float oldRotation;
 
@@ -40,7 +40,7 @@ class script : script_base
 	d3StartPos@ startPos;
 	[hidden] Vector3 startCoords;
 
-	d2Math::Vector2 middleDragStart;
+	Vector2 middleDragStart;
 	float middleDragStartRot;
 	[label:"middle mouse hotkeys"] bool middleDragEnable = true;
 
@@ -89,12 +89,12 @@ class script : script_base
 	void on_editor_start() 
 	{
 		manager.manager.collisionOrder = collisionOrder;
-		manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+		manager.manager.Init(d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 		@manager.script = @this;
 		rotation = 0;
 		oldRotation = 0;
 		camera@ c = get_active_camera();
-		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
+		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		manager.cam.centre = startCoords;
 	}
@@ -102,12 +102,12 @@ class script : script_base
 	void PlayInit()
 	{
 		manager.manager.collisionOrder = collisionOrder;
-		manager.manager.PlayInit(this, d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
+		manager.manager.PlayInit(this, d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
 		@manager.script = @this;
 		rotation = 0;
 		oldRotation = 0;
 		controllable@ c = controller_controllable(uint(get_active_player()));
-		manager.cam.igCoords = d2Math::Vector2(c.x(), c.y());
+		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		get_active_camera().controller_mode(4);
 		manager.cam.centre = startCoords;
@@ -148,10 +148,10 @@ class script : script_base
 		//fuck this game I fucking hate this why are you this shit fuck you
 		if (input.key_check_pressed_vk(0x58) && input.key_check_gvb(11) && currentDistCol != 2)
 		{
-			oldCamPos = d2Math::Vector2(0,0);
+			oldCamPos = Vector2(0,0);
 			cam.x(0);
 			cam.y(0);
-			manager.cam.igCoords = d2Math::Vector2(0,0);
+			manager.cam.igCoords = Vector2(0,0);
 			UpdateRotation(true);
 		}
 
@@ -184,7 +184,7 @@ class script : script_base
 		if (input.mouse_state() & 0x80 != 0)
 		{
 			middleDragStartRot = rotation;
-			middleDragStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+			middleDragStart = Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
 		}
 		if (input.mouse_state() & 0x10 != 0)
 		{
@@ -229,7 +229,7 @@ class script : script_base
 	void CentraliseTriggers()
 	{
 		camera@ cam = get_active_camera();
-		d2Math::Vector2 camPos = d2Math::Vector2(cam.x(), cam.y());
+		Vector2 camPos = Vector2(cam.x(), cam.y());
 		for(uint i = 0; i < fakeTriggers.length(); i++)
 		{
 			entity@ t = fakeTriggers[i].trigger;
@@ -268,7 +268,7 @@ class script : script_base
 		}
 		if (update)
 		{
-			manager.manager.Init(d2Math::IntRect(d2Math::Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
+			manager.manager.Init(d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 			manager.UpdateCollision();
 		}
 	}
@@ -355,13 +355,13 @@ class script : script_base
 		if (!is_playing())
 		{
 			camera@ rcam = get_active_camera();
-			auto rcamPos = d2Math::Vector2(rcam.x(), rcam.y());
-			if (oldCamPos == d2Math::Vector2(0,0))
+			auto rcamPos = Vector2(rcam.x(), rcam.y());
+			if (oldCamPos == Vector2(0,0))
 			{
 				oldCamPos = rcamPos;
 				return;
 			}
-			d2Math::Vector2 dif = oldCamPos - rcamPos;
+			Vector2 dif = oldCamPos - rcamPos;
 			if (dif.Magnitude() > 0.1)
 			{
 				Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
@@ -374,13 +374,13 @@ class script : script_base
 		else
 		{
 			controllable@ player = controller_controllable(uint(get_active_player()));
-			auto rcamPos = d2Math::Vector2(player.x(), player.y());
-			if (oldCamPos == d2Math::Vector2(0,0))
+			auto rcamPos = Vector2(player.x(), player.y());
+			if (oldCamPos == Vector2(0,0))
 			{
 				oldCamPos = rcamPos;
 				return;
 			}
-			d2Math::Vector2 dif = oldCamPos - rcamPos;
+			Vector2 dif = oldCamPos - rcamPos;
 			if (dif.Magnitude() > 0.1)
 			{
 				Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
@@ -429,7 +429,7 @@ class script : script_base
 				squareCol = 0xFFFF0000;
 			break;
 		}
-		d2Math::Vector2 pos = d2Math::Vector2(750, 400);
+		Vector2 pos = Vector2(750, 400);
 		s.draw_rectangle_hud(21, 1, pos.x-squareSize, pos.y-squareSize, pos.x+squareSize, pos.y+squareSize, 0, squareCol);
 	}
 
@@ -508,7 +508,7 @@ class script : script_base
 
 	// void MakeDust(int n) 
 	// {
-	// 	d2Math::Vector2 pos = d2Math::Vector2(dustPosX, dustPosY);
+	// 	Vector2 pos = Vector2(dustPosX, dustPosY);
 	// 	int width = int(sqrt(n));
 	// 	if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
 	// 	int height = n/width;
@@ -545,6 +545,7 @@ class d3StartPos : trigger_base
 	d3::d3Manager@ manager;
 
 	[hidden] d3FakeTrigger fakeTrigger;
+	FakeTrigger@ d2FakeTrigger;
 	[hidden] bool hasInit = false;
 
 	void init(script@ s, scripttrigger@ self)
@@ -572,7 +573,7 @@ class d3StartPos : trigger_base
 			puts("ft null in startPos!!!!!!!");
 		}
 
-		fakeTrigger.Init(self.as_entity(), s, manager);
+		@d2FakeTrigger = @fakeTrigger.Init(self.as_entity(), s, manager);
 		fakeTrigger.colour = 0xFFFF0000;
 		self.editor_handle_size(0);
 		UpdateRotation();
@@ -582,17 +583,17 @@ class d3StartPos : trigger_base
 
 	void editor_step()
 	{
-		fakeTrigger.EditorStep();
+		fakeTrigger.EditorStep(manager, d2FakeTrigger);
 		script.startCoords = fakeTrigger.pos;
 	}
 
 	void UpdateRotation()
 	{
-		fakeTrigger.UpdateRotation();
+		fakeTrigger.UpdateRotation(manager, d2FakeTrigger);
 	}
 
 	void on_remove()
 	{
-		fakeTrigger.DeleteSelf();
+		fakeTrigger.DeleteSelf(d2FakeTrigger);
 	}
 }

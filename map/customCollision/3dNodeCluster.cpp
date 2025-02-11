@@ -20,10 +20,10 @@ class d3NodeCluster : trigger_base
 	[hidden] array<array<uint>> dust;
 	[hidden] array<array<uint>> deactivated;
 
-	d2Math::Vector2 oldCentre;
+	Vector2 oldCentre;
 
 	//for dragging nodes
-	d2Math::Vector2 oldMousePos;
+	Vector2 oldMousePos;
 	bool heldLastFrame = false;
 
 	d3::d3Manager@ manager;
@@ -36,14 +36,14 @@ class d3NodeCluster : trigger_base
 	[hidden] Vector3 d3pos;
 
 	bool rotating = false;
-	d2Math::Vector2 rotStart;
+	Vector2 rotStart;
 	//0 = idk, 1 = x, 2 = y, 3 = z
 	int rotatingDir;
 	array<Vector3> rotStartNodes;
 	Vector3 rotCentre;
 
 	bool scaling = false;
-	d2Math::Vector2 scaleStart;
+	Vector2 scaleStart;
 	int scalingDir;
 	//0 = idk, 1 = x, 2 = y, 3 = z
 	array<Vector3> scaleStartNodes;
@@ -86,11 +86,11 @@ class d3NodeCluster : trigger_base
 			{
 				sub_layer = 1;
 			}
-			d2Math::Vector2 camCen = manager.cam.igCoords;
+			Vector2 camCen = manager.cam.igCoords;
 			d3pos = manager.cam.CamToWorldPos(Vector3(self.x()-camCen.x,self.y()-camCen.y,0));
 			hasInit = true;
 		}
-		@fakeTrigger = @FakeTrigger(s, self.as_entity(), d2Math::Vector2());
+		@fakeTrigger = @FakeTrigger(s, self.as_entity(), Vector2());
 		self.editor_handle_size(0);
 		InitQuads();
 		UpdateRotation();
@@ -112,7 +112,7 @@ class d3NodeCluster : trigger_base
 				rotating = !rotating; 
 				if (rotating)
 				{
-					rotStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+					rotStart = Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
 					rotStartNodes = nodes;
 					Vector3 sum;
 					uint count = 0;
@@ -130,7 +130,7 @@ class d3NodeCluster : trigger_base
 				if (input.key_check_pressed_vk(0x59)) { rotatingDir = 2; } 
 				if (input.key_check_pressed_vk(0x5A)) { rotatingDir = 3; } 
 				if (rotatingDir == 0) { return; }
-				auto curPos = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
+				auto curPos = Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
 				auto dif = curPos - rotStart;
 				float a = dif.x/100;
 				float s = sin(a);
@@ -176,7 +176,7 @@ class d3NodeCluster : trigger_base
 				scaling = !scaling;
 				if (scaling)
 				{
-					scaleStart = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
+					scaleStart = Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));
 					scaleStartNodes = nodes;
 					Vector3 sum;
 					uint count = 0;
@@ -194,7 +194,7 @@ class d3NodeCluster : trigger_base
 				if (input.key_check_pressed_vk(0x58)) { scalingDir = 1; } 
 				if (input.key_check_pressed_vk(0x59)) { scalingDir = 2; } 
 				if (input.key_check_pressed_vk(0x5A)) { scalingDir = 3; } 
-				auto curPos = d2Math::Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
+				auto curPos = Vector2(input.mouse_x_hud(true), input.mouse_y_hud(true));			
 				auto dif = curPos - scaleStart;
 				float m = 1+dif.x/300;
 				if (scalingDir == 0)
@@ -252,7 +252,7 @@ class d3NodeCluster : trigger_base
 			//select node
 			if (input.key_check_pressed_gvb(2) && input.key_check_gvb(10))
 			{
-				d2Math::Vector2 mpos = d2Math::Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
+				Vector2 mpos = Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
 				int cb = -1;
 				float cbz = 0;
 				for (uint i = 0; i < nodes.length(); i++)
@@ -277,7 +277,7 @@ class d3NodeCluster : trigger_base
 			//deselect node
 			if (input.key_check_pressed_gvb(3) && input.key_check_gvb(10))
 			{
-				d2Math::Vector2 mpos = d2Math::Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
+				Vector2 mpos = Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
 				int cb = -1;
 				float cbz = 0;
 				for (uint i = 0; i < nodes.length(); i++)
@@ -385,12 +385,12 @@ class d3NodeCluster : trigger_base
 			if (input.key_check_gvb(2) && !heldLastFrame && !input.key_check_gvb(10))
 			{
 				heldLastFrame = true;
-				oldMousePos = d2Math::Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
+				oldMousePos = Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
 			}
 			if (input.key_check_gvb(2) && heldLastFrame && !input.key_check_gvb(10))
 			{
-				d2Math::Vector2 curMouse = d2Math::Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
-				d2Math::Vector2 diff = curMouse - oldMousePos;
+				Vector2 curMouse = Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
+				Vector2 diff = curMouse - oldMousePos;
 				Vector3 diff3 = manager.cam.CamToWorldDir(Vector3(diff.x, diff.y, 0));
 				if (selectedNodes.length() == 0)
 				{
@@ -458,7 +458,7 @@ class d3NodeCluster : trigger_base
 				}
 				if (best != -1)
 				{
-					d2Math::Vector2 mousePos2d = d2Math::Vector2(
+					Vector2 mousePos2d = Vector2(
 						input.mouse_x_world(21), input.mouse_y_world(21));
 					int side = quads[best].base.SideFromPoint(mousePos2d, eKey);
 					if (side != -1)
@@ -552,9 +552,9 @@ class d3NodeCluster : trigger_base
 		else { rotating = false; }
 
 		//trigger move
-		d2Math::Vector2 curPos = fakeTrigger.pos;
-		d2Math::Vector2 dif = curPos - oldCentre;
-		if (dif != d2Math::Vector2())
+		Vector2 curPos = fakeTrigger.pos;
+		Vector2 dif = curPos - oldCentre;
+		if (dif != Vector2())
 		{
 			d3pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = fakeTrigger.pos;
@@ -632,11 +632,11 @@ class d3NodeCluster : trigger_base
 			quads[i].base.colour = d3col;
 		}
 		UpdatePositions();
-		d2Math::Vector2 camCen = manager.cam.igCoords;
+		Vector2 camCen = manager.cam.igCoords;
 		Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
 		Vector3 newPos = manager.cam.WorldToCamPos(d3pos) + camPos;
-		fakeTrigger.pos = d2Math::Vector2(newPos.x, newPos.y);
-		oldCentre = d2Math::Vector2(newPos.x, newPos.y);
+		fakeTrigger.pos = Vector2(newPos.x, newPos.y);
+		oldCentre = Vector2(newPos.x, newPos.y);
 		if (newPos.z < 0) { fakeTrigger.size = 0; }
 		else { fakeTrigger.size = 10; }
 	}

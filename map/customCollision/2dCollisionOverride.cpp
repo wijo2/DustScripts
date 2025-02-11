@@ -62,7 +62,7 @@ class CollisionOverride : callback_base
 				int(colRect.bottom() + ec.y())
 			);
 		}
-		d2Math::Vector2 pos = d2Math::Vector2(ec.x(), ec.y());
+		Vector2 pos = Vector2(ec.x(), ec.y());
 
 		// CIR.Draw(get_scene(), 22, 1);
 		array<d2::d2CQuad@>@ colliders = manager.GetCollidersInArea(CIR);
@@ -80,7 +80,7 @@ class CollisionOverride : callback_base
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 				// puts("suitable side! side: " + side);
 
-				d2Math::Vector2 hitPos;
+				Vector2 hitPos;
 				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos)) { continue; }
 				// d2Math::Rect(hitPos, 20, 20).Draw(get_scene(), 22, 1);
 
@@ -246,7 +246,7 @@ class CollisionOverride : callback_base
 			{
 				if (!CIR.CheckLineIntersection(edges[li])) { continue; }
 
-				d2Math::Vector2 hitPos;
+				Vector2 hitPos;
 				if (!CIR.BoundedIntersectionPosition(edges[li], hitPos) 
 					&& !CIR.PointInside(edges[li].bound1)) { continue; }
 

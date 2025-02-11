@@ -11,12 +11,12 @@ class d3Cam
 	Vector3 centre;
 	float rotation; //0 = normal xy, z away from cam, upwards = angle in radians topdown clockwise
 	//coords of centre of cam in in-game coordinate system
-	d2Math::Vector2 igCoords;
+	Vector2 igCoords;
 
 	d3Cam()
 	{
 		centre = Vector3(0,0,0);
-		d2Math::Vector2 igCoords;
+		Vector2 igCoords;
 		rotation = 0;
 	}
 
@@ -92,10 +92,10 @@ class d3Quad
 	Vector3 csp4;
 
 	//""projected"" positions
-	d2Math::Vector2 pp1;
-	d2Math::Vector2 pp2;
-	d2Math::Vector2 pp3;
-	d2Math::Vector2 pp4;
+	Vector2 pp1;
+	Vector2 pp2;
+	Vector2 pp3;
+	Vector2 pp4;
 
 	array<bool> drawnSides(4);
 
@@ -200,10 +200,10 @@ class d3Quad
 		csp3 = cam.WorldToCamPos(p3) + centre;
 		csp4 = cam.WorldToCamPos(p4) + centre;
 
-		pp1 = d2Math::Vector2(csp1.x, csp1.y);
-		pp2 = d2Math::Vector2(csp2.x, csp2.y);
-		pp3 = d2Math::Vector2(csp3.x, csp3.y);
-		pp4 = d2Math::Vector2(csp4.x, csp4.y);
+		pp1 = Vector2(csp1.x, csp1.y);
+		pp2 = Vector2(csp2.x, csp2.y);
+		pp3 = Vector2(csp3.x, csp3.y);
+		pp4 = Vector2(csp4.x, csp4.y);
 
 		int behindc = 0;
 		if (csp1.z <= 0) { behindc += 1; sides[0] = false; } else { sides[0] = true; }
@@ -280,14 +280,14 @@ class d3Quad
 
 	//gets where line between points 0 and 1 in pair crosses cam plane
 	//input is pair for convenience
-	d2Math::Vector2 GetIntersection(array<int> pair)
+	Vector2 GetIntersection(array<int> pair)
 	{
 		Vector3 first = CPointByNumber(pair[1]); 
 		Vector3 second = CPointByNumber(pair[0]);
 		Vector3 dir = second - first;
-		if (first.z == second.z) { return d2Math::Vector2(first.x + second.x, first.y + second.y)/2; }
+		if (first.z == second.z) { return Vector2(first.x + second.x, first.y + second.y)/2; }
 		dir = dir/abs(first.z - second.z) * abs(first.z);
-		return d2Math::Vector2(dir.x + first.x, dir.y + first.y);
+		return Vector2(dir.x + first.x, dir.y + first.y);
 	}
 
 	Vector3 Find3dCentre()
@@ -336,10 +336,10 @@ class d3Quad
 	int PointRelation(Vector3 pos)
 	{
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp3.x, csp3.y)))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y)))
 		{
 			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(1);
@@ -350,10 +350,10 @@ class d3Quad
 			return -1;
 		}
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp4.x, csp4.y)))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp4.x, csp4.y)))
 		{
 			// puts("upstream nonzero");
 			Vector3 norm = GetNormalVector(2);
@@ -364,10 +364,10 @@ class d3Quad
 			return -1;
 		}
 			if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp3.x, csp3.y),
-				d2Math::Vector2(csp4.x, csp4.y)))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y)))
 
 		{
 			// puts("upstream nonzero");
@@ -380,10 +380,10 @@ class d3Quad
 
 		}
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp3.x, csp3.y),
-				d2Math::Vector2(csp4.x, csp4.y)))
+				Vector2(pos.x, pos.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y)))
 
 		{
 			// puts("upstream nonzero");
@@ -399,40 +399,40 @@ class d3Quad
 	}
 
 	//which active side is this screen point on?
-	int SideFromPoint(d2Math::Vector2 pos, bool allowDeactive = false)
+	int SideFromPoint(Vector2 pos, bool allowDeactive = false)
 	{
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp3.x, csp3.y))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y))
 				&& (drawnSides[0] || allowDeactive) && fac1 > 0)
 		{
 			return 1;
 		}
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp4.x, csp4.y))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp4.x, csp4.y))
 				&& (drawnSides[1] || allowDeactive) && fac2 > 0)
 		{
 			return 2;
 		}
 			if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp1.x, csp1.y),
-				d2Math::Vector2(csp3.x, csp3.y),
-				d2Math::Vector2(csp4.x, csp4.y))
+				Vector2(pos.x, pos.y),
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y))
 				&& (drawnSides[2] || allowDeactive) && fac3 > 0)
 		{
 			return 3;
 		}
 		if (d2Math::PointInTriangle(
-				d2Math::Vector2(pos.x, pos.y),
-				d2Math::Vector2(csp2.x, csp2.y),
-				d2Math::Vector2(csp3.x, csp3.y),
-				d2Math::Vector2(csp4.x, csp4.y))
+				Vector2(pos.x, pos.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y))
 				&& (drawnSides[3] || allowDeactive) && fac4 > 0)
 		{
 			return 4;
@@ -520,7 +520,7 @@ class d3CQuad
 			collisionBase.base.p2 = base.GetIntersection(sideLookup[side2-1][side3-1]);
 			collisionBase.base.p3 = base.GetIntersection(sideLookup[side3-1][side1-1]);
 			//need to offset for nodefrompoint to work correctly
-			collisionBase.base.p4 = collisionBase.base.p3 + d2Math::Vector2(0.1,0.1);
+			collisionBase.base.p4 = collisionBase.base.p3 + Vector2(0.1,0.1);
 			collisionBase.activeLines[0] = activeSides[side2-1];
 			collisionBase.spikeLines[0] = spikeSides[side2-1];
 			collisionBase.dustLines[0] = dustSides[side2-1];
@@ -797,22 +797,22 @@ class Renderable
 		Vector3@ p2 = q.base.p2;
 		Vector3@ p3 = q.base.p3;
 		Vector3@ p4 = q.base.p4;
-		if (r.PointInside(d2Math::Vector2(p1.x,p1.y)))
+		if (r.PointInside(Vector2(p1.x,p1.y)))
 		{
 			if (p1.z < depth) { return -1; }
 			return 1;
 		}
-		if (r.PointInside(d2Math::Vector2(p2.x,p2.y)))
+		if (r.PointInside(Vector2(p2.x,p2.y)))
 		{
 			if (p2.z < depth) { return -1; }
 			return 1;
 		}
-		if (r.PointInside(d2Math::Vector2(p3.x,p3.y)))
+		if (r.PointInside(Vector2(p3.x,p3.y)))
 		{
 			if (p3.z < depth) { return -1; }
 			return 1;
 		}
-		if (r.PointInside(d2Math::Vector2(p4.x,p4.y)))
+		if (r.PointInside(Vector2(p4.x,p4.y)))
 		{
 			if (p4.z < depth) { return -1; }
 			return 1;
