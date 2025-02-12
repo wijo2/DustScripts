@@ -775,20 +775,38 @@ class Renderable
 		//other quad, this one not
 		d2Math::Rect drect = flat.drawRect; 
 		float depth = flat.depth; 
-		puts("depth" + depth);
+		// puts("depth" + depth);
 		
-		int i = AnyPointQUnderR(o.quad, drect, depth);
-		puts("i1: " + i);
-		if (i != 0) { return i; }
-		i = AnyPointRUnderQ(o.quad, drect, depth);
-		puts("i2: " + i);
-		return -i;
+		int i = AnyPointRUnderQ(o.quad, drect, depth);
+		// puts("i1: " + (-i));
+		if (i != 0) { return -i; }
+		i = AnyPointQUnderR(o.quad, drect, depth);
+		// puts("i2: " + i);
+		return i;
 	}
 
 	//is any point of rect under quad
 	//-1 = r in front, 0 = idk, 1 = r behind
 	int AnyPointRUnderQ(d3CQuad@ q, d2Math::Rect r, float depth)
 	{
+		//debug
+		// if (!(cast<d3FlatObjectBase>(flat) is null) && @cast<d3FlatObjectBase>(flat).script != null)
+		// {
+		// 	Vector3@ p1 = q.base.csp1;
+		// 	Vector3@ p2 = q.base.csp2;
+		// 	Vector3@ p3 = q.base.csp3;
+		// 	Vector3@ p4 = q.base.csp4;
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(r);
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p1.x-5, p1.y-5, p1.x+5, p1.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p2.x-5, p2.y-5, p2.x+5, p2.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p3.x-5, p3.y-5, p3.x+5, p3.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p4.x-5, p4.y-5, p4.x+5, p4.y+5));
+		// }
+
 		int i;
 		i = q.base.PointRelation(Vector3(r.x1, r.y1, depth));
 		if (i != 0) { return i; }
@@ -807,20 +825,6 @@ class Renderable
 		Vector3@ p2 = q.base.csp2;
 		Vector3@ p3 = q.base.csp3;
 		Vector3@ p4 = q.base.csp4;
-
-		//debug
-		// if (!(cast<d3FlatObjectBase>(flat) is null) && @cast<d3FlatObjectBase>(flat).script != null)
-		// {
-		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(r);
-		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
-		// 		d2Math::Rect(p1.x-5, p1.y-5, p1.x+5, p1.y+5));
-		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
-		// 		d2Math::Rect(p2.x-5, p2.y-5, p2.x+5, p2.y+5));
-		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
-		// 		d2Math::Rect(p3.x-5, p3.y-5, p3.x+5, p3.y+5));
-		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
-		// 		d2Math::Rect(p4.x-5, p4.y-5, p4.x+5, p4.y+5));
-		// }
 
 		if (r.PointInside(Vector2(p1.x,p1.y)))
 		{
@@ -895,10 +899,61 @@ class d3Manager
 
 	}
 
+	//I'll make some scuffed merge sort for this I don't care anymore
+	//(the built in array.sortAsc() appears to be full of shit)
 	void SortRenderList()
 	{
-		puts("sorting!");
-		renderables.sortAsc();
+		// puts("");
+		// puts("sorting!");
+		renderables = BadMergeSort(renderables);
+	}
+
+	//yes I know I'm doing so much unnecessary copying and
+	//such but rn I don't care improve later if needed
+	//sorts smallest to largest
+	array<Renderable@> BadMergeSort(array<Renderable@> arr)
+	{
+		if (arr.length() <= 1) { return arr; }
+		uint middle = uint(floor(arr.length()/2));
+		array<Renderable@> arr1;
+		array<Renderable@> arr2;
+		for(uint i = 0; i < arr.length(); i++)
+		{
+			if (i < middle)
+			{
+				arr1.insertLast(arr[i]);
+			}
+			else
+			{
+				arr2.insertLast(arr[i]);
+			}
+		}
+		arr1 = BadMergeSort(arr1);
+		arr2 = BadMergeSort(arr2);
+		return Merge(arr1, arr2);
+	}
+
+	array<Renderable@> Merge(array<Renderable@> arr1, array<Renderable@> arr2)
+	{
+		array<Renderable@> ret;
+		uint i = 0;
+		uint j = 0;
+		uint tot = arr1.length() + arr2.length();
+		while (true)
+		{
+			if (i+j >= tot) { break; }
+			if (j >= arr2.length() || (i < arr1.length() && arr1[i] < arr2[j]))
+			{
+				ret.insertLast(arr1[i]);
+				i += 1;
+			}
+			else
+			{
+				ret.insertLast(arr2[j]);
+				j += 1;
+			}
+		}
+		return ret;
 	}
 
 	void Draw()

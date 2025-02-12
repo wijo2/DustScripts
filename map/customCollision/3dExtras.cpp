@@ -83,7 +83,7 @@ class d3EnemyBase : d3FlatObjectBase
 		@sprites = entity.get_sprites();
 		d3FlatObjectBase::init(s, self.as_entity());
 		fakeTrigger.colour = 0xFF0000FF;
-		// entity.layer(17);
+		entity.layer(18);
 	}
 
 	void editor_step() override
