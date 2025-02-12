@@ -5,26 +5,28 @@
 
 class d3ESmallPrism : d3EnemyBase, trigger_base
 {
-	[hidden] int entityId = -1;
 	void init(script@ s, scripttrigger@ self)
 	{
 		// get_scene().remove_entity(self.as_entity());
 		sprite = "airidle";
 		if (entityId == -1) 
 		{
-			puts("neg");
 			@entity = create_entity("enemy_tutorial_square");
+			get_scene().add_entity(entity);
 			entityId = entity.id();
-			puts("new " + entityId);
+			// puts("new " + entityId);
 		}
 		else
 		{
-			puts("id: " + entityId);
+			// puts("id: " + entityId);
 			@entity = @entity_by_id(uint(entityId));
 			if (@entity == null)
 			{
-				entityId = -1;
-				puts("couldn't find");
+				// puts("couldn't find");
+				@entity = create_entity("enemy_tutorial_square");
+				get_scene().add_entity(entity);
+				entityId = entity.id();
+				// puts("new " + entityId);
 			}
 		}
 		d3EnemyBase::init(s, self);

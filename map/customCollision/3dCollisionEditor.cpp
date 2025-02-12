@@ -86,6 +86,7 @@ class script : script_base
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
+		get_scene().sub_layer_visible(17, 8, false);
 	}
 
 	void on_editor_start() 
@@ -99,7 +100,7 @@ class script : script_base
 		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		manager.cam.centre = startCoords;
-		// get_scene().sub_layer_visible(17, 10, false);
+		// get_scene().sub_layer_visible(17, 8, false);
 	}
 
 	void PlayInit()
@@ -114,7 +115,7 @@ class script : script_base
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		get_active_camera().controller_mode(4);
 		manager.cam.centre = startCoords;
-		// get_scene().sub_layer_visible(17, 10, false);
+		// get_scene().sub_layer_visible(17, 8, false);
 	}
 
 	void on_level_start() { PlayInit(); }

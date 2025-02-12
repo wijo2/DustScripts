@@ -68,6 +68,7 @@ class d3EnemyBase : d3FlatObjectBase
 {
 	scripttrigger@ self;
 	entity@ entity;
+	[hidden] int entityId = -1;
 	sprites@ sprites;
 	string sprite;
 	uint palette = 1;
@@ -79,25 +80,22 @@ class d3EnemyBase : d3FlatObjectBase
 	{
 		@this.self = self;
 		self.editor_handle_size(0);
-		get_scene().add_entity(entity);
 		@sprites = entity.get_sprites();
 		d3FlatObjectBase::init(s, self.as_entity());
 		fakeTrigger.colour = 0xFF0000FF;
-		entity.layer(18);
+		entity.layer(17);
 	}
 
 	void editor_step() override
 	{
-		return;
 		d3FlatObjectBase::editor_step();
-		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
+		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
 		entity.x(fakeTrigger.ssp.x);
 		entity.y(fakeTrigger.ssp.y);
 	}
 	void step()
 	{
-		return;
-		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
+		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
 		entity.x(fakeTrigger.ssp.x);
 		entity.y(fakeTrigger.ssp.y);
 	}
