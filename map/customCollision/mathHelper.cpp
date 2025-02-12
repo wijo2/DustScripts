@@ -299,6 +299,7 @@ class Rect
 
 	bool PointInside(Vector2 point)
 	{
+		// puts("x: " + ((point.x - x1)*(point.x - x2) <= 0) + " y: " + ((point.y - y1)*(point.y - y2) <= 0));
 		return ((point.x - x1)*(point.x - x2) <= 0) && ((point.y - y1)*(point.y - y2) <= 0);
 	}
 

@@ -34,6 +34,7 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 		@renderable = @d3::Renderable(1);
 		@renderable.flat = @this;
 		manager.renderables.insertLast(renderable);
+		s.flats.insertLast(this);
 	}
 
 	void editor_step()
@@ -44,7 +45,7 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 	void UpdateRotation()
 	{
 		fakeTrigger.UpdateRotation();
-		depth = fakeTrigger.pos.z;
+		depth = fakeTrigger.ssp.z;
 	}
 
 	void on_remove()
@@ -54,12 +55,19 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 		{
 			manager.renderables.removeAt(i);
 		}
+		i = script.flats.findByRef(this);
+		if (i != -1)
+		{
+			script.flats.removeAt(i);
+		}
+		fakeTrigger.DeleteSelf();
 	}
 }
 
 class d3EnemyBase : d3FlatObjectBase
 {
-	scriptenemy@ self;
+	scripttrigger@ self;
+	entity@ entity;
 	sprites@ sprites;
 	string sprite;
 	uint palette = 1;
@@ -67,34 +75,59 @@ class d3EnemyBase : d3FlatObjectBase
 	Vector2 scale = Vector2(1,1);
 	uint frame = 0;
 
-	void init(script@ s, scriptenemy@ self)
+	void init(script@ s, scripttrigger@ self, entity@ entity)
 	{
-		d3FlatObjectBase::init(s, self.as_entity());
 		@this.self = self;
-		@sprites = self.get_sprites();
-		self.layer(17);
+		self.editor_handle_size(0);
+		@this.entity = entity;
+		@sprites = entity.get_sprites();
+		d3FlatObjectBase::init(s, self.as_entity());
+		fakeTrigger.colour = 0xFF0000FF;
+		// entity.layer(17);
+	}
+
+	void editor_step() override
+	{
+		d3FlatObjectBase::editor_step();
+		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
+		entity.x(fakeTrigger.ssp.x);
+		entity.y(fakeTrigger.ssp.y);
+	}
+	void step()
+	{
+		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
+		entity.x(fakeTrigger.ssp.x);
+		entity.y(fakeTrigger.ssp.y);
 	}
 
 	void UpdateRotation() override
 	{
 		d3FlatObjectBase::UpdateRotation();
-		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
 		rectangle@ sr = sprites.get_sprite_rect(sprite, frame);
-		Vector2 pos = fakeTrigger.oldCentre;
+		Vector2 pos = Vector2(fakeTrigger.ssp.x, fakeTrigger.ssp.y);
 		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
+		// script.debugDraw.insertLast(drawRect);
 	}
 
 	void Draw(scene@ s) override
 	{
+		// return;
 		uint color = script.ApplyFog(0xFFFFFFFF, depth);
-		sprites.draw_world(18, 10, sprite, frame, palette, fakeTrigger.oldCentre.x, 
-					 fakeTrigger.oldCentre.y, rotation, scale.x, scale.y, color);
+		sprites.draw_world(18, 1, sprite, frame, palette, fakeTrigger.ssp.x, 
+					 fakeTrigger.ssp.y, rotation, scale.x, scale.y, color);
+	}
+
+	void on_remove() override
+	{
+		d3FlatObjectBase::on_remove();
+		get_scene().remove_entity(entity);
 	}
 }
 
 class d3FakeTrigger
 {
 	[hidden] Vector3 pos;
+	Vector3 ssp;
 	[hidden] uint colour = 0xFF490f70;
 
 	[hidden] Vector2 oldCentre;
@@ -127,6 +160,10 @@ class d3FakeTrigger
 		{
 			pos += manager.cam.CamToWorldDir(Vector3(dif.x, dif.y,0));
 			oldCentre = fakeTrigger.pos;
+			Vector2 camCen = manager.cam.igCoords;
+			Vector3 camPos = Vector3(camCen.x, camCen.y, 0);
+			Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
+			ssp = newPos;
 		}
 	}
 
@@ -137,6 +174,7 @@ class d3FakeTrigger
 		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
 		fakeTrigger.pos = Vector2(newPos.x, newPos.y);
 		oldCentre = Vector2(newPos.x, newPos.y);
+		ssp = newPos;
 		if (newPos.z < 0) { fakeTrigger.size = 0; }
 		else { fakeTrigger.size = 10; }
 	}
@@ -163,6 +201,8 @@ class FakeTrigger
 	bool isHeldR = false;
 
 	Vector2 oldPos;
+
+	bool centralise = true;
 
 	FakeTrigger(){}
 	FakeTrigger(script@ s, entity@ trigger, Vector2 pos)

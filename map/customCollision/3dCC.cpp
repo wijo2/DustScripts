@@ -760,7 +760,7 @@ class Renderable
 		}
 		if (type == 0)
 		{
-			return o.opCmp(this);
+			return -o.opCmp(this);
 		}
 		//both flat
 		if (o.type != 0)
@@ -775,10 +775,13 @@ class Renderable
 		//other quad, this one not
 		d2Math::Rect drect = flat.drawRect; 
 		float depth = flat.depth; 
+		puts("depth" + depth);
 		
 		int i = AnyPointQUnderR(o.quad, drect, depth);
+		puts("i1: " + i);
 		if (i != 0) { return i; }
 		i = AnyPointRUnderQ(o.quad, drect, depth);
+		puts("i2: " + i);
 		return -i;
 	}
 
@@ -800,10 +803,25 @@ class Renderable
 	//-1 = q in front, 0 = idk, 1 = q behind
 	int AnyPointQUnderR(d3CQuad@ q, d2Math::Rect r, float depth)
 	{
-		Vector3@ p1 = q.base.p1;
-		Vector3@ p2 = q.base.p2;
-		Vector3@ p3 = q.base.p3;
-		Vector3@ p4 = q.base.p4;
+		Vector3@ p1 = q.base.csp1;
+		Vector3@ p2 = q.base.csp2;
+		Vector3@ p3 = q.base.csp3;
+		Vector3@ p4 = q.base.csp4;
+
+		//debug
+		// if (!(cast<d3FlatObjectBase>(flat) is null) && @cast<d3FlatObjectBase>(flat).script != null)
+		// {
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(r);
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p1.x-5, p1.y-5, p1.x+5, p1.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p2.x-5, p2.y-5, p2.x+5, p2.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p3.x-5, p3.y-5, p3.x+5, p3.y+5));
+		// 	cast<d3FlatObjectBase>(flat).script.debugDraw.insertLast(
+		// 		d2Math::Rect(p4.x-5, p4.y-5, p4.x+5, p4.y+5));
+		// }
+
 		if (r.PointInside(Vector2(p1.x,p1.y)))
 		{
 			if (p1.z < depth) { return -1; }
@@ -832,9 +850,11 @@ class Renderable
 		switch (type)
 		{
 			case 0:
+				// puts("draw quad!");
 				quad.DrawBase(s);
 				break;
 			case 1:
+				// puts("draw flat!");
 				flat.Draw(s);
 				break;
 		}
@@ -877,6 +897,7 @@ class d3Manager
 
 	void SortRenderList()
 	{
+		puts("sorting!");
 		renderables.sortAsc();
 	}
 

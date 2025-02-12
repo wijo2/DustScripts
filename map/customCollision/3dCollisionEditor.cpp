@@ -37,6 +37,7 @@ class script : script_base
 
 	array<d3NodeCluster@> nodeClusters;
 	array<FakeTrigger@> fakeTriggers;
+	array<d3FlatObjectBase@> flats;
 
 	d3StartPos@ startPos;
 	[hidden] Vector3 startCoords;
@@ -121,6 +122,7 @@ class script : script_base
 
 	void editor_step()
 	{
+		debugDraw = array<d2Math::Rect>(0);
 		if (firstFrame)
 		{
 			firstFrame = false;
@@ -241,7 +243,7 @@ class script : script_base
 		for(uint i = 0; i < fakeTriggers.length(); i++)
 		{
 			entity@ t = fakeTriggers[i].trigger;
-			if (@t != null)
+			if (@t != null && fakeTriggers[i].centralise)
 			{
 				t.x(camPos.x);
 				t.y(camPos.y);
@@ -350,6 +352,10 @@ class script : script_base
 			{
 				nodeClusters[i].UpdateRotation();
 			}
+			for(uint i = 0; i < flats.length(); i++)
+			{
+				flats[i].UpdateRotation();
+			}
 			if (@startPos != null)
 			{
 				startPos.UpdateRotation();
@@ -410,6 +416,10 @@ class script : script_base
 		if (showCacheDebug) 
 		{
 			manager.manager.Draw(s, 22, 1);
+		}
+		for (uint i = 0; i < debugDraw.length(); i++) 
+		{
+			debugDraw[i].Draw(s, 22, 1);
 		}
 		for(uint i = 0; i < fakeTriggers.length(); i++)
 		{
