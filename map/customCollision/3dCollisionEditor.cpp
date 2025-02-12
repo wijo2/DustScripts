@@ -511,7 +511,6 @@ class script : script_base
 			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dx.x,compassPosY+dx.y, 5, col1);
 			s.draw_line_hud(21,1,compassPosX,compassPosY, compassPosX+dz.x,compassPosY+dz.y, 5, col2);
 		}
-
 	}
 
 	// void on_level_end() 

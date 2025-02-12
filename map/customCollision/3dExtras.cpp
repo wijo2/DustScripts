@@ -75,11 +75,11 @@ class d3EnemyBase : d3FlatObjectBase
 	Vector2 scale = Vector2(1,1);
 	uint frame = 0;
 
-	void init(script@ s, scripttrigger@ self, entity@ entity)
+	void init(script@ s, scripttrigger@ self)
 	{
 		@this.self = self;
 		self.editor_handle_size(0);
-		@this.entity = entity;
+		get_scene().add_entity(entity);
 		@sprites = entity.get_sprites();
 		d3FlatObjectBase::init(s, self.as_entity());
 		fakeTrigger.colour = 0xFF0000FF;
@@ -88,6 +88,7 @@ class d3EnemyBase : d3FlatObjectBase
 
 	void editor_step() override
 	{
+		return;
 		d3FlatObjectBase::editor_step();
 		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
 		entity.x(fakeTrigger.ssp.x);
@@ -95,6 +96,7 @@ class d3EnemyBase : d3FlatObjectBase
 	}
 	void step()
 	{
+		return;
 		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
 		entity.x(fakeTrigger.ssp.x);
 		entity.y(fakeTrigger.ssp.y);
