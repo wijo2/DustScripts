@@ -13,23 +13,23 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 	//d2Math::Rect drawRect;
 	//float depth;
 
-	scripttrigger@ self;
 	d3::d3Manager@ manager;
 	d3::Renderable@ renderable;
+	script@ script;
 
 	[hidden] d3FakeTrigger fakeTrigger;
 	[hidden] bool hasInit = false;
 
-	void init(script@ s, scripttrigger@ self) 
+	void init(script@ s, entity@ self) 
 	{
 		@this.manager = @s.manager;
-		@this.self = @self;
+		@script = @s;
 		if (!hasInit)
 		{
 			fakeTrigger = d3FakeTrigger();
 			hasInit = true;
 		}
-		fakeTrigger.Init(self.as_entity(), s, manager);
+		fakeTrigger.Init(self, s, manager);
 		UpdateRotation();
 		@renderable = @d3::Renderable(1);
 		@renderable.flat = @this;
@@ -47,7 +47,7 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 		depth = fakeTrigger.pos.z;
 	}
 
-	void DestroySelf()
+	void on_remove()
 	{
 		int i = manager.renderables.findByRef(renderable);
 		if (i != -1)
@@ -55,8 +55,41 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 			manager.renderables.removeAt(i);
 		}
 	}
+}
 
-	void Draw(scene@ s) {}
+class d3EnemyBase : d3FlatObjectBase
+{
+	scriptenemy@ self;
+	sprites@ sprites;
+	string sprite;
+	uint palette = 1;
+	float rotation = 0;
+	Vector2 scale = Vector2(1,1);
+	uint frame = 0;
+
+	void init(script@ s, scriptenemy@ self)
+	{
+		d3FlatObjectBase::init(s, self.as_entity());
+		@this.self = self;
+		@sprites = self.get_sprites();
+		self.layer(17);
+	}
+
+	void UpdateRotation() override
+	{
+		d3FlatObjectBase::UpdateRotation();
+		frame = uint(get_scene().time_in_level()*60/1000) % sprites.get_animation_length(sprite);
+		rectangle@ sr = sprites.get_sprite_rect(sprite, frame);
+		Vector2 pos = fakeTrigger.oldCentre;
+		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
+	}
+
+	void Draw(scene@ s) override
+	{
+		uint color = script.ApplyFog(0xFFFFFFFF, depth);
+		sprites.draw_world(18, 10, sprite, frame, palette, fakeTrigger.oldCentre.x, 
+					 fakeTrigger.oldCentre.y, rotation, scale.x, scale.y, color);
+	}
 }
 
 class d3FakeTrigger
@@ -104,8 +137,8 @@ class d3FakeTrigger
 		Vector3 newPos = manager.cam.WorldToCamPos(pos) + camPos;
 		fakeTrigger.pos = Vector2(newPos.x, newPos.y);
 		oldCentre = Vector2(newPos.x, newPos.y);
-		// if (newPos.z < 0) { fakeTrigger.size = 0; }
-		// else { fakeTrigger.size = 10; }
+		if (newPos.z < 0) { fakeTrigger.size = 0; }
+		else { fakeTrigger.size = 10; }
 	}
 
 	void DeleteSelf()
@@ -182,7 +215,7 @@ class FakeTrigger
 				{
 					if (@trigger != null)
 					{
-						get_scene().remove_entity(trigger);
+						get_scene().remove_entity(trigger.as_entity());
 					}
 				}
 				holdTimeR = 0;
@@ -210,7 +243,7 @@ class FakeTrigger
 					if (@trigger != null)
 					{
 						script.editor.editor_tab("Triggers");
-						script.editor.set_selected_trigger(trigger);
+						script.editor.set_selected_trigger(trigger.as_entity());
 					}
 				}
 				holdTime = 0;

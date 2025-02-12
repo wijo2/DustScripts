@@ -1,4 +1,3 @@
-//WIP!
 namespace d2Math
 {
 

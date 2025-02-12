@@ -1,4 +1,5 @@
 #include "3dNodeCluster.cpp";
+#include "3dFlats.cpp";
 //DustScripts/map/customCollision/3dCollisionEditor.cpp
 
 class script : script_base
@@ -97,6 +98,7 @@ class script : script_base
 		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		manager.cam.centre = startCoords;
+		// get_scene().sub_layer_visible(17, 10, false);
 	}
 
 	void PlayInit()
@@ -111,6 +113,7 @@ class script : script_base
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		get_active_camera().controller_mode(4);
 		manager.cam.centre = startCoords;
+		// get_scene().sub_layer_visible(17, 10, false);
 	}
 
 	void on_level_start() { PlayInit(); }
