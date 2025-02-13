@@ -9,25 +9,17 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
-	[text] int collisionOrder = 8;
-	[text] bool showPlayArea;
-	[text] bool showCacheDebug;
-
-	[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
-	[hidden] int playAreaCornerY;
-	[text] int playAreaWidth = 10000;
-	[text] int playAreaHeight = 10000;
-
 	[colour,alpha] uint spikeColour = 0xFFFF0000;
 	[colour,alpha] uint dustColour = 0xFF00FF00;
 	[colour,alpha] uint spikeColour3d = 0xCCFF0000;
 	[colour,alpha] uint dustColour3d = 0xCC00FF00;
 	[colour,alpha] uint edgeColour = 0x11000000;
+	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
+	[colour,alpha] uint default2dCol = 0xBB888888;
+
 	[colour,alpha] uint fogColour = 0x66000000;
 	//more = fog is further
 	[text] float fogDist = 500;
-	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
-	[colour,alpha] uint default2dCol = 0xBB888888;
 
 	Vector2 oldCamPos;
 	[hidden] float rotation;
@@ -75,6 +67,18 @@ class script : script_base
 
 	[text] uint layerFrames = 1;
 	uint layerFrameCounter;
+
+	[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
+	[hidden] int playAreaCornerY;
+	[text] int collisionOrder = 8;
+	[text] int playAreaWidth = 10000;
+	[text] int playAreaHeight = 10000;
+
+	//added this cause I wanted to use it for horisontal
+	//culling but then I realised I'd have to layer
+	//when not turning so yeah idk not for now, maybe
+	//some day I'll make a system where it re-layers per distance
+	float screenHeight = 900;
 	
 	//debug
 	[text] bool quadDebug = false;
@@ -82,6 +86,9 @@ class script : script_base
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugY] int debugX;
 	[hidden] int debugY;
+
+	[text] bool showPlayArea;
+	[text] bool showCacheDebug;
 
 	script() 
 	{
@@ -159,6 +166,7 @@ class script : script_base
 		{
 			currentDistCol = 0;
 		}
+		screenHeight = cam.screen_height();
 
 		for(uint i = 0; i < fakeTriggers.length(); i++)
 		{
@@ -241,6 +249,10 @@ class script : script_base
 
 			manager.UpdateCollision();
 		}
+
+		camera@ cam = get_active_camera();
+		screenHeight = cam.screen_height();
+
 		debugDraw = array<d2Math::Rect>(0);
 		HandleGameplayRotation();
 		manager.Step();
@@ -370,7 +382,7 @@ class script : script_base
 			manager.cam.rotation = rotation;
 			for (uint i = 0; i < nodeClusters.length(); i++)
 			{
-				nodeClusters[i].UpdateRotation();
+				nodeClusters[i].UpdateRotation(force);
 			}
 			for(uint i = 0; i < flats.length(); i++)
 			{

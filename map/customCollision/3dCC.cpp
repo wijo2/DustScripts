@@ -821,6 +821,20 @@ class Renderable
 			return 0;
 		}
 		//other quad, this one not
+
+		Vector2 rcen2 = (flat.drawRect.p1 + flat.drawRect.p2)/2;
+		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
+		float rmag = (rcen2 - flat.drawRect.p1).Magnitude();
+		Vector3 c2 = (o.quad.base.csp1+o.quad.base.csp2+o.quad.base.csp3+o.quad.base.csp4)/4;
+		if ((c1-c2).Magnitude() < rmag + o.quad.base.maxDistance)
+		{
+			if (c1.z > c2.z)
+			{
+				return -1;
+			}
+			return 1;
+		}
+
 		d2Math::Rect drect = flat.drawRect; 
 		float depth = flat.depth; 
 		// puts("depth" + depth);
