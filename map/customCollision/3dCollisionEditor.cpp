@@ -31,6 +31,7 @@ class script : script_base
 
 	Vector2 oldCamPos;
 	[hidden] float rotation;
+	[text] float startRot;
 	float oldRotation;
 
 	//should I just have added a method list? yes.
@@ -66,9 +67,9 @@ class script : script_base
 
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
-	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX;
-	[hidden] float compassPosY;
-	[slider,min:0,max:1000|label:"compass size"] float compassSize;
+	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX = 750;
+	[hidden] float compassPosY = -320;
+	[slider,min:0,max:1000|label:"compass size"] float compassSize = 200;
 
 	[text|label:"join distance"] float joinDist = 40;
 
@@ -88,6 +89,7 @@ class script : script_base
 		}
 		@input = @get_input_api();
 		@editor = @get_editor_api();
+		//makes enemies invisible so I can render them myself
 		get_scene().sub_layer_visible(17, 8, false);
 	}
 
@@ -96,13 +98,12 @@ class script : script_base
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.Init(d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));
 		@manager.script = @this;
-		rotation = 0;
+		rotation = startRot;
 		oldRotation = 0;
 		camera@ c = get_active_camera();
 		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		manager.cam.centre = startCoords;
-		// get_scene().sub_layer_visible(17, 8, false);
 	}
 
 	void PlayInit()
@@ -110,14 +111,14 @@ class script : script_base
 		manager.manager.collisionOrder = collisionOrder;
 		manager.manager.PlayInit(this, d2Math::IntRect(Vector2(playAreaCornerX, playAreaCornerY), playAreaWidth, playAreaHeight));	
 		@manager.script = @this;
-		rotation = 0;
+		rotation = startRot;
 		oldRotation = 0;
 		controllable@ c = controller_controllable(uint(get_active_player()));
 		manager.cam.igCoords = Vector2(c.x(), c.y());
 		manager.cam.centre = Vector3(c.x(), c.y(), 0);
 		get_active_camera().controller_mode(4);
+		oldCamPos = manager.cam.igCoords;
 		manager.cam.centre = startCoords;
-		// get_scene().sub_layer_visible(17, 8, false);
 	}
 
 	void on_level_start() { PlayInit(); }
@@ -318,6 +319,10 @@ class script : script_base
 				{
 					right90 = true;
 					rotation += hpi;
+					//doing an extra couple of updates because this really fucks it up for some reason...
+					UpdateRotation(true);
+					UpdateRotation(true);
+					UpdateRotation(true);
 				}
 			}
 			else { right90 = false; }
@@ -328,6 +333,9 @@ class script : script_base
 				{
 					left90 = true;
 					rotation -= hpi;
+					UpdateRotation(true);
+					UpdateRotation(true);
+					UpdateRotation(true);
 				}
 			}
 			else { left90 = false; }
@@ -407,7 +415,7 @@ class script : script_base
 				return;
 			}
 			Vector2 dif = oldCamPos - rcamPos;
-			if (dif.Magnitude() > 0.1)
+			if (dif != Vector2())
 			{
 				Vector3 dif2 = manager.cam.CamToWorldDir(Vector3(dif.x, dif.y, 0));
 				manager.cam.centre -= dif2;

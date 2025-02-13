@@ -218,6 +218,7 @@ class d3TextTrigger : trigger_base
 		fakeTrigger.Init(self.as_entity(), s, manager);
 		self.editor_handle_size(0);
 		UpdateRotation();
+		script.textTriggers.insertLast(this);
 
 		if (ttId == -1)
 		{
@@ -240,7 +241,30 @@ class d3TextTrigger : trigger_base
 	void editor_step()
 	{
 		fakeTrigger.EditorStep();
-		step();
+		if (@tt == null) { return; }
+
+		Vector2 camCen = manager.cam.igCoords;
+		if(script.editor.editor_tab() == "Triggers" 
+			&& @script.editor.get_selected_trigger() != null
+	 		&& (script.editor.get_selected_trigger().is_same(self.as_entity())
+				|| script.editor.get_selected_trigger().is_same(tt.as_entity())))
+		{
+			if ((manager.cam.centre - fakeTrigger.pos).Magnitude() < range)
+			{
+				tt.x(camCen.x);
+				tt.y(camCen.y);
+			}
+			else
+			{
+				tt.x(camCen.x);
+				tt.y(camCen.y + 5000);
+			}
+		}
+		else
+		{
+			tt.x(camCen.x);
+			tt.y(camCen.y + 5000);
+		}
 	}
 
 	void step()
@@ -267,5 +291,10 @@ class d3TextTrigger : trigger_base
 	{
 		fakeTrigger.DeleteSelf();
 		get_scene().remove_entity(tt);
+		int i = script.textTriggers.findByRef(this);
+		if (i != -1)
+		{
+			script.textTriggers.removeAt(i);
+		}
 	}
 }

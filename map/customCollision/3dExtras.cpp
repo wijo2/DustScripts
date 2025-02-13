@@ -111,7 +111,7 @@ class d3EnemyBase : d3FlatObjectBase
 		d3FlatObjectBase::UpdateRotation();
 		rectangle@ sr = sprites.get_sprite_rect(sprite, frame);
 		Vector2 pos = Vector2(fakeTrigger.ssp.x, fakeTrigger.ssp.y);
-		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
+		drawRect = d2Math::Rect(pos.x + sr.left()*scale.x, pos.y + sr.top()*scale.y, pos.x + sr.right()*scale.x, pos.y + sr.bottom()*scale.y);
 		if (abs(fakeTrigger.ssp.z) > thickness)
 		{
 			Vector2 cp = manager.cam.igCoords;

@@ -913,11 +913,47 @@ class d3Manager
 	//(the built in array.sortAsc() appears to be full of shit)
 	void SortRenderList()
 	{
-		// puts("");
-		// puts("sorting!");
-		renderables = BadMergeSort(renderables);
+		BetterInsSort(renderables);
 	}
 
+	//plz be better plz be better plz be better
+	void BetterInsSort(array<Renderable@>@ arr)
+	{
+		// puts("");
+		// puts("sort start!!!");
+		uint len = arr.length();
+		if (len < 2) { return; }
+		for (uint i = 0; i < len; i++)
+		{
+	   		Renderable@ e = arr[i];
+	   		bool success = false;
+			for (uint j = i; j >= 1; j--)
+			{
+				//I'll just use the raw int it's clearer honestly :p
+				int c = e.opCmp(arr[j-1]); 
+				// puts("comparing old " + i + " to " + (j-1));
+				if (c <= 0)
+				{
+					// puts("moving " + (j-1) + " -> " + j);
+					@arr[j] = @arr[j-1];
+				}
+				else
+				{
+					// puts("setting old " + i + " -> " + j);
+					@arr[j] = @e;
+					success = true;
+					break;
+				}
+			}
+			if (!success)
+			{
+				// puts("new behindest old " + i + " ->  0");
+				@arr[0] = @e;
+			}
+		}
+	}
+
+	//I'll leave this here as backup for now at least
 	//yes I know I'm doing so much unnecessary copying and
 	//such but rn I don't care improve later if needed
 	//sorts smallest to largest

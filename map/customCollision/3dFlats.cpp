@@ -41,7 +41,7 @@ class d3Prop : d3FlatObjectBase, trigger_base
 		d3FlatObjectBase::UpdateRotation();
 		rectangle@ sr = sprites.get_sprite_rect(sprite, 1);
 		Vector2 pos = Vector2(fakeTrigger.ssp.x, fakeTrigger.ssp.y);
-		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
+		drawRect = d2Math::Rect(pos.x + sr.left()*scaleX, pos.y + sr.top()*scaleY, pos.x + sr.right()*scaleX, pos.y + sr.bottom()*scaleY);
 	}
 
 	void Draw(scene@ s) override
