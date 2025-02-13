@@ -134,6 +134,7 @@ class d3Quad
 
 	void Draw(scene@ s, uint layer, uint sub_layer, script@ script)
 	{
+		if (!drawn) { return; }
 		if (colour == 0x00000000 || behind) { return; }
 		if (!shaded)
 		{
