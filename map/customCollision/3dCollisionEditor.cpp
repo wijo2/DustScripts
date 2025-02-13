@@ -9,6 +9,7 @@ class script : script_base
 	input_api@ input;
 	editor_api@ editor;
 
+	[label:"Aestethics"|option] int t1;
 	[colour,alpha] uint spikeColour = 0xFFFF0000;
 	[colour,alpha] uint dustColour = 0xFF00FF00;
 	[colour,alpha] uint spikeColour3d = 0xCCFF0000;
@@ -21,6 +22,14 @@ class script : script_base
 	//more = fog is further
 	[text] float fogDist = 500;
 
+	[text] bool showCompass = true;
+	[text] bool showCompassGame = true;
+	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX = 750;
+	[hidden] float compassPosY = -320;
+	[slider,min:0,max:1000|label:"compass size"] float compassSize = 200;
+
+
+	[label:"Map Settings"|option] int t2;
 	Vector2 oldCamPos;
 	[hidden] float rotation;
 	[text] float startRot;
@@ -57,18 +66,15 @@ class script : script_base
 	//0 = green, 1 = yellow, 2 = red
 	int currentDistCol = 0;
 
-	[text] bool showCompass = true;
-	[text] bool showCompassGame = true;
-	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX = 750;
-	[hidden] float compassPosY = -320;
-	[slider,min:0,max:1000|label:"compass size"] float compassSize = 200;
-
 	[text|label:"join distance"] float joinDist = 40;
+
+	[label:"Optimisation"|option] int t3;
 
 	[text] uint layerFrames = 1;
 	uint layerFrameCounter;
 
-	[position,mode:world,layer:19,y:playAreaCornerY] int playAreaCornerX;
+	//this was inherited from 2d editor so it's not a vector
+	[hidden] int playAreaCornerX;
 	[hidden] int playAreaCornerY;
 	[text] int collisionOrder = 8;
 	[text] int playAreaWidth = 10000;
@@ -80,12 +86,13 @@ class script : script_base
 	//some day I'll make a system where it re-layers per distance
 	float screenHeight = 900;
 	
+	[label:"Debugging"|option] int t4;
 	//debug
 	[text] bool quadDebug = false;
 	[text] bool extraQuadDebug = false;
 	array<d2Math::Rect> debugDraw;
-	[position,mode:world,layer:19,y:debugY] int debugX;
-	[hidden] int debugY;
+	[position,mode:world,layer:19,y:debugPosY] int debugPosX;
+	[hidden] int debugPosY;
 
 	[text] bool showPlayArea;
 	[text] bool showCacheDebug;
