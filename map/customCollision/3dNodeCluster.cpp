@@ -48,6 +48,8 @@ class d3NodeCluster : trigger_base
 	//can cycle presets
 	bool canPreset = false;
 
+	uint deactiveFrameCounter;
+
 	scripttrigger@ self;
 	script@ script;
 	input_api@ input;
@@ -88,7 +90,7 @@ class d3NodeCluster : trigger_base
 		fakeTrigger.Init(self.as_entity(), s, manager);
 		self.editor_handle_size(0);
 		InitQuads();
-		UpdateRotation();
+		UpdateRotation(true);
 		s.firstFrame = true;
 	}
 
@@ -161,7 +163,7 @@ class d3NodeCluster : trigger_base
 					}
 				}
 				UpdatePositions();
-				manager.UpdateLooks();
+				manager.UpdateLooks(true);
 				return;
 			}
 
@@ -233,7 +235,7 @@ class d3NodeCluster : trigger_base
 					}
 				}
 				UpdatePositions();
-				manager.UpdateLooks();
+				manager.UpdateLooks(true);
 				return;
 			}
 
@@ -348,7 +350,7 @@ class d3NodeCluster : trigger_base
 				manager.renderables.insertLast(r);
 				UpdatePositions();
 				SetActiveSidesAll();
-				manager.UpdateLooks();
+				manager.UpdateLooks(true);
 				canPreset = false;
 			}
 
@@ -405,7 +407,7 @@ class d3NodeCluster : trigger_base
 				}
 				oldMousePos = curMouse;
 				UpdatePositions();
-				manager.UpdateLooks();
+				manager.UpdateLooks(true);
 			}
 
 			//join nodes
@@ -499,7 +501,7 @@ class d3NodeCluster : trigger_base
 						SetActiveSidesAll();
 						ApplyTileEnts();
 						UpdateRotation();
-						manager.UpdateLooks();
+						manager.UpdateLooks(true);
 					}
 				}
 			}
@@ -587,18 +589,20 @@ class d3NodeCluster : trigger_base
 		}
 	}
 
-	void UpdateRotation()
+	void UpdateRotation(bool force = false)
 	{
-		SetActiveSidesAll();
 		UpdateSelf();
 		fakeTrigger.UpdateRotation();
+		if (!force && deactiveFrameCounter < script.layerFrames) { deactiveFrameCounter++; return; }
+		deactiveFrameCounter = 0;
+		SetActiveSidesAll();
 	}
 
 	void editor_var_changed(var_info@ info)
 	{
 		SetActiveSidesAll();
 		UpdateSelf();
-		manager.UpdateLooks();
+		manager.UpdateLooks(true);
 	}
 
 	void UpdateSelf()
@@ -710,6 +714,10 @@ class d3NodeCluster : trigger_base
 			DealWithSharedTrigs(i);
 		}
 		ApplyDeactivatedOnly();
+		for(uint i = 0; i < quads.length(); i++)
+		{
+			quads[i].base.UpdateDrawn();
+		}
 	}
 
 	//resets dust, only do at init

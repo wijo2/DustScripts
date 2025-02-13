@@ -102,6 +102,8 @@ class d3Quad
 
 	//behind cam, don't draw
 	bool behind;
+	//is any side drawn
+	bool drawn;
 	//intersecting with cam plane
 	bool intersecting;
 	//false for 1-3, true for 2-2
@@ -221,6 +223,11 @@ class d3Quad
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
+	}
+
+	void UpdateDrawn()
+	{
+		drawn = drawnSides[0] || drawnSides[1] || drawnSides[2] || drawnSides[3];
 	}
 
 	//cam coords
@@ -729,7 +736,8 @@ class d3CQuad
 	//return -1 if behind o
 	int opCmp(d3CQuad@ o)
 	{
-		if (base.behind) { return -1; }
+		//1 is optimal for my insertion sort to stop immediately
+		if (base.behind || base.drawn) { return 1; }
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		return o.AnyPointUnder(this);
@@ -890,13 +898,15 @@ class d3Manager
 		@cam = @d3Cam();
 	}
 
-	void UpdateLooks()
+	void UpdateLooks(bool force)
 	{
 		for (uint i = 0; i < allQuads.length(); i++)
 		{
 			allQuads[i].base.ApplyProjection(cam);
 			allQuads[i].UpdateIntersectQuad(cam);
 		}
+		if (!force && script.layerFrameCounter < script.layerFrames) { script.layerFrameCounter++; return; }
+		script.layerFrameCounter = 0;
 		SortRenderList();
 	}
 

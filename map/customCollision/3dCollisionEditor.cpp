@@ -73,6 +73,9 @@ class script : script_base
 
 	[text|label:"join distance"] float joinDist = 40;
 
+	[text] uint layerFrames = 1;
+	uint layerFrameCounter;
+	
 	//debug
 	[text] bool quadDebug = false;
 	[text] bool extraQuadDebug = false;
@@ -322,7 +325,6 @@ class script : script_base
 					//doing an extra couple of updates because this really fucks it up for some reason...
 					UpdateRotation(true);
 					UpdateRotation(true);
-					UpdateRotation(true);
 				}
 			}
 			else { right90 = false; }
@@ -333,7 +335,6 @@ class script : script_base
 				{
 					left90 = true;
 					rotation -= hpi;
-					UpdateRotation(true);
 					UpdateRotation(true);
 					UpdateRotation(true);
 				}
@@ -380,7 +381,7 @@ class script : script_base
 			{
 				textTriggers[i].UpdateRotation();
 			}
-			manager.UpdateLooks();
+			manager.UpdateLooks(force);
 		}
 	}
 
