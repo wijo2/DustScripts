@@ -75,6 +75,8 @@ class d3EnemyBase : d3FlatObjectBase
 	float rotation = 0;
 	Vector2 scale = Vector2(1,1);
 	uint frame = 0;
+	float thickness = 48;
+	uint colour = 0xFFFFFFFF;
 
 	void init(script@ s, scripttrigger@ self)
 	{
@@ -96,8 +98,6 @@ class d3EnemyBase : d3FlatObjectBase
 	void step()
 	{
 		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
-		entity.x(fakeTrigger.ssp.x);
-		entity.y(fakeTrigger.ssp.y);
 	}
 
 	void UpdateRotation() override
@@ -106,15 +106,38 @@ class d3EnemyBase : d3FlatObjectBase
 		rectangle@ sr = sprites.get_sprite_rect(sprite, frame);
 		Vector2 pos = Vector2(fakeTrigger.ssp.x, fakeTrigger.ssp.y);
 		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
-		// script.debugDraw.insertLast(drawRect);
+		if (abs(fakeTrigger.ssp.z) > thickness)
+		{
+			Vector2 cp = manager.cam.igCoords;
+			entity.x(cp.x+200);
+			entity.y(cp.y+200);
+			SetInactiveColour();
+		}
+		else
+		{
+			entity.x(fakeTrigger.ssp.x);
+			entity.y(fakeTrigger.ssp.y);
+			SetActiveColour();
+		}
+	}
+
+	//I've seperated these to give overriding privelages c:
+	void SetActiveColour()
+	{
+		colour = 0xFFFFFFFF;
+	}
+	void SetInactiveColour()
+	{
+		colour = 0xFF888888;
 	}
 
 	void Draw(scene@ s) override
 	{
+		if (entity.destroyed() || depth < -thickness) { return; }
 		// return;
-		uint color = script.ApplyFog(0xFFFFFFFF, depth);
+		uint ncolour = script.ApplyFog(colour, depth);
 		sprites.draw_world(18, 1, sprite, frame, palette, fakeTrigger.ssp.x, 
-					 fakeTrigger.ssp.y, rotation, scale.x, scale.y, color);
+					 fakeTrigger.ssp.y, rotation, scale.x, scale.y, ncolour);
 	}
 
 	void on_remove() override
@@ -185,6 +208,7 @@ class d3FakeTrigger
 	}
 }
 
+//before I forger for the fifth time: trigger centralisation happens in script!!!
 class FakeTrigger
 {
 	Vector2 pos;
