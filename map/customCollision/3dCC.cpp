@@ -617,6 +617,16 @@ class d3CQuad
 		UpdateIntersectQuad(manager.cam);
 	}
 
+	uint GetDustCount()
+	{
+		uint s = 0;
+		if (dustSides[0]) { s += 1; }
+		if (dustSides[1]) { s += 1; }
+		if (dustSides[2]) { s += 1; }
+		if (dustSides[3]) { s += 1; }
+		return s;
+	}
+
 	void DrawBase(scene@ s)
 	{
 		//I could make a loop and stuff but like this is literally easier so whatever

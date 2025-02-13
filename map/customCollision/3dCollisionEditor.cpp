@@ -28,9 +28,6 @@ class script : script_base
 	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
 	[colour,alpha] uint default2dCol = 0xBB888888;
 
-	[position,mode:world,layer:19,y:dustPosY] int dustPosX;
-	[hidden] int dustPosY;
-
 	Vector2 oldCamPos;
 	[hidden] float rotation;
 	float oldRotation;
@@ -520,46 +517,46 @@ class script : script_base
 		}
 	}
 
-	// void on_level_end() 
-	// {
-	// 	int count = 0;
-	// 	for (uint i = 0; i < manager.allQuads.length(); i++) 
-	// 	{
-	// 		count += quadManager.quads[i].quad.GetDustCount();
-	// 	}
-	// 	MakeDust(count);
-	// }
+	void on_level_end() 
+	{
+		uint count = 0;
+		for (uint i = 0; i < manager.allQuads.length(); i++) 
+		{
+			count += manager.allQuads[i].GetDustCount();
+		}
+		MakeDust(count);
+	}
 
-	// void MakeDust(int n) 
-	// {
-	// 	Vector2 pos = Vector2(dustPosX, dustPosY);
-	// 	int width = int(sqrt(n));
-	// 	if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
-	// 	int height = n/width;
-	// 	int lastRow = n - width*height;
-	// 	puts(width+ ", " + height + ", " + lastRow);
-	//
-	// 	tileinfo@ t = create_tileinfo();
-	// 	t.solid(true);
-	// 	t.sprite_set(2);
-	// 	t.sprite_tile(13);
-	// 	t.sprite_palette(1);
-	// 	t.set_dustblock(2);
-	//
-	// 	scene@ s = get_scene();
-	//
-	// 	for (int x = floor(-width/2.0); x < width/2; x += 1)
-	// 	{
-	// 		for (int y = floor(-height/2.0); y < height/2; y += 1) //stops 1 short 
-	// 		{
-	// 			s.set_tile(floor(pos.x/48+x), floor(pos.y/48+y), 19, t, false);
-	// 		}
-	// 	}
-	// 	for (int x = floor(-width/2.0); x < floor(-width/2.0) + lastRow; x += 1) 
-	// 	{
-	// 		s.set_tile(floor(pos.x/48)+x, floor(pos.y/48)+int(height/2), 19, t, false);
-	// 	}
-	// }
+	void MakeDust(int n) 
+	{
+		Vector2 pos = manager.cam.igCoords + Vector2(5000, 5000);
+		int width = int(sqrt(n));
+		if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases
+		int height = n/width;
+		int lastRow = n - width*height;
+		// puts(width+ ", " + height + ", " + lastRow);
+
+		tileinfo@ t = create_tileinfo();
+		t.solid(true);
+		t.sprite_set(2);
+		t.sprite_tile(13);
+		t.sprite_palette(1);
+		t.set_dustblock(2);
+
+		scene@ s = get_scene();
+
+		for (int x = int(floor(-width/2.0)); x < width/2; x += 1)
+		{
+			for (int y = int(floor(-height/2.0)); y < height/2; y += 1) //stops 1 short 
+			{
+				s.set_tile(int(floor(pos.x/48+x)), int(floor(pos.y/48+y)), 19, t, false);
+			}
+		}
+		for (int x = int(floor(-width/2.0)); x < int(floor(-width/2.0)) + lastRow; x += 1) 
+		{
+			s.set_tile(int(floor(pos.x/48))+x, int(floor(pos.y/48))+int(height/2), 19, t, false);
+		}
+	}
 }
 
 class d3StartPos : trigger_base
@@ -588,7 +585,7 @@ class d3StartPos : trigger_base
 		if (!hasInit)
 		{
 			fakeTrigger = d3FakeTrigger();
-			fakeTrigger.colour = 0xFFFF0000;
+			fakeTrigger.colour = 0xFF00FF00;
 			hasInit = true;
 		}
 		fakeTrigger.Init(self.as_entity(), s, manager);

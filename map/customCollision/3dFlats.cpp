@@ -3,6 +3,62 @@
 
 //prop and specific enemy implementations
 
+class d3Prop : d3FlatObjectBase, trigger_base
+{
+	scripttrigger@ self;
+	sprites@ sprites;
+	[text] string spriteSet;
+	[text] string sprite;
+	[text] uint palette = 1;
+	[text] float rotation = 0;
+	[text] float scaleX = 1;
+	[text] float scaleY = 1;
+	[colour,alpha] uint colour = 0xFFFFFFFF;
+
+	void init(script@ s, scripttrigger@ self)
+	{
+		@this.self = self;
+		self.editor_handle_size(0);
+		@sprites = create_sprites();
+		sprites.add_sprite_set(spriteSet);
+		d3FlatObjectBase::init(s, self.as_entity());
+		fakeTrigger.colour = 0xFFAA00FF;
+	}
+
+	void editor_step() override
+	{
+		d3FlatObjectBase::editor_step();
+	}
+
+	void editor_var_changed(var_info@ info)
+	{
+		@sprites = create_sprites();
+		sprites.add_sprite_set(spriteSet);
+	}
+
+	void UpdateRotation() override
+	{
+		d3FlatObjectBase::UpdateRotation();
+		rectangle@ sr = sprites.get_sprite_rect(sprite, 1);
+		Vector2 pos = Vector2(fakeTrigger.ssp.x, fakeTrigger.ssp.y);
+		drawRect = d2Math::Rect(pos.x + sr.left(), pos.y + sr.top(), pos.x + sr.right(), pos.y + sr.bottom());
+	}
+
+	void Draw(scene@ s) override
+	{
+		if (depth < 0) { return; }
+		// return;
+		uint ncolour = script.ApplyFog(colour, depth);
+		sprites.draw_world(18, 1, sprite, 1, palette, fakeTrigger.ssp.x, 
+					 fakeTrigger.ssp.y, rotation, scaleX, scaleY, ncolour);
+	}
+
+	void on_remove() override
+	{
+		d3FlatObjectBase::on_remove();
+	}
+}
+
 class d3ESmallPrism : d3EnemyBase, trigger_base
 {
 	void init(script@ s, scripttrigger@ self)

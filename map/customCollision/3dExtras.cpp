@@ -101,8 +101,8 @@ class d3EnemyBase : d3FlatObjectBase
 		if (abs(fakeTrigger.ssp.z) > thickness)
 		{
 			Vector2 cp = manager.cam.igCoords;
-			entity.x(cp.x+500);
-			entity.y(cp.y+500);
+			entity.x(cp.x+1000);
+			entity.y(cp.y+1000);
 		}
 	}
 
