@@ -133,6 +133,9 @@ class script : script_base
 		if (firstFrame)
 		{
 			firstFrame = false;
+			//I stopped asking questions long ago
+			UpdateRotation(true);
+			UpdateRotation(true);
 			UpdateRotation(true);
 		}
 		for(uint i = 0; i < fakeTriggers.length(); i++)
@@ -231,7 +234,11 @@ class script : script_base
 		if (firstFrame)
 		{
 			firstFrame = false;
+			//I stopped asking questions long ago
 			UpdateRotation(true);
+			UpdateRotation(true);
+			UpdateRotation(true);
+
 			manager.UpdateCollision();
 		}
 		debugDraw = array<d2Math::Rect>(0);

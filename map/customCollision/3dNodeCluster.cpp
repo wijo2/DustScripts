@@ -434,7 +434,7 @@ class d3NodeCluster : trigger_base
 				UpdateSelf();
 			}
 
-			//spikes
+			//spikes, dust and deactive
 			bool qKey = input.key_check_pressed_vk(0x51);
 			bool wKey = input.key_check_pressed_vk(0x57);
 			bool eKey = input.key_check_pressed_vk(0x45);
@@ -445,6 +445,7 @@ class d3NodeCluster : trigger_base
 				int best = -1;
 				for(uint i = 0; i < quads.length(); i++)
 				{
+					if (!quads[i].base.drawn || quads[i].base.behind) { continue; }
 					if (quads[i].base.PointRelation(mousePos) != 0)
 					{
 						if (best == -1 || quads[i].opCmp(quads[best]) == 1)
@@ -500,7 +501,7 @@ class d3NodeCluster : trigger_base
 						ResetAllSides();
 						SetActiveSidesAll();
 						ApplyTileEnts();
-						UpdateRotation();
+						UpdateRotation(true);
 						manager.UpdateLooks(true);
 					}
 				}
@@ -697,6 +698,10 @@ class d3NodeCluster : trigger_base
 			q.base.p2 += (c-q.base.p2)/shrinkAmount;
 			q.base.p3 += (c-q.base.p3)/shrinkAmount;
 			q.base.p4 += (c-q.base.p4)/shrinkAmount;
+		}
+		for(uint i = 0; i < quads.length(); i++)
+		{
+			quads[i].base.UpdateMaxDist();
 		}
 	}
 

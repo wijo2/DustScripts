@@ -103,7 +103,7 @@ class d3Quad
 	//behind cam, don't draw
 	bool behind;
 	//is any side drawn
-	bool drawn;
+	bool drawn = true;
 	//intersecting with cam plane
 	bool intersecting;
 	//false for 1-3, true for 2-2
@@ -112,6 +112,8 @@ class d3Quad
 	//for every point, which side of cam is it on?
 	//1 = front
 	array<bool> sides(4);
+
+	float maxDistance = 0;
 
 	Renderable@ renderable;
 
@@ -224,11 +226,26 @@ class d3Quad
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
+
+
 	}
 
 	void UpdateDrawn()
 	{
-		drawn = drawnSides[0] || drawnSides[1] || drawnSides[2] || drawnSides[3];
+		drawn = !behind && ((drawnSides[0] && fac1 > 0) || (drawnSides[1] && fac2 > 0) 
+			|| (drawnSides[2] && fac3 > 0) || (drawnSides[3] && fac4 > 0));
+	}
+
+	void UpdateMaxDist()
+	{
+		Vector3 c = Find3dCentre();
+		maxDistance = (c-p1).Magnitude();
+		float m = (c-p2).Magnitude();
+		if (m > maxDistance) { maxDistance = m; }
+		m = (c-p3).Magnitude();
+		if (m > maxDistance) { maxDistance = m; }
+		m = (c-p4).Magnitude();
+		if (m > maxDistance) { maxDistance = m; }
 	}
 
 	//cam coords
@@ -723,6 +740,8 @@ class d3CQuad
 	//is any point of this quad is under o return 1, if any of this is over other quad return -1, otherwise 0
 	int AnyPointUnder(d3CQuad@ o)
 	{
+		if (base.behind) { return -1; }
+		if (!base.drawn) { return 0; }
 		int i;
 		i = o.base.PointRelation(base.csp1);
 		if (i != 0) { return i; }
@@ -737,8 +756,18 @@ class d3CQuad
 	//return -1 if behind o
 	int opCmp(d3CQuad@ o)
 	{
-		//1 is optimal for my insertion sort to stop immediately
-		if (base.behind || base.drawn) { return 1; }
+		if (base.behind) { return 1; }
+		if (!base.drawn) { return 0; }
+		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
+		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
+		if ((c1-c2).Magnitude() < base.maxDistance + o.base.maxDistance)
+		{
+			if (c1.z > c2.z)
+			{
+				return -1;
+			}
+			return 1;
+		}
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		return o.AnyPointUnder(this);
@@ -868,6 +897,20 @@ class Renderable
 		return 0;
 	}
 
+	bool IsDrawn()
+	{
+		switch (type)
+		{
+			case 0:
+				return quad.base.drawn;
+			case 1:
+				//this might sadly cut off really big enemies before their thickness
+				//runs out but oh well I need that performance :p
+				return flat.depth > -1000;
+		}
+		return false;
+	}
+
 	void Draw(scene@ s)
 	{
 		switch (type)
@@ -888,6 +931,8 @@ class d3Manager
 {
 	array<d3CQuad@> allQuads;
 	array<Renderable@> renderables;
+	//holds the drawn subset of renderables
+	array<Renderable@> nextRender;
 	d2::CollisionManager@ manager;
 	d3Cam@ cam;
 
@@ -924,7 +969,15 @@ class d3Manager
 	//(the built in array.sortAsc() appears to be full of shit)
 	void SortRenderList()
 	{
-		BetterInsSort(renderables);
+		nextRender.resize(0);
+		for(uint i = 0; i < renderables.length(); i++)
+		{
+			if (renderables[i].IsDrawn())
+			{
+				nextRender.insertLast(renderables[i]);
+			}
+		}
+		BetterInsSort(nextRender);
 	}
 
 	//plz be better plz be better plz be better
@@ -1017,9 +1070,9 @@ class d3Manager
 	{
 		scene@ s = get_scene();
 		// puts("renderables: " + renderables.length());
-		for (uint i = 0; i < renderables.length(); i++)
+		for (uint i = 0; i < nextRender.length(); i++)
 		{
-			renderables[i].Draw(s);
+			nextRender[i].Draw(s);
 		}
 		//intersects unlayered
 		for (uint i = 0; i < allQuads.length(); i++)

@@ -222,7 +222,9 @@ class d2CQuad
 	void SideTouched(int side)
 	{
 		controllable@ c = controller_controllable(uint(get_active_player()));
+		if (@c == null) { return; }
 		dustman@ d = c.as_dustman();
+		if (@d == null) { return; }
 		int state = d.state();
 		if (state != 5 && state != 7 && state != 8 && state != 19 && dustLines[side-1])
 		{
