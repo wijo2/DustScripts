@@ -293,6 +293,7 @@ class script : script_base
 		if (ca.input_taunt() != 0)
 		{
 			co.as_entity().time_warp(0);
+			co.as_hittable().freeze_frame_timer(0.1);
 			if (!wasRotating)
 			{
 				wasGrounded = co.ground();

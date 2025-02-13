@@ -98,6 +98,12 @@ class d3EnemyBase : d3FlatObjectBase
 	void step()
 	{
 		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
+		if (abs(fakeTrigger.ssp.z) > thickness)
+		{
+			Vector2 cp = manager.cam.igCoords;
+			entity.x(cp.x+500);
+			entity.y(cp.y+500);
+		}
 	}
 
 	void UpdateRotation() override
