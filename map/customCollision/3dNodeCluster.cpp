@@ -10,6 +10,9 @@ class d3NodeCluster : trigger_base
 	[colour,alpha] uint d2colour;
 	[colour,alpha] uint d3colour;
 
+	[text] bool isConvex = true;
+	[text] bool simplerLayering = true;
+
 	//when nodes are deleted they're just set to 0
 	//to preserve quad nodes so work around that c:
 	[hidden] array<Vector3> nodes;
@@ -663,14 +666,19 @@ class d3NodeCluster : trigger_base
 			nq.sub_layer = sub_layer;
 			nq.base.colour = d3colour;
 			nq.collisionBase.base.colour = d2colour;
-	   		@nq.collisionBase.manager = @manager.manager;
-	   		@nq.collisionBase.script = @script;
+			@nq.collisionBase.manager = @manager.manager;
+			@nq.collisionBase.script = @script;
 			@nq.manager = @manager;
 			d3::Renderable r = d3::Renderable(0);
 			@r.quad = @nq;
 			@nq.base.renderable = @r;
+			nq.base.simplerPointRelation = simplerLayering;
+			if (isConvex)
+			{
+				nq.base.clusterId = self.id();
+			}
 			manager.renderables.insertLast(r);
-	   		quads.insertLast(@nq);
+			quads.insertLast(@nq);
 			manager.allQuads.insertLast(@nq);
 		}
 		UpdatePositions();
@@ -692,7 +700,7 @@ class d3NodeCluster : trigger_base
 
 			//shrinking the quads slightly so that layering can work
 			Vector3 c = q.base.Find3dCentre();
-			int shrinkAmount = 10000;
+			int shrinkAmount = 100000;
 			if (script.quadDebug) { shrinkAmount = 10; }
 			q.base.p1 += (c-q.base.p1)/shrinkAmount;
 			q.base.p2 += (c-q.base.p2)/shrinkAmount;

@@ -113,7 +113,13 @@ class d3Quad
 	//1 = front
 	array<bool> sides(4);
 
+	//optimisations
+	//2 far away things can be compared simpler
 	float maxDistance = 0;
+	//idk for sure if this is a valid optimisation or if something breaks but it sure does save time
+	bool simplerPointRelation;
+	//things in same convex cluster don't need to be sorted
+	int clusterId = -1;
 
 	Renderable@ renderable;
 
@@ -138,6 +144,11 @@ class d3Quad
 	{
 		if (!drawn) { return; }
 		if (colour == 0x00000000 || behind) { return; }
+
+		//debug
+		// Vector2 cen = (pp1+pp2+pp3+pp4)/4;
+		// script.debugDraw.insertLast(d2Math::Rect(cen.x-20, cen.y-20, cen.x+20, cen.y+20));
+
 		if (!shaded)
 		{
 			if (drawnSides[0])
@@ -353,15 +364,17 @@ class d3Quad
 				points[2] = csp4;
 			break;
 		}
-		Vector3 dir = (points[0]+points[1]+points[2])/3 - (csp1+csp2+csp3+csp4)/4;
-		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]);
+		//added some extra normalisation cause the numbers were getting massive -> lots of float impresicion
+		Vector3 dir = ((points[0]+points[1]+points[2])/3 - (csp1+csp2+csp3+csp4)/4).Normalised();
+		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]).Normalised();
 		return (norm*norm.Dot(dir)).Normalised();
 	}
 
 	//1 = point is under (more z), -1 = point is over (less z), 0 = point not inside
 	int PointRelation(Vector3 pos)
 	{
-		if (d2Math::PointInTriangle(
+		if ((!simplerPointRelation || (drawnSides[0] && fac1 > 0))
+			&& d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp2.x, csp2.y),
@@ -375,7 +388,8 @@ class d3Quad
 			}
 			return -1;
 		}
-		if (d2Math::PointInTriangle(
+		if ((!simplerPointRelation || (drawnSides[1] && fac2 > 0))
+			&& d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp2.x, csp2.y),
@@ -389,7 +403,8 @@ class d3Quad
 			}
 			return -1;
 		}
-			if (d2Math::PointInTriangle(
+			if ((!simplerPointRelation || (drawnSides[2] && fac3 > 0))
+			&& d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp3.x, csp3.y),
@@ -405,7 +420,8 @@ class d3Quad
 			return -1;
 
 		}
-		if (d2Math::PointInTriangle(
+		if ((!simplerPointRelation || (drawnSides[3] && fac4 > 0))
+			&& d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp2.x, csp2.y),
 				Vector2(csp3.x, csp3.y),
@@ -758,9 +774,12 @@ class d3CQuad
 	{
 		if (base.behind) { return 1; }
 		if (!base.drawn) { return 0; }
+
+		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
+
 		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
 		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
-		if ((c1-c2).Magnitude() < base.maxDistance + o.base.maxDistance)
+		if ((c1-c2).Magnitude() > base.maxDistance + o.base.maxDistance)
 		{
 			if (c1.z > c2.z)
 			{
@@ -768,6 +787,10 @@ class d3CQuad
 			}
 			return 1;
 		}
+
+		//debug for what 2 are compared
+		// get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,4,0xFFFF000);
+
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		return o.AnyPointUnder(this);

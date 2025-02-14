@@ -143,7 +143,6 @@ class script : script_base
 
 	void editor_step()
 	{
-		debugDraw = array<d2Math::Rect>(0);
 		if (firstFrame)
 		{
 			firstFrame = false;
@@ -260,7 +259,6 @@ class script : script_base
 		camera@ cam = get_active_camera();
 		screenHeight = cam.screen_height();
 
-		debugDraw = array<d2Math::Rect>(0);
 		HandleGameplayRotation();
 		manager.Step();
 		UpdateCamPos();
@@ -464,10 +462,12 @@ class script : script_base
 		{
 			manager.manager.Draw(s, 22, 1);
 		}
+		// puts("debug len: " + debugDraw.length());
 		for (uint i = 0; i < debugDraw.length(); i++) 
 		{
 			debugDraw[i].Draw(s, 22, 1);
 		}
+		debugDraw.resize(0);
 		for(uint i = 0; i < fakeTriggers.length(); i++)
 		{
 			fakeTriggers[i].Draw(s);
@@ -514,6 +514,7 @@ class script : script_base
 		{
 			debugDraw[i].Draw(sc, 22, 1);
 		}
+		debugDraw.resize(0);
 		if (showCompassGame)
 		{
 			DrawCompass();
