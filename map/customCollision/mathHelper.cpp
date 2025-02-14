@@ -186,6 +186,53 @@ class LineFunc
 			return pos.x > bound1.x && pos.x < bound2.x;
 		}
 	}
+
+	Vector2 IntersectionPosition(LineFunc@ o)
+	{
+		if (nullLine || o.nullLine) { return Vector2(); }
+		if (upright)
+		{
+			if (o.upright) { return Vector2(); }
+			return Vector2(upx, o.GetValue(upx));
+		}
+		if (o.upright) { return Vector2(o.upx, GetValue(o.upx)); }
+		if (k == o.k) { return Vector2(); }
+		//yes it's supposed to be that way
+		float x = (o.b - b)/(k - o.k);
+		return Vector2(x, GetValue(x));
+	}
+
+	Vector2 BoundedIntersectionPosition(LineFunc@ o)
+	{
+		Vector2 pos = IntersectionPosition(o);
+		if (pos == Vector2()) { return Vector2(); }
+		if (!IsWithinBounds(pos) || !o.IsWithinBounds(pos)) { return Vector2(); }
+		return pos;
+	}
+
+	//% of how far along line this is from b1 to b2
+	//doesn't check if on line, in bounds, or has bounds
+	float HowFarAlong(Vector2 pos)
+	{
+		if (abs(k) > 1)
+		{
+			return (bound1.y-pos.y)/(bound1.y-bound2.y);
+		}
+		else
+		{
+			return (bound1.x-pos.x)/(bound1.x-bound2.x);
+		}
+	}
+
+	//do these 2 bounded lines have any hope of intersecting?
+	bool CanIntersect(LineFunc@ o)
+	{
+		Vector2 c1 = (bound1+bound2)/2;
+		Vector2 c2 = (o.bound1+o.bound2)/2;
+		//shifted the /2 from side 1 to *2 side 2
+		return ((bound1-bound2).Magnitude() + (o.bound1-o.bound2).Magnitude() >
+			(c1-c2).Magnitude() * 2); 
+	}
 }
 
 class Rect

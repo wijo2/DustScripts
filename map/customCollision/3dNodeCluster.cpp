@@ -12,6 +12,7 @@ class d3NodeCluster : trigger_base
 
 	[text] bool isConvex = true;
 	[text] bool simplerLayering = true;
+	[text] bool lineComp = false;
 
 	//when nodes are deleted they're just set to 0
 	//to preserve quad nodes so work around that c:
@@ -626,6 +627,16 @@ class d3NodeCluster : trigger_base
 		{
 			quads[i].collisionBase.base.colour = d2col;
 			quads[i].base.colour = d3col;
+			quads[i].base.simplerPointRelation = simplerLayering;
+			quads[i].base.lineComp = lineComp;
+			if (isConvex)
+			{
+				quads[i].base.clusterId = self.id();
+			}
+			else
+			{
+				quads[i].base.clusterId = -1;
+			}
 		}
 		UpdatePositions();
 	}
@@ -659,6 +670,7 @@ class d3NodeCluster : trigger_base
 	void InitQuads()
 	{
 		quads.resize(0);
+	   	// puts("id: " + self.id());
 		for (uint i = 0; i < quadNodes.length(); i++)
 		{
 			d3::d3CQuad nq;
@@ -677,6 +689,7 @@ class d3NodeCluster : trigger_base
 			{
 				nq.base.clusterId = self.id();
 			}
+	   		nq.base.lineComp = lineComp;
 			manager.renderables.insertLast(r);
 			quads.insertLast(@nq);
 			manager.allQuads.insertLast(@nq);

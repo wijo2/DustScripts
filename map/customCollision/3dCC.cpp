@@ -115,11 +115,14 @@ class d3Quad
 
 	//optimisations
 	//2 far away things can be compared simpler
-	float maxDistance = 0;
+	float maxDistanceHorisontal = 0;
+	float maxDistanceVertical = 0;
 	//idk for sure if this is a valid optimisation or if something breaks but it sure does save time
 	bool simplerPointRelation;
 	//things in same convex cluster don't need to be sorted
 	int clusterId = -1;
+	//un-optimisation: do line checks as well for better sort results
+	bool lineComp = false;
 
 	Renderable@ renderable;
 
@@ -250,13 +253,28 @@ class d3Quad
 	void UpdateMaxDist()
 	{
 		Vector3 c = Find3dCentre();
-		maxDistance = (c-p1).Magnitude();
-		float m = (c-p2).Magnitude();
-		if (m > maxDistance) { maxDistance = m; }
-		m = (c-p3).Magnitude();
-		if (m > maxDistance) { maxDistance = m; }
-		m = (c-p4).Magnitude();
-		if (m > maxDistance) { maxDistance = m; }
+
+		Vector2 cf = Vector2(c.x, c.z);
+		Vector2 fp1 = Vector2(p1.x, p1.z);
+		Vector2 fp2 = Vector2(p2.x, p2.z);
+		Vector2 fp3 = Vector2(p3.x, p3.z);
+		Vector2 fp4 = Vector2(p4.x, p4.z);
+
+		maxDistanceHorisontal = (cf-fp1).Magnitude();
+		float m = (cf-fp2).Magnitude();
+		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
+		m = (cf-fp3).Magnitude();
+		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
+		 m = (cf-fp4).Magnitude();
+		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
+
+		maxDistanceVertical = abs(c.y-p1.y);
+		m = abs(c.y-p2.y);
+		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
+		m = abs(c.y-p3.y);
+		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
+		m = abs(c.y-p4.y);
+		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
 	}
 
 	//cam coords
@@ -295,6 +313,18 @@ class d3Quad
 			case 4: return csp4.z > 0;
 		}
 		return false;
+	}
+
+	Vector3 CoordsFromNode(int point)
+	{
+		switch (point)
+		{
+			case 1: return csp1;
+			case 2: return csp2;
+			case 3: return csp3;
+			case 4: return csp4;
+		}
+		return Vector3();
 	}
 
 	//I realise now this is the same functionality as the method literally 2 methods up
@@ -480,6 +510,99 @@ class d3Quad
 			return 4;
 		}
 		return -1;
+	}
+
+	//line comparisons (more expensive but catch more cases)
+	
+	//1 = this is behind, 0 = id, -1 = this is front
+	int CompareLine(d3Quad@ o, uint i1, uint i2, uint oi1, uint oi2)
+	{
+		Vector3 point1 = CoordsFromNode(i1);
+		Vector3 point2 = CoordsFromNode(i2);
+		Vector3 opoint1 = o.CoordsFromNode(oi1);
+		Vector3 opoint2 = o.CoordsFromNode(oi2);
+		Vector2 point12 = Vector2(point1.x, point1.y);
+		Vector2 point22 = Vector2(point2.x, point2.y);
+		Vector2 opoint12 = Vector2(opoint1.x, opoint1.y);
+		Vector2 opoint22 = Vector2(opoint2.x, opoint2.y);
+		d2Math::LineFunc l1 = d2Math::LineFunc(point12, point22);
+		d2Math::LineFunc l2 = d2Math::LineFunc(opoint12, opoint22);
+		l1.SetBounds(point12, point22);
+		l2.SetBounds(opoint12, opoint22);
+
+		//check if they're so far they can't possibly intersect
+		if (!l1.CanIntersect(l2)) { return 0; }
+
+		Vector2 intersect = l1.BoundedIntersectionPosition(l2);
+		if (intersect == Vector2()) { return 0; }
+		float z1 = point1.z + (point2.z - point1.z)*l1.HowFarAlong(intersect);
+		float z2 = opoint1.z + (opoint2.z - opoint1.z)*l2.HowFarAlong(intersect);
+		if (z1 > z2) { return 1; }
+		return -1;
+	}
+
+	//sides -> node pairs
+	array<array<uint>> GetPairCollection(array<uint> sides)
+	{
+		array<array<uint>> ret;
+		for(uint i = 0; i < sides.length(); i++)
+		{
+			array<uint> nodes = NodesFromSide(sides[i]);
+			array<array<uint>> newPairs = {
+			{nodes[0], nodes[1]},
+			{nodes[0], nodes[2]},
+			{nodes[1], nodes[2]}
+			};
+			for(uint newPair = 0; newPair < newPairs.length(); newPair++)
+			{
+				array<uint>@ thisPair = @newPairs[newPair];
+				array<uint> altPair = { thisPair[1], thisPair[0] };
+				if (ret.find(thisPair) == -1 && ret.find(altPair) == -1)
+				{
+					ret.insertLast(thisPair);
+				}
+			}
+		}
+		return ret;
+	}
+
+	array<uint> NodesFromSide(uint side)
+	{
+		array<uint> points(3);
+		switch (side)
+		{
+			case 1:
+				points[0] = 1;
+				points[1] = 2;
+				points[2] = 3;
+				return points;
+			case 2:
+				points[0] = 1;
+				points[1] = 2;
+				points[2] = 4;
+				return points;
+			case 3:
+				points[0] = 1;
+				points[1] = 3;
+				points[2] = 4;
+				return points;
+			case 4:
+				points[0] = 2;
+				points[1] = 3;
+				points[2] = 4;
+				return points;
+		}
+		return points;
+	}
+
+	array<uint> GetActiveSides()
+	{
+		array<uint> ret;
+		if (drawnSides[0] && fac1 > 0) { ret.insertLast(1); }
+		if (drawnSides[1] && fac2 > 0) { ret.insertLast(2); }
+		if (drawnSides[2] && fac3 > 0) { ret.insertLast(3); }
+		if (drawnSides[3] && fac4 > 0) { ret.insertLast(4); }
+		return ret;
 	}
 }
 
@@ -753,11 +876,46 @@ class d3CQuad
 		return 0;
 	}
 
+	//any line of this under other return 1 and vice verca same as all the others
+	int AnyLineUnder(d3CQuad@ o)
+	{
+		array<array<uint>> pairs = base.GetPairCollection(base.GetActiveSides());
+		array<array<uint>> opairs = o.base.GetPairCollection(o.base.GetActiveSides());
+
+		for(uint i = 0; i < pairs.length(); i++)
+		{
+			for(uint j = 0; j < opairs.length(); j++)
+			{
+				int k = base.CompareLine(o.base, pairs[i][0],pairs[i][1],opairs[j][0],opairs[j][1]);
+				if (k != 0) { return k; }
+			}
+		}
+		return 0;
+	}
+
+	//most of the time the majority of the lines are used anyways so maybe it's better to just do all of them?
+	//result: pretty much the same if not slightly worse :/
+	int AnyLineUnder2(d3CQuad@ o)
+	{
+		array<array<uint>> pairs = {
+		{1,2},{1,3},{1,4},
+		{2,3},{2,4},
+		{3,4}
+		};
+		for(uint i = 0; i < pairs.length(); i++)
+		{
+			for(uint j = 0; j < pairs.length(); j++)
+			{
+				int k = base.CompareLine(o.base, pairs[i][0],pairs[i][1],pairs[j][0],pairs[j][1]);
+				if (k != 0) { return k; }
+			}
+		}
+		return 0;
+	}
+
 	//is any point of this quad is under o return 1, if any of this is over other quad return -1, otherwise 0
 	int AnyPointUnder(d3CQuad@ o)
 	{
-		if (base.behind) { return -1; }
-		if (!base.drawn) { return 0; }
 		int i;
 		i = o.base.PointRelation(base.csp1);
 		if (i != 0) { return i; }
@@ -774,12 +932,16 @@ class d3CQuad
 	{
 		if (base.behind) { return 1; }
 		if (!base.drawn) { return 0; }
+		if (!o.base.drawn) { return 0; }
+		if (o.base.behind) { return -1; }
 
+		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
 
 		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
 		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
-		if ((c1-c2).Magnitude() > base.maxDistance + o.base.maxDistance)
+
+		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
 			{
@@ -788,12 +950,34 @@ class d3CQuad
 			return 1;
 		}
 
-		//debug for what 2 are compared
-		// get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,4,0xFFFF000);
+		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
+			|| abs(c1.y-c2.y) > base.maxDistanceVertical + o.base.maxDistanceVertical)
+		{
+			return 0;
+		}
+
+		Vector2 cf1 = Vector2(c1.x, c1.y);
+		Vector2 cf2 = Vector2(c2.x, c2.y);
+
+		if ((cf1-cf2).Magnitude() < 500)
+		{
+			get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
+		}
 
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
-		return o.AnyPointUnder(this);
+		r = o.AnyPointUnder(this);
+		// return r;
+		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
+
+		// if ((cf1-cf2).Magnitude() < 500)
+		// {
+		// 	get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,5,0xFFFFFFFF);
+		// }
+
+		r = AnyLineUnder(o);
+		if (r != 0) { return -r; }
+		return o.AnyLineUnder(this);
 	}
 }	
 
@@ -847,15 +1031,21 @@ class Renderable
 
 		Vector2 rcen2 = (flat.drawRect.p1 + flat.drawRect.p2)/2;
 		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
-		float rmag = (rcen2 - flat.drawRect.p1).Magnitude();
+		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
+		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
 		Vector3 c2 = (o.quad.base.csp1+o.quad.base.csp2+o.quad.base.csp3+o.quad.base.csp4)/4;
-		if ((c1-c2).Magnitude() < rmag + o.quad.base.maxDistance)
+		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
 			{
 				return -1;
 			}
 			return 1;
+		}
+		if (abs(c1.x-c2.x) > rmagx + o.quad.base.maxDistanceHorisontal
+			|| abs(c1.y-c2.y) > rmagy + o.quad.base.maxDistanceVertical) 
+		{
+			return 0;
 		}
 
 		d2Math::Rect drect = flat.drawRect; 
@@ -1006,6 +1196,7 @@ class d3Manager
 	//(the built in array.sortAsc() appears to be full of shit)
 	void SortRenderList()
 	{
+		//only render what you absolutely need to c:
 		nextRender.resize(0);
 		for(uint i = 0; i < renderables.length(); i++)
 		{
@@ -1017,7 +1208,7 @@ class d3Manager
 		BetterInsSort(nextRender);
 	}
 
-	//plz be better plz be better plz be better
+	//plz be better plz be better plz be better (spoiler alert it's 1000x better c:)
 	void BetterInsSort(array<Renderable@>@ arr)
 	{
 		// puts("");
