@@ -956,13 +956,13 @@ class d3CQuad
 			return 0;
 		}
 
-		Vector2 cf1 = Vector2(c1.x, c1.y);
-		Vector2 cf2 = Vector2(c2.x, c2.y);
-
-		if ((cf1-cf2).Magnitude() < 500)
-		{
-			get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
-		}
+		// Vector2 cf1 = Vector2(c1.x, c1.y);
+		// Vector2 cf2 = Vector2(c2.x, c2.y);
+		//
+		// if ((cf1-cf2).Magnitude() < 500)
+		// {
+		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
+		// }
 
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
