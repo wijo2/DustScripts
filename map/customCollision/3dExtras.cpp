@@ -92,13 +92,11 @@ class d3EnemyBase : d3FlatObjectBase
 	{
 		d3FlatObjectBase::editor_step();
 		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
-		entity.x(fakeTrigger.ssp.x);
-		entity.y(fakeTrigger.ssp.y);
 	}
 	void step()
 	{
 		frame = uint(get_scene().time_in_level()*12/1000) % sprites.get_animation_length(sprite);
-		if (abs(fakeTrigger.ssp.z) > thickness)
+		if (@entity != null && abs(fakeTrigger.ssp.z) > thickness)
 		{
 			Vector2 cp = manager.cam.igCoords;
 			entity.x(cp.x+1000);
@@ -115,15 +113,17 @@ class d3EnemyBase : d3FlatObjectBase
 		if (abs(fakeTrigger.ssp.z) > thickness)
 		{
 			Vector2 cp = manager.cam.igCoords;
+			SetInactiveColour();
+			if (!is_playing()) { return; }
 			entity.x(cp.x+200);
 			entity.y(cp.y+200);
-			SetInactiveColour();
 		}
 		else
 		{
+			SetActiveColour();
+			if (!is_playing()) { return; }
 			entity.x(fakeTrigger.ssp.x);
 			entity.y(fakeTrigger.ssp.y);
-			SetActiveColour();
 		}
 	}
 
@@ -149,6 +149,7 @@ class d3EnemyBase : d3FlatObjectBase
 	void on_remove() override
 	{
 		d3FlatObjectBase::on_remove();
+		if (@entity == null) { return; }
 		get_scene().remove_entity(entity);
 	}
 }
