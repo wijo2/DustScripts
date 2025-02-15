@@ -63,7 +63,7 @@ class d3EndFlag : trigger_base
 	[hidden] d3FakeTrigger fakeTrigger;
 	[hidden] bool hasInit = false;
 
-	//ids
+	//ids of scripttriggers
 	[hidden] array<uint> attachedEntities;
 	array<entity@> entityHandles;
 
@@ -92,7 +92,7 @@ class d3EndFlag : trigger_base
 		{
 			// puts("id: " + entityId);
 			entity@ ent = @entity_by_id(attachedEntities[uint(i)]);
-			if (@ent == null)
+			if (@ent == null || @ent.as_scripttrigger() == null)
 			{
 				//this is going to happen on checkpoints if I ever add them
 				//but since stuff doesn't persist in play mode anyways it's fine
@@ -117,18 +117,18 @@ class d3EndFlag : trigger_base
 			{
 				d3EnemyBase@ flat = cast<d3EnemyBase>(script.flats[i]);
 				if (flat is null || flat.depth < -flat.thickness) { continue; }
-				if (!flat.drawRect.PointInside(mpos) || flat.entity is null) { continue; }
-				uint id = flat.entity.id();
+				if (!flat.drawRect.PointInside(mpos)) { continue; }
+				uint id = flat.self.id();
 				int ind = attachedEntities.find(id);
 				if (ind != -1)
 				{
 					attachedEntities.removeAt(ind);
-					ind = entityHandles.findByRef(flat.entity);
+					ind = entityHandles.findByRef(flat.self.as_entity());
 					if (ind != -1) { entityHandles.removeAt(ind); }
 				}
 				else
 				{
-					entityHandles.insertLast(flat.entity);
+					entityHandles.insertLast(flat.self.as_entity());
 					attachedEntities.insertLast(id);
 				}
 				break;
@@ -142,7 +142,9 @@ class d3EndFlag : trigger_base
 		bool end = entityHandles.length() != 0;
 		for(uint i = 0; i < entityHandles.length(); i++)
 		{
-			if (@entityHandles[i] != null && !entityHandles[i].destroyed())
+			if (@entityHandles[i] != null 
+				&& !(cast<d3EnemyBase>(entityHandles[i].as_scripttrigger().get_object()).entity is null) 
+			&& !(cast<d3EnemyBase>(entityHandles[i].as_scripttrigger().get_object()).entity.destroyed()))
 			{
 				end = false;
 				break;
@@ -166,7 +168,7 @@ class d3EndFlag : trigger_base
 			{
 				d3EnemyBase@ flat = cast<d3EnemyBase>(script.flats[i]);
 				if (flat is null || flat.depth < -flat.thickness) { continue; }
-				if (flat.entity is null || attachedEntities.find(flat.entityId) == -1) { continue; }
+				if (attachedEntities.find(flat.self.id()) == -1) { continue; }
 				s.draw_line_world(21, 1, fakeTrigger.ssp.x, fakeTrigger.ssp.y, 
 						 flat.fakeTrigger.ssp.x, flat.fakeTrigger.ssp.y, 3, 0xFFFF0000);
 			}	

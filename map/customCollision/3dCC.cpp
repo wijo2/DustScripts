@@ -252,7 +252,7 @@ class d3Quad
 
 	void UpdateMaxDist()
 	{
-		Vector3 c = Find3dCentre();
+		Vector3 c = (p1 + p2 + p3 + p4)/4;
 
 		Vector2 cf = Vector2(c.x, c.z);
 		Vector2 fp1 = Vector2(p1.x, p1.z);
@@ -956,12 +956,63 @@ class d3CQuad
 			return 0;
 		}
 
-		// Vector2 cf1 = Vector2(c1.x, c1.y);
-		// Vector2 cf2 = Vector2(c2.x, c2.y);
-		//
-		// if ((cf1-cf2).Magnitude() < 500)
+		Vector2 cf1 = Vector2(c1.x, c1.y);
+		Vector2 cf2 = Vector2(c2.x, c2.y);
+
+		int r = AnyPointUnder(o);
+		if (r != 0) { return -r; }
+		r = o.AnyPointUnder(this);
+		// return r;
+		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
+
+		r = AnyLineUnder(o);
+		if (r != 0) { return -r; }
+		return o.AnyLineUnder(this);
+	}
+
+	//since this is THE lag centre I'm making an extra copy for this to
+	//not fuck over fps even more with 5 million useless ifs
+	int opCmpDraw(d3CQuad@ o)
+	{
+		if (base.behind) { return 1; }
+		if (!base.drawn) { return 0; }
+		if (!o.base.drawn) { return 0; }
+		if (o.base.behind) { return -1; }
+
+		//I thought I could put 1 there, nope, don't do that c:
+		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
+
+		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
+		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
+
+		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
+		{
+			if (c1.z > c2.z)
+			{
+				return -1;
+			}
+			return 1;
+		}
+
+		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
+			|| abs(c1.y-c2.y) > base.maxDistanceVertical + o.base.maxDistanceVertical)
+		{
+			return 0;
+		}
+
+		Vector2 cf1 = Vector2(c1.x, c1.y);
+		Vector2 cf2 = Vector2(c2.x, c2.y);
+
+		get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
+		// get_scene().draw_rectangle_world(21,3,c1.x-10, c1.y-10, c1.x+10,c1.y+10, 0,0xFF0000FF); 
+		// get_scene().draw_rectangle_world(21,3,c2.x-10, c2.y-10, c2.x+10,c2.y+10, 0,0xFF0000FF); 
+		// if (c1.x-c2.x > 0)
 		// {
-		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
+		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x-base.maxDistanceHorisontal,c1.y,5,0xFFFFFF00);
+		// }
+		// else
+		// {
+		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x+base.maxDistanceHorisontal,c1.y,5,0xFFFFFF00);
 		// }
 
 		int r = AnyPointUnder(o);
@@ -970,10 +1021,7 @@ class d3CQuad
 		// return r;
 		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
 
-		// if ((cf1-cf2).Magnitude() < 500)
-		// {
-		// 	get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,5,0xFFFFFFFF);
-		// }
+		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,5,0xFFFFFFFF);
 
 		r = AnyLineUnder(o);
 		if (r != 0) { return -r; }
@@ -1012,6 +1060,62 @@ class Renderable
 		if (type == 0 && o.type == 0)
 		{
 			return quad.opCmp(o.quad);
+		}
+		if (type == 0)
+		{
+			return -o.opCmp(this);
+		}
+		//both flat
+		if (o.type != 0)
+		{
+			float d = flat.depth;
+			float od = o.flat.depth;
+
+			if (d < od) { return 1; }
+			if (d > od) { return -1; }
+			return 0;
+		}
+		//other quad, this one not
+
+		Vector2 rcen2 = (flat.drawRect.p1 + flat.drawRect.p2)/2;
+		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
+		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
+		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
+		Vector3 c2 = (o.quad.base.csp1+o.quad.base.csp2+o.quad.base.csp3+o.quad.base.csp4)/4;
+		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
+		{
+			if (c1.z > c2.z)
+			{
+				return -1;
+			}
+			return 1;
+		}
+		if (abs(c1.x-c2.x) > rmagx + o.quad.base.maxDistanceHorisontal
+			|| abs(c1.y-c2.y) > rmagy + o.quad.base.maxDistanceVertical) 
+		{
+			return 0;
+		}
+
+		d2Math::Rect drect = flat.drawRect; 
+		float depth = flat.depth; 
+		// puts("depth" + depth);
+		
+		int i = AnyPointRUnderQ(o.quad, drect, depth);
+		// puts("i1: " + (-i));
+		if (i != 0) { return -i; }
+		i = AnyPointQUnderR(o.quad, drect, depth);
+		// puts("i2: " + i);
+		return i;
+	}
+
+	//since this is THE lag centre I'm making an extra copy for this to
+	//not fuck over fps even more with 5 million useless ifs
+	int opCmpDraw(Renderable@ o)
+	{
+		//both quads
+		if (type == 0 && o.type == 0)
+		{
+			return quad.opCmpDraw(o.quad);
 		}
 		if (type == 0)
 		{
@@ -1205,7 +1309,14 @@ class d3Manager
 				nextRender.insertLast(renderables[i]);
 			}
 		}
-		BetterInsSort(nextRender);
+		if (!script.layerDebug)
+		{
+			BetterInsSort(nextRender);
+		}
+		else
+		{
+			BetterInsSortDraw(nextRender);
+		}
 	}
 
 	//plz be better plz be better plz be better (spoiler alert it's 1000x better c:)
@@ -1245,53 +1356,42 @@ class d3Manager
 		}
 	}
 
-	//I'll leave this here as backup for now at least
-	//yes I know I'm doing so much unnecessary copying and
-	//such but rn I don't care improve later if needed
-	//sorts smallest to largest
-	array<Renderable@> BadMergeSort(array<Renderable@> arr)
+	//since this is THE lag centre I'm making an extra copy for this to
+	//not fuck over fps even more with 5 million useless ifs
+	void BetterInsSortDraw(array<Renderable@>@ arr)
 	{
-		if (arr.length() <= 1) { return arr; }
-		uint middle = uint(floor(arr.length()/2));
-		array<Renderable@> arr1;
-		array<Renderable@> arr2;
-		for(uint i = 0; i < arr.length(); i++)
+		// puts("");
+		// puts("sort start!!!");
+		uint len = arr.length();
+		if (len < 2) { return; }
+		for (uint i = 0; i < len; i++)
 		{
-			if (i < middle)
+	   		Renderable@ e = arr[i];
+	   		bool success = false;
+			for (uint j = i; j >= 1; j--)
 			{
-				arr1.insertLast(arr[i]);
+				//I'll just use the raw int it's clearer honestly :p
+				int c = e.opCmpDraw(arr[j-1]); 
+				// puts("comparing old " + i + " to " + (j-1));
+				if (c <= 0)
+				{
+					// puts("moving " + (j-1) + " -> " + j);
+					@arr[j] = @arr[j-1];
+				}
+				else
+				{
+					// puts("setting old " + i + " -> " + j);
+					@arr[j] = @e;
+					success = true;
+					break;
+				}
 			}
-			else
+			if (!success)
 			{
-				arr2.insertLast(arr[i]);
+				// puts("new behindest old " + i + " ->  0");
+				@arr[0] = @e;
 			}
 		}
-		arr1 = BadMergeSort(arr1);
-		arr2 = BadMergeSort(arr2);
-		return Merge(arr1, arr2);
-	}
-
-	array<Renderable@> Merge(array<Renderable@> arr1, array<Renderable@> arr2)
-	{
-		array<Renderable@> ret;
-		uint i = 0;
-		uint j = 0;
-		uint tot = arr1.length() + arr2.length();
-		while (true)
-		{
-			if (i+j >= tot) { break; }
-			if (j >= arr2.length() || (i < arr1.length() && arr1[i] < arr2[j]))
-			{
-				ret.insertLast(arr1[i]);
-				i += 1;
-			}
-			else
-			{
-				ret.insertLast(arr2[j]);
-				j += 1;
-			}
-		}
-		return ret;
 	}
 
 	void Draw()

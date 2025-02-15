@@ -93,9 +93,10 @@ class script : script_base
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugPosY] int debugPosX;
 	[hidden] int debugPosY;
+	[text] bool layerDebug = false;
 
-	[text] bool showPlayArea;
-	[text] bool showCacheDebug;
+	[text] bool showPlayArea = false;
+	[text] bool showCacheDebug = false;
 
 	script() 
 	{

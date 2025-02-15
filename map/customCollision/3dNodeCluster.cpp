@@ -247,7 +247,9 @@ class d3NodeCluster : trigger_base
 			if (input.key_check_pressed_gvb(18) ||
 				(input.key_check_pressed_vk(0x41) && input.key_check_gvb(10) && selectedNodes.length() == 0))
 			{
-				AddNode(manager.cam.centre);
+				Vector3 mpos = Vector3(input.mouse_x_world(21), input.mouse_y_world(21), 0);
+				Vector3 centre = Vector3(manager.cam.igCoords.x, manager.cam.igCoords.y, 0);
+				AddNode(manager.cam.CamToWorldPos(mpos-centre));
 				canPreset = false;
 			}
 			//select node
@@ -356,6 +358,8 @@ class d3NodeCluster : trigger_base
 				SetActiveSidesAll();
 				manager.UpdateLooks(true);
 				canPreset = false;
+				//look I have no idea why but I just really don't care anymore
+				script.UpdateRotation(true);
 			}
 
 			//delete quad
@@ -378,6 +382,8 @@ class d3NodeCluster : trigger_base
 					quads.removeAt(bq);
 					quadNodes.removeAt(bq);
 					SetActiveSidesAll();
+					//look I have no idea why but I just really don't care anymore
+					script.UpdateRotation(true);
 				}
 			}
 

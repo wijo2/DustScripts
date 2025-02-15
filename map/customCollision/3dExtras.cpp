@@ -71,6 +71,10 @@ class d3EnemyBase : d3FlatObjectBase
 	[hidden] int entityId = -1;
 	sprites@ sprites;
 	string sprite;
+	//have to just do create sprites in editor
+	//cause fucking trigger radiai fuck triggers
+	string spritesName;
+	string entityName;
 	uint palette = 1;
 	float rotation = 0;
 	Vector2 scale = Vector2(1,1);
@@ -82,10 +86,35 @@ class d3EnemyBase : d3FlatObjectBase
 	{
 		@this.self = self;
 		self.editor_handle_size(0);
-		@sprites = entity.get_sprites();
+
+		if (is_playing())
+		{
+			if (entityId == -1) 
+			{
+				@entity = create_entity(entityName);
+				get_scene().add_entity(entity);
+				entityId = entity.id();
+				// puts("new " + entityId);
+			}
+			else
+			{
+				// puts("id: " + entityId);
+				@entity = @entity_by_id(uint(entityId));
+				if (@entity == null)
+				{
+					// puts("couldn't find");
+					@entity = create_entity(entityName);
+					get_scene().add_entity(entity);
+					entityId = entity.id();
+					// puts("new " + entityId);
+				}
+			}
+			entity.layer(17);
+		}
+		@sprites = @create_sprites();
+		sprites.add_sprite_set(spritesName);
 		d3FlatObjectBase::init(s, self.as_entity());
 		fakeTrigger.colour = 0xFF0000FF;
-		entity.layer(17);
 	}
 
 	void editor_step() override
@@ -114,14 +143,14 @@ class d3EnemyBase : d3FlatObjectBase
 		{
 			Vector2 cp = manager.cam.igCoords;
 			SetInactiveColour();
-			if (!is_playing()) { return; }
+			if (@entity == null) { return; }
 			entity.x(cp.x+200);
 			entity.y(cp.y+200);
 		}
 		else
 		{
 			SetActiveColour();
-			if (!is_playing()) { return; }
+			if (@entity == null) { return; }
 			entity.x(fakeTrigger.ssp.x);
 			entity.y(fakeTrigger.ssp.y);
 		}
@@ -139,7 +168,7 @@ class d3EnemyBase : d3FlatObjectBase
 
 	void Draw(scene@ s) override
 	{
-		if (entity.destroyed() || depth < -thickness) { return; }
+		if (depth < -thickness || (@entity != null && entity.destroyed())) { return; }
 		// return;
 		uint ncolour = script.ApplyFog(colour, depth);
 		sprites.draw_world(18, 1, sprite, frame, palette, fakeTrigger.ssp.x, 
