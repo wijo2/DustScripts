@@ -56,6 +56,8 @@ class script : script_base
 	//bools for up/down keys cause reasons
 	bool right90 = false;
 	bool left90 = false;
+	[text] int turnDelay = 6;
+	int turnDelayCounter = -1;
 	bool wasGrounded;
 
 	bool firstFrame = true;
@@ -335,18 +337,20 @@ void HandleDeathzone()
 		{
 			co.as_entity().time_warp(0);
 			co.as_hittable().freeze_frame_timer(0.1);
+			if (turnDelayCounter > 0) { turnDelayCounter--; }
 			if (!wasRotating)
 			{
 				wasGrounded = co.ground();
+				turnDelayCounter = turnDelay;
 			}
 			wasRotating = true;
 			//right
-			if (ca.input_x() & 0x2 != 0)
+			if (ca.input_x() & 0x2 != 0 && turnDelayCounter <= 0)
 			{
 				rotation += rotPerSec/60;
 			}
 			//left
-			if (ca.input_x() & 0x1 != 0)
+			if (ca.input_x() & 0x1 != 0 && turnDelayCounter <= 0)
 			{
 				rotation -= rotPerSec/60;
 			}
@@ -386,6 +390,7 @@ void HandleDeathzone()
 				wasRotating = false;
 				manager.UpdateCollision();
 				co.ground(wasGrounded);
+				turnDelayCounter = -1;
 			}
 		}
 	}

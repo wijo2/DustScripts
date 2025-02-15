@@ -165,7 +165,7 @@ class d3EnemyBase : d3FlatObjectBase
 	}
 	void SetInactiveColour()
 	{
-		colour = 0xFF888888;
+		colour = script.ApplyFog(0x88888888, depth);
 	}
 
 	void Draw(scene@ s) override

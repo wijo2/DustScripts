@@ -79,6 +79,8 @@ class d3Quad
 	Vector3 p4;
 	uint colour;
 	bool shaded = true;
+	//distance used for fog by spikes/dust
+	float closest;
 
 	//cached answer for shading
 	float fac1;
@@ -834,8 +836,8 @@ class d3CQuad
 		//I could make a loop and stuff but like this is literally easier so whatever
 		base.Draw(s, layer, sub_layer, manager.script);
 		if (base.behind) { return; }
-		uint sc = manager.script.spikeColour3d;
-		uint dc = manager.script.dustColour3d;
+		uint sc = manager.script.ApplyFog(manager.script.spikeColour3d, base.closest);
+		uint dc = manager.script.ApplyFog(manager.script.dustColour3d, base.closest);
 		if (spikeSides[0] && base.fac1 > 0)
 		{
 			s.draw_quad_world(layer, sub_layer, false, 

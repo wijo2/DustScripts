@@ -633,6 +633,7 @@ class d3NodeCluster : trigger_base
 		{
 			quads[i].collisionBase.base.colour = d2col;
 			quads[i].base.colour = d3col;
+			quads[i].base.closest = closest;
 			quads[i].base.simplerPointRelation = simplerLayering;
 			quads[i].base.lineComp = lineComp;
 			if (isConvex)
