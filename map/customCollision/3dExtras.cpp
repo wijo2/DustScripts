@@ -66,6 +66,8 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 
 class d3EnemyBase : d3FlatObjectBase
 {
+	[text] int layer = 18;
+	[text] int sub_layer = 1;
 	scripttrigger@ self;
 	entity@ entity;
 	[hidden] int entityId = -1;
@@ -171,7 +173,7 @@ class d3EnemyBase : d3FlatObjectBase
 		if (depth < -thickness || (@entity != null && entity.destroyed())) { return; }
 		// return;
 		uint ncolour = script.ApplyFog(colour, depth);
-		sprites.draw_world(18, 1, sprite, frame, palette, fakeTrigger.ssp.x, 
+		sprites.draw_world(layer, sub_layer, sprite, frame, palette, fakeTrigger.ssp.x, 
 					 fakeTrigger.ssp.y, rotation, scale.x, scale.y, ncolour);
 	}
 

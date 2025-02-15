@@ -116,7 +116,8 @@ class d3Quad
 	//optimisations
 	//2 far away things can be compared simpler
 	float maxDistanceHorisontal = 0;
-	float maxDistanceVertical = 0;
+	float maxDistanceUp = 0;
+	float maxDistanceDown = 0;
 	//idk for sure if this is a valid optimisation or if something breaks but it sure does save time
 	bool simplerPointRelation;
 	//things in same convex cluster don't need to be sorted
@@ -268,13 +269,50 @@ class d3Quad
 		 m = (cf-fp4).Magnitude();
 		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
 
-		maxDistanceVertical = abs(c.y-p1.y);
-		m = abs(c.y-p2.y);
-		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
-		m = abs(c.y-p3.y);
-		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
-		m = abs(c.y-p4.y);
-		if (m > maxDistanceVertical) { maxDistanceVertical = m; }
+		maxDistanceUp = 0;
+		maxDistanceDown = 0;
+		 m = c.y - p1.y;
+		if (m > maxDistanceUp) { maxDistanceUp = m; }
+		if (m < maxDistanceDown) { maxDistanceDown = m; }
+		 m = c.y - p2.y;
+		if (m > maxDistanceUp) { maxDistanceUp = m; }
+		if (m < maxDistanceDown) { maxDistanceDown = m; }
+		 m = c.y - p3.y;
+		if (m > maxDistanceUp) { maxDistanceUp = m; }
+		if (m < maxDistanceDown) { maxDistanceDown = m; }
+		 m = c.y - p4.y;
+		if (m > maxDistanceUp) { maxDistanceUp = m; }
+		if (m < maxDistanceDown) { maxDistanceDown = m; }
+		maxDistanceDown *= -1;
+	}
+
+	float MaxDistCamLeft()
+	{
+		Vector3 c = (csp1 + csp2 + csp3 + csp4)/4;
+		float ret = 0;
+		float m = c.x-csp1.x;
+		if (m > ret) { ret = m; }
+		 m = c.x-csp2.x;
+		if (m > ret) { ret = m; }
+		 m = c.x-csp3.x;
+		if (m > ret) { ret = m; }
+		 m = c.x-csp4.x;
+		if (m > ret) { ret = m; }
+		return ret;
+	}
+	float MaxDistCamRight()
+	{
+		Vector3 c = (csp1 + csp2 + csp3 + csp4)/4;
+		float ret = 0;
+		float m = csp1.x-c.x;
+		if (m > ret) { ret = m; }
+		 m = csp2.x-c.x;
+		if (m > ret) { ret = m; }
+		 m = csp3.x-c.x;
+		if (m > ret) { ret = m; }
+		 m = csp4.x-c.x;
+		if (m > ret) { ret = m; }
+		return ret;
 	}
 
 	//cam coords
@@ -941,6 +979,7 @@ class d3CQuad
 		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
 		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
 
+		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
@@ -951,11 +990,29 @@ class d3CQuad
 		}
 
 		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
-			|| abs(c1.y-c2.y) > base.maxDistanceVertical + o.base.maxDistanceVertical)
+			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown
+			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp)
 		{
 			return 0;
 		}
 
+		//medium dist checks
+		if (c1.x > c2.x)
+		{
+			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			if (c2.x-c1.x > base.MaxDistCamRight() + o.base.MaxDistCamLeft())
+			{
+				return 0;
+			}
+		}
+
+		//long checks :c
 		Vector2 cf1 = Vector2(c1.x, c1.y);
 		Vector2 cf2 = Vector2(c2.x, c2.y);
 
@@ -985,6 +1042,7 @@ class d3CQuad
 		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
 		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
 
+		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
@@ -995,15 +1053,34 @@ class d3CQuad
 		}
 
 		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
-			|| abs(c1.y-c2.y) > base.maxDistanceVertical + o.base.maxDistanceVertical)
+			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown
+			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp)
 		{
 			return 0;
 		}
 
+		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,3,0xAAFFFF00);
+		//medium dist checks
+		if (c1.x > c2.x)
+		{
+			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			if (c2.x-c1.x > base.MaxDistCamRight() + o.base.MaxDistCamLeft())
+			{
+				return 0;
+			}
+		}
+
+		//long checks :c
 		Vector2 cf1 = Vector2(c1.x, c1.y);
 		Vector2 cf2 = Vector2(c2.x, c2.y);
 
-		get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,3,0xAA0000FF);
+		get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,5,0xAA0000FF);
 		// get_scene().draw_rectangle_world(21,3,c1.x-10, c1.y-10, c1.x+10,c1.y+10, 0,0xFF0000FF); 
 		// get_scene().draw_rectangle_world(21,3,c2.x-10, c2.y-10, c2.x+10,c2.y+10, 0,0xFF0000FF); 
 		// if (c1.x-c2.x > 0)
@@ -1091,7 +1168,8 @@ class Renderable
 			return 1;
 		}
 		if (abs(c1.x-c2.x) > rmagx + o.quad.base.maxDistanceHorisontal
-			|| abs(c1.y-c2.y) > rmagy + o.quad.base.maxDistanceVertical) 
+			|| c1.y-c2.y > rmagy + o.quad.base.maxDistanceDown
+			|| c2.y-c1.y > rmagy + o.quad.base.maxDistanceUp) 
 		{
 			return 0;
 		}
@@ -1147,7 +1225,8 @@ class Renderable
 			return 1;
 		}
 		if (abs(c1.x-c2.x) > rmagx + o.quad.base.maxDistanceHorisontal
-			|| abs(c1.y-c2.y) > rmagy + o.quad.base.maxDistanceVertical) 
+			|| c1.y-c2.y > rmagy + o.quad.base.maxDistanceDown
+			|| c2.y-c1.y > rmagy + o.quad.base.maxDistanceUp) 
 		{
 			return 0;
 		}

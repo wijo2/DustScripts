@@ -34,6 +34,8 @@ class script : script_base
 	[hidden] float rotation;
 	[text] float startRot;
 	float oldRotation;
+	[text] bool enableDeathzone = false;
+	[text] float deathzoneHeight = 2000;
 
 	//should I just have added a method list? yes.
 	//am I too lazy to do that at this point? yes.
@@ -266,6 +268,7 @@ class script : script_base
 		UpdateRotation();
 		UpdatePlayArea();
 		CentraliseTriggers();
+		HandleDeathzone();
 	}
 
 	void CentraliseTriggers()
@@ -314,6 +317,14 @@ class script : script_base
 			manager.UpdateCollision();
 		}
 	}
+	
+void HandleDeathzone()
+{
+	if (!enableDeathzone) { return; }
+	controllable@ p = controller_controllable(uint(get_active_player()));
+	if (@p == null) { return; }
+	if (p.y() > deathzoneHeight) { p.as_dustman().kill(false); }
+}
 
 	void HandleGameplayRotation()
 	{

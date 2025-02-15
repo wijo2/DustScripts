@@ -5,6 +5,8 @@
 
 class d3Prop : d3FlatObjectBase, trigger_base
 {
+	[text] int layer = 18;
+	[text] int sub_layer = 1;
 	scripttrigger@ self;
 	sprites@ sprites;
 	[text] string spriteSet;
