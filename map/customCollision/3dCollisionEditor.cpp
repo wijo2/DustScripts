@@ -56,7 +56,7 @@ class script : script_base
 	//bools for up/down keys cause reasons
 	bool right90 = false;
 	bool left90 = false;
-	[text] int turnDelay = 6;
+	[text|tooltip:"frames after pressing taunt where smooth turn is disabled"] int turnDelay = 6;
 	int turnDelayCounter = -1;
 	bool wasGrounded;
 
