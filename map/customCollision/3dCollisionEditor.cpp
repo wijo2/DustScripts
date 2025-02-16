@@ -592,6 +592,7 @@ void HandleDeathzone()
 
 	void MakeDust(int n) 
 	{
+		if (n == 0) { return; }
 		Vector2 pos = manager.cam.igCoords + Vector2(5000, 5000);
 		int width = int(sqrt(n));
 		if (sqrt(n) - width > 0.01) { width += 1; } //round up while not fucking up square cases

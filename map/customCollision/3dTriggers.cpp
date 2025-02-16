@@ -183,7 +183,7 @@ class d3EndFlag : trigger_base
 	void on_remove()
 	{
 		fakeTrigger.DeleteSelf();
-		int i = script.flags.find(this);
+		int i = script.flags.findByRef(this);
 		if (i != -1)
 		{
 			script.flags.removeAt(i);
