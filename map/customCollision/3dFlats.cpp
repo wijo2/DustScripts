@@ -11,7 +11,7 @@ class d3Prop : d3FlatObjectBase, trigger_base
 	sprites@ sprites;
 	[text|tooltip:"name of sprite set"] string spriteSet;
 	[text|tooltip:"name of sprite"] string sprite;
-	[text|tooltip:"name of palette"] uint palette = 1;
+	[text|tooltip:"palette number"] uint palette = 1;
 	[text|tooltip:"2d rotation of sprite, layering doesn't\naccount for this so be careful."] float rotation = 0;
 	[text] float scaleX = 1;
 	[text] float scaleY = 1;
