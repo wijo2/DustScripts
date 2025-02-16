@@ -5,14 +5,14 @@ class fuckThis{}
 class d3NodeCluster : trigger_base 
 {
 	[hidden] bool hasInit = false;
-	[text] int layer;
-	[text] int sub_layer;
-	[colour,alpha] uint d2colour;
-	[colour,alpha] uint d3colour;
+	[text|tooltip:"what layer is drawn on, don't change in normal circumstances."] int layer;
+	[text|tooltip:"what sub layer is drawn on, don't change in normal circumstances."] int sub_layer;
+	[colour,alpha|tooltip:"colour of 2d slices"] uint d2colour;
+	[colour,alpha|tooltip:"colour of 3d shape"] uint d3colour;
 
-	[text] bool isConvex = true;
-	[text] bool simplerLayering = true;
-	[text] bool lineComp = false;
+	[text|tooltip:"disables sorting between cluster members.\nVery efficient but will cause layering problems\nif cluster isn't horisontally convex."] bool isConvex = true;
+	[text|tooltip:"enables an important optimisation that shouldn't\ncause problems but added this setting just in case\ncause I'm not 100% sure"] bool simplerLayering = true;
+	[text|tooltip:"enables line comparisons, this can fix a specific\nissue but is EXTREMELY SLOW.\nOnly use if you absolutely have to."] bool lineComp = false;
 
 	//when nodes are deleted they're just set to 0
 	//to preserve quad nodes so work around that c:

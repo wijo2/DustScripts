@@ -200,7 +200,7 @@ class d3TextTrigger : trigger_base
 	[hidden] d3FakeTrigger fakeTrigger;
 	[hidden] bool hasInit = false;
 	//no you don't get a visualisation fuck you deal with it
-	[text] float range = 1000;
+	[text|tooltip:"3d rangle of trigger"] float range = 1000;
 
 	[hidden] int ttId = -1;
 	entity@ tt;

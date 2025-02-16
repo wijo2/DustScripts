@@ -66,8 +66,8 @@ class d3FlatObjectBase : d3::d3FlatDrawable
 
 class d3EnemyBase : d3FlatObjectBase
 {
-	[text] int layer = 18;
-	[text] int sub_layer = 1;
+	[text|tooltip:"what layer is drawn on, don't change in normal circumstances."] int layer = 18;
+	[text|tooltip:"what sub layer is drawn on, don't change in normal circumstances."] int sub_layer = 1;
 	scripttrigger@ self;
 	entity@ entity;
 	[hidden] int entityId = -1;

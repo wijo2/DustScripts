@@ -10,21 +10,21 @@ class script : script_base
 	editor_api@ editor;
 
 	[label:"Aestethics"|option] int t1;
-	[colour,alpha] uint spikeColour = 0xFFFF0000;
-	[colour,alpha] uint dustColour = 0xFF00FF00;
+	[colour,alpha|label:"spikeColour2d"] uint spikeColour = 0xFFFF0000;
+	[colour,alpha|label:"dustColour2d"] uint dustColour = 0xFF00FF00;
+	[colour,alpha|label:"edgeColour2d"|tooltip:"colour of solid edges on 2d collision"] uint edgeColour = 0x11000000;
 	[colour,alpha] uint spikeColour3d = 0xCCFF0000;
 	[colour,alpha] uint dustColour3d = 0xCC00FF00;
-	[colour,alpha] uint edgeColour = 0x11000000;
-	[colour,alpha] uint default3dCol = 0xFFFFFFFF;
-	[colour,alpha] uint default2dCol = 0xBB888888;
+	[colour,alpha|tooltip:"assigned to new node clusters by default"] uint default3dCol = 0xFFFFFFFF;
+	[colour,alpha|tooltip:"assigned to new node clusters by default"] uint default2dCol = 0xBB888888;
 
-	[colour,alpha] uint fogColour = 0x66000000;
+	[colour,alpha|tooltip:"colour far away things converge to"] uint fogColour = 0x66000000;
 	//more = fog is further
-	[text] float fogDist = 500;
+	[text|tooltip:"controlls the starting distance as well as strength gain of fog"] float fogDist = 500;
 
 	[text] bool showCompass = true;
 	[text] bool showCompassGame = true;
-	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"] float compassPosX = 750;
+	[position,mode:world,layer:5,y:compassPosY|label:"compass pos"|tooltip:"I was lazy so this uses world coords, ctrl+x to 00 and set there"] float compassPosX = 750;
 	[hidden] float compassPosY = -320;
 	[slider,min:0,max:1000|label:"compass size"] float compassSize = 200;
 
@@ -32,9 +32,9 @@ class script : script_base
 	[label:"Map Settings"|option] int t2;
 	Vector2 oldCamPos;
 	[hidden] float rotation;
-	[text] float startRot;
+	[text|tooltip:"starting rotation in game and editor"] float startRot;
 	float oldRotation;
-	[text] bool enableDeathzone = false;
+	[text|tooltip:"enable a deathzone at a fixed height"] bool enableDeathzone = false;
 	[text] float deathzoneHeight = 2000;
 
 	//should I just have added a method list? yes.
@@ -70,11 +70,11 @@ class script : script_base
 	//0 = green, 1 = yellow, 2 = red
 	int currentDistCol = 0;
 
-	[text|label:"join distance"] float joinDist = 40;
+	[text|label:"join distance"|tooltip:"distance that node clusters can join at with ctrl+j"] float joinDist = 40;
 
 	[label:"Optimisation"|option] int t3;
 
-	[text] uint layerFrames = 1;
+	[text|tooltip:"only does layer sorting and node cluster side checks\nevery x frames, only applies to in game smooth turning"] uint layerFrames = 1;
 	uint layerFrameCounter;
 
 	//this was inherited from 2d editor so it's not a vector
@@ -92,15 +92,15 @@ class script : script_base
 	
 	[label:"Debugging"|option] int t4;
 	//debug
-	[text] bool quadDebug = false;
-	[text] bool extraQuadDebug = false;
+	[text|tooltip:"splits quads to easily see their shape\nhighly recommended when building collision"] bool quadDebug = false;
+	[text|tooltip:"forces every quad face in a node cluster to be visible.\nIf you need to use this turn off isConvex\nfor the quad you're working with."] bool extraQuadDebug = false;
 	array<d2Math::Rect> debugDraw;
 	[position,mode:world,layer:19,y:debugPosY] int debugPosX;
 	[hidden] int debugPosY;
-	[text] bool layerDebug = false;
+	[text|tooltip:"visualises med(yellow)/short(blue)/line(white) checks"] bool layerDebug = false;
 
-	[text] bool showPlayArea = false;
-	[text] bool showCacheDebug = false;
+	[text|tooltip:"shows 2d play area"] bool showPlayArea = false;
+	[text|tooltip:"shows occupied 2d grid squares"] bool showCacheDebug = false;
 
 	script() 
 	{

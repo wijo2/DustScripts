@@ -5,17 +5,17 @@
 
 class d3Prop : d3FlatObjectBase, trigger_base
 {
-	[text] int layer = 18;
-	[text] int sub_layer = 1;
+	[text|tooltip:"what layer is drawn on, don't change in normal circumstances."] int layer = 18;
+	[text|tooltip:"what sub layer is drawn on, don't change in normal circumstances."] int sub_layer = 1;
 	scripttrigger@ self;
 	sprites@ sprites;
-	[text] string spriteSet;
-	[text] string sprite;
-	[text] uint palette = 1;
-	[text] float rotation = 0;
+	[text|tooltip:"name of sprite set"] string spriteSet;
+	[text|tooltip:"name of sprite"] string sprite;
+	[text|tooltip:"name of palette"] uint palette = 1;
+	[text|tooltip:"2d rotation of sprite, layering doesn't\naccount for this so be careful."] float rotation = 0;
 	[text] float scaleX = 1;
 	[text] float scaleY = 1;
-	[colour,alpha] uint colour = 0xFFFFFFFF;
+	[colour,alpha|tooltip:"fog trigger like colour"] uint colour = 0xFFFFFFFF;
 
 	void init(script@ s, scripttrigger@ self)
 	{
