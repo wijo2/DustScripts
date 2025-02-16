@@ -651,11 +651,14 @@ class Vector3
 	}
 	Vector3 Normalised()
 	{
-		if (this.Magnitude() == 0) { return Vector3(); }
-		return this/Magnitude();
+		float mag = this.Magnitude();
+		if (mag == 0) { return Vector3(); }
+		return this/mag;
 	}
 	Vector3 Cross(Vector3@ o)
 	{
+		//I'm pretty sure the y component in this is the wrong way around
+		//but this works and the correct way doesn't so who am I to judge :p
 		return Vector3(y*o.z - z*o.y, z*o.x - x*o.z, x*o.y - y*o.x);
 	}
 	float Dot(Vector3@ o)

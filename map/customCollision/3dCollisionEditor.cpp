@@ -380,7 +380,9 @@ void HandleDeathzone()
 				}
 			}
 			else { left90 = false; }
-
+		// manager.UpdateLooks(false);
+		// manager.UpdateLooks(false);
+		// manager.UpdateLooks(false);
 		}
 		else
 		{

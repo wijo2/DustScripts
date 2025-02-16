@@ -100,6 +100,10 @@ class d3Quad
 	Vector2 pp3;
 	Vector2 pp4;
 
+	//centre so that it doesn't have to be recalculated every single time
+	//since it's already calced everywhere I'll just do a reference to this since that's a lot easier
+	Vector3 CamSpaceCentre;
+
 	array<bool> drawnSides(4);
 
 	//behind cam, don't draw
@@ -154,6 +158,10 @@ class d3Quad
 		//debug
 		// Vector2 cen = (pp1+pp2+pp3+pp4)/4;
 		// script.debugDraw.insertLast(d2Math::Rect(cen.x-20, cen.y-20, cen.x+20, cen.y+20));
+		// GetNormalVector(1);
+		// GetNormalVector(2);
+		// GetNormalVector(3);
+		// GetNormalVector(4);
 
 		if (!shaded)
 		{
@@ -239,12 +247,14 @@ class d3Quad
 		// puts("intersecting " + intersecting);
 		intersectionType = (behindc == 2);
 
+		CamSpaceCentre = (csp1+csp2+csp3+csp4)/4;
+
 		fac1 = GetSideFacing(1);
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
 
-
+		UpdateMaxDist();
 	}
 
 	void UpdateDrawn()
@@ -253,9 +263,10 @@ class d3Quad
 			|| (drawnSides[2] && fac3 > 0) || (drawnSides[3] && fac4 > 0));
 	}
 
+	//long dist checks
 	void UpdateMaxDist()
 	{
-		Vector3 c = (p1 + p2 + p3 + p4)/4;
+		Vector3@ c = (p1+p2+p3+p4)/4;
 
 		Vector2 cf = Vector2(c.x, c.z);
 		Vector2 fp1 = Vector2(p1.x, p1.z);
@@ -268,29 +279,30 @@ class d3Quad
 		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
 		m = (cf-fp3).Magnitude();
 		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
-		 m = (cf-fp4).Magnitude();
+		m = (cf-fp4).Magnitude();
 		if (m > maxDistanceHorisontal) { maxDistanceHorisontal = m; }
 
 		maxDistanceUp = 0;
 		maxDistanceDown = 0;
-		 m = c.y - p1.y;
+		m = c.y - p1.y;
 		if (m > maxDistanceUp) { maxDistanceUp = m; }
 		if (m < maxDistanceDown) { maxDistanceDown = m; }
-		 m = c.y - p2.y;
+		m = c.y - p2.y;
 		if (m > maxDistanceUp) { maxDistanceUp = m; }
 		if (m < maxDistanceDown) { maxDistanceDown = m; }
-		 m = c.y - p3.y;
+		m = c.y - p3.y;
 		if (m > maxDistanceUp) { maxDistanceUp = m; }
 		if (m < maxDistanceDown) { maxDistanceDown = m; }
-		 m = c.y - p4.y;
+		m = c.y - p4.y;
 		if (m > maxDistanceUp) { maxDistanceUp = m; }
 		if (m < maxDistanceDown) { maxDistanceDown = m; }
 		maxDistanceDown *= -1;
 	}
 
+	//med dist checks
 	float MaxDistCamLeft()
 	{
-		Vector3 c = (csp1 + csp2 + csp3 + csp4)/4;
+		Vector3@ c = @CamSpaceCentre;
 		float ret = 0;
 		float m = c.x-csp1.x;
 		if (m > ret) { ret = m; }
@@ -304,7 +316,7 @@ class d3Quad
 	}
 	float MaxDistCamRight()
 	{
-		Vector3 c = (csp1 + csp2 + csp3 + csp4)/4;
+		Vector3@ c = @CamSpaceCentre;
 		float ret = 0;
 		float m = csp1.x-c.x;
 		if (m > ret) { ret = m; }
@@ -313,6 +325,35 @@ class d3Quad
 		 m = csp3.x-c.x;
 		if (m > ret) { ret = m; }
 		 m = csp4.x-c.x;
+		if (m > ret) { ret = m; }
+		return ret;
+	}
+	//up = +z, down = -z
+	float MaxDistCamUp()
+	{
+		Vector3@ c = @CamSpaceCentre;
+		float ret = 0;
+		float m = csp1.z-c.z;
+		if (m > ret) { ret = m; }
+		 m = csp2.z-c.z;
+		if (m > ret) { ret = m; }
+		 m = csp3.z-c.z;
+		if (m > ret) { ret = m; }
+		 m = csp4.z-c.z;
+		if (m > ret) { ret = m; }
+		return ret;
+	}
+	float MaxDistCamDown()
+	{
+		Vector3@ c = @CamSpaceCentre;
+		float ret = 0;
+		float m = c.z-csp1.z;
+		if (m > ret) { ret = m; }
+		 m = c.z-csp2.z;
+		if (m > ret) { ret = m; }
+		 m = c.z-csp3.z;
+		if (m > ret) { ret = m; }
+		 m = c.z-csp4.z;
 		if (m > ret) { ret = m; }
 		return ret;
 	}
@@ -410,6 +451,7 @@ class d3Quad
 
 	Vector3 GetNormalVector(int side)
 	{
+		if (!drawnSides[side-1]) { return Vector3(0,0,1); }
 		array<Vector3> points(3);
 		switch (side)
 		{
@@ -435,9 +477,16 @@ class d3Quad
 			break;
 		}
 		//added some extra normalisation cause the numbers were getting massive -> lots of float impresicion
-		Vector3 dir = ((points[0]+points[1]+points[2])/3 - (csp1+csp2+csp3+csp4)/4).Normalised();
+		Vector3 dir = ((points[0]+points[1]+points[2])/3 - CamSpaceCentre).Normalised();
 		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]).Normalised();
-		return (norm*norm.Dot(dir)).Normalised();
+		norm = (norm*norm.Dot(dir)).Normalised();
+
+		//debug
+		// Vector3 c1 = (points[0]+points[1]+points[2])/3;
+		// get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x+norm.x*100,c1.y+norm.y*100,5,0xAA0000FF);
+		// get_scene().draw_rectangle_world(21,1,c1.x-10,c1.y-10,c1.x+10,c1.y+10,0,0xFF00FF00);
+
+		return norm;
 	}
 
 	//1 = point is under (more z), -1 = point is over (less z), 0 = point not inside
@@ -978,8 +1027,8 @@ class d3CQuad
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
 
-		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
-		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
+		Vector3@ c1 = @base.CamSpaceCentre;
+		Vector3@ c2 = @o.base.CamSpaceCentre;
 
 		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
@@ -999,6 +1048,20 @@ class d3CQuad
 		}
 
 		//medium dist checks
+		if (c1.z > c2.z)
+		{
+			if (c1.z-c2.z > base.MaxDistCamDown() + o.base.MaxDistCamUp())
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			if (c2.z-c1.z > base.MaxDistCamUp() + o.base.MaxDistCamDown())
+			{
+				return 1;
+			}
+		}
 		if (c1.x > c2.x)
 		{
 			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
@@ -1041,9 +1104,8 @@ class d3CQuad
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
 
-		Vector3 c1 = (base.csp1+base.csp2+base.csp3+base.csp4)/4;
-		Vector3 c2 = (o.base.csp1+o.base.csp2+o.base.csp3+o.base.csp4)/4;
-
+		Vector3@ c1 = @base.CamSpaceCentre;
+		Vector3@ c2 = @o.base.CamSpaceCentre;
 		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
 		{
@@ -1062,7 +1124,23 @@ class d3CQuad
 		}
 
 		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,3,0xAAFFFF00);
+		// get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y+base.maxDistanceDown,3,0xFF0000FF);
+		// get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y-base.maxDistanceUp,3,0xFF0000FF);
 		//medium dist checks
+		if (c1.z > c2.z)
+		{
+			if (c1.z-c2.z > base.MaxDistCamDown() + o.base.MaxDistCamUp())
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			if (c2.z-c1.z > base.MaxDistCamUp() + o.base.MaxDistCamDown())
+			{
+				return 1;
+			}
+		}
 		if (c1.x > c2.x)
 		{
 			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
@@ -1160,7 +1238,9 @@ class Renderable
 		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
 		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
 		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
-		Vector3 c2 = (o.quad.base.csp1+o.quad.base.csp2+o.quad.base.csp3+o.quad.base.csp4)/4;
+		Vector3@ c2 = @o.quad.base.CamSpaceCentre;
+
+		//long dist checks
 		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
@@ -1174,6 +1254,36 @@ class Renderable
 			|| c2.y-c1.y > rmagy + o.quad.base.maxDistanceUp) 
 		{
 			return 0;
+		}
+
+		//med distance checks
+		if (c1.z > c2.z)
+		{
+			if (c1.z-c2.z > o.quad.base.MaxDistCamUp())
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			if (c2.z-c1.z > o.quad.base.MaxDistCamDown())
+			{
+				return 1;
+			}
+		}
+		if (c1.x > c2.x)
+		{
+			if (c1.x-c2.x > rmagx + o.quad.base.MaxDistCamRight())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			if (c2.x-c1.x > rmagx + o.quad.base.MaxDistCamLeft())
+			{
+				return 0;
+			}
 		}
 
 		d2Math::Rect drect = flat.drawRect; 
@@ -1217,7 +1327,9 @@ class Renderable
 		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
 		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
 		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
-		Vector3 c2 = (o.quad.base.csp1+o.quad.base.csp2+o.quad.base.csp3+o.quad.base.csp4)/4;
+		Vector3@ c2 = @o.quad.base.CamSpaceCentre;
+
+		//long dist checks
 		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
 		{
 			if (c1.z > c2.z)
@@ -1232,6 +1344,40 @@ class Renderable
 		{
 			return 0;
 		}
+
+		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,3,0xAAFFFF00);
+
+		//med distance checks
+		if (c1.z > c2.z)
+		{
+			if (c1.z-c2.z > o.quad.base.MaxDistCamUp())
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			if (c2.z-c1.z > o.quad.base.MaxDistCamDown())
+			{
+				return 1;
+			}
+		}
+		if (c1.x > c2.x)
+		{
+			if (c1.x-c2.x > rmagx + o.quad.base.MaxDistCamRight())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			if (c2.x-c1.x > rmagx + o.quad.base.MaxDistCamLeft())
+			{
+				return 0;
+			}
+		}
+
+		get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,5,0xAA0000FF);
 
 		d2Math::Rect drect = flat.drawRect; 
 		float depth = flat.depth; 

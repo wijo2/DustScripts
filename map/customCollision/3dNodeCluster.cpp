@@ -727,10 +727,6 @@ class d3NodeCluster : trigger_base
 			q.base.p3 += (c-q.base.p3)/shrinkAmount;
 			q.base.p4 += (c-q.base.p4)/shrinkAmount;
 		}
-		for(uint i = 0; i < quads.length(); i++)
-		{
-			quads[i].base.UpdateMaxDist();
-		}
 	}
 
 	void SetActiveSidesAll()
