@@ -726,6 +726,7 @@ class d3NodeCluster : trigger_base
 			q.base.p2 += (c-q.base.p2)/shrinkAmount;
 			q.base.p3 += (c-q.base.p3)/shrinkAmount;
 			q.base.p4 += (c-q.base.p4)/shrinkAmount;
+			q.base.UpdateMaxDist();
 		}
 	}
 

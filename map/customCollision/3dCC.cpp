@@ -253,8 +253,6 @@ class d3Quad
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
-
-		UpdateMaxDist();
 	}
 
 	void UpdateDrawn()
