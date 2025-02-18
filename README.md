@@ -6,7 +6,7 @@ No dependencies at the moment.
 (I spent like 100-200h working on this so this better fucking catch on lol)
 
 ### Setup
-Add 3dCollisionEditor to your map (you need all scripts in map/customCollision except 2dCollisionEditor).
+Add 3dCollisionEditor to your map (you need all scripts in map/customCollision except 2dCollisionEditor). Don't copy from the map, I've already fixed a couple of important things.
 
 ### Important Limitations
 
