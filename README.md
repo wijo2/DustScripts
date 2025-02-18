@@ -6,7 +6,7 @@ No dependencies at the moment.
 (I spent like 100-200h working on this so this better fucking catch on lol)  
 
 ### Setup
-Add 3dCollisionEditor to your map (you need all scripts in map/customCollision except 2dCollisionEditor). Don't copy from the map, I've already fixed a couple of important things.  
+Add 3dCollisionEditor to your map (you need all scripts in map/customCollision except 2dCollisionEditor). Don't copy from the protodimensionetics map, I've already fixed a couple of important things.  
 
 ### Important Limitations
 
@@ -37,7 +37,7 @@ As long as middle mouse hotkeys are enabled in script, drag with middle mouse to
 
 ### using the "triggers"
 
-All objects in the script are added with a scripttrigger, though the moment you select the type of scripttrigger it should be the actual scripttrigger gets hidden and is replaced by a fake trigger. (this is due to the trigger load distance mentioned earlier). Importantly this means you can't interact with the triggers from the trigger menu. Instead you need to use the select menu. To move a trigger, drag it. To select a trigger, left click it. To delete a trigger, right click it. All triggers are 3d ones, which means that they are only visible in front of the camera and when you move them, they retain their distance from the camera and move in alignment with it.  
+All objects in the script are added with a scripttrigger, though the moment you select the type of scripttrigger it should be the actual scripttrigger gets hidden and is replaced by a fake trigger. (this is due to the trigger load distance mentioned earlier). Importantly this means you can't interact with the triggers from the trigger menu. Instead you need to use the select menu. To move a trigger, drag it. To select a trigger, left click it. To delete a trigger, right click it. All triggers are 3d ones, which means that they are only visible in front of the camera and when you move them, they retain their distance from the camera and move in alignment with it. Often when you place a trigger it's already technically behind the cam so you need to scroll down to see it if you want to.
 
 ### start pos
 
@@ -90,7 +90,7 @@ presets: currently keys 1-3 (more could be easily added, see extending section) 
 ctrl J: for every node of the NC, look through all other NCs' nodes and if one is within join distance (in script settings), set this node's position equal to the other's. note: this is a one time thing, if either is moved joining will have to be redone. Whenever you join 2 NCs, make sure to disable all the faces that are between them, this is important for maaaany reasons, from lag reduction, to layering correctness, to an active face inbetween looking stupid in 2d.  
 
 Building Collision  
-In order for your collision to be a continuous volume, every 2 quads that are next to each other must share 1 side. See this example clip of building a random small piece of collision for example: (I ran out of instant replay window so this start with me already having selected preset 1, sorry :p)  
+In order for your collision to be a continuous volume, every 2 quads that are next to each other must share 1 side. See this example clip of building a random small piece of collision for example: (I ran out of instant replay window so this starts with me already having selected preset 1, sorry :p)  
 https://www.youtube.com/watch?v=gLF6Dj6cu3g  
 In order for the NC to disable the inside faces they need to be shared between 2 quads, so if you have a "rectangle face" that you're adding your next quad to, be sure that that quad shares a side with one of the 2 quads that make up the rectangle. To do this, enable "quad debug" in script settings to be able to see where they are.  
 NEVER overlap collision. It will use expensive checks, won't even layer correctly after those, and will look really stupid.  
@@ -101,7 +101,7 @@ If and when you're building collision and suddenly it looks super weird and some
 
 first the settings:  
 
-IsConvex: this is on by default because 99% of the time you should build your collision in such a way that this can be on, though it is completely possible to unknowingly violate this rule. What this setting does is that it disables layering between the quads of the cluster, which is incredibly important because all checks between quads in a node cluster would usually be slow short checks (explained below). But what this means is that if you build a nodecluster in a way where, if looked at the right way, 2 visible faces might overlap, those faces have a 50/50 chance of being the wrong way arund. If you are in a situation where you need to have this kind of collision, you should have 2 NCs instead and join them with ctrl+j.  
+IsConvex: this is on by default because 99% of the time you should build your collision in such a way that this can be on, though it is completely possible to unknowingly violate this rule. What this setting does is that it disables layering between the quads of the cluster, which is incredibly important because all checks between quads in a node cluster would usually be slow short checks (explained below). But what this means is that if you build a nodecluster in a way where, if looked at the right way, 2 visible faces might overlap, those faces have a 50/50 chance of being the wrong way arund. If you are in a situation where you need to have this kind of collision, you should have 2 NCs instead and join them with ctrl+j. For example the collision I made in the earlier example video would not meet the requirements for this to be on.
 
 simplerLayering: as the tooltip says, this is a just-in-case setting if an optimisation doesn't hold up for some reason. Consult me if you think you might need to turn this off.  
 
@@ -123,7 +123,7 @@ The easiest things literally anyone can do is add enemies and node presets.
 
 enemies: go to 3dFlats.cpp, scroll down, copy paste one of the classes, change the strings, thickness and possibly vertical offset. if you want your enemy to move be sure to pick something that inherits from d3MovingEnemyBase. If you want custom behaviour however you are more than welcome to dabble in overriding stuff from the base class to make your own beatiful monstrosity  
 
-presets: go to 3dNodeCluster.cpp, search for "presets", second match should be over some if statements that are the presets. observe the pattern, copy paste another one, and set the 3d coordinates. note: the keycode for the number key n is 0x3n c:  
+presets: go to 3dNodeCluster.cpp, search for "presets", second match should be over some if statements that are the presets. observe the pattern, copy paste another one, and set the 3d coordinates. note: the keycode for the number key n is 0x3n. Also I recommend following my pattern of slightly offsetting the heights of the nodes since the script might behave weird with perfectly flat things.
 
 if you want to make something bigger new feel free to, if you want to utilise the editor tooling I recommend just adding another file, but if you want to start fresh with only the pure maths include 3dCC.cpp and get going, just look at the pre-existing implementations to learn what updates are needed for the objects and when (there are quite many, sorry but work should only be done when necesary :p)  
 
