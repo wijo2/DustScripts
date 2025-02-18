@@ -111,6 +111,7 @@ class d3EnemyBase : d3FlatObjectBase
 					// puts("new " + entityId);
 				}
 			}
+			puts("setting ent layer");
 			entity.layer(17);
 		}
 		@sprites = @create_sprites();
@@ -183,6 +184,93 @@ class d3EnemyBase : d3FlatObjectBase
 		if (@entity == null) { return; }
 		get_scene().remove_entity(entity);
 	}
+}
+
+class d3MovingEnemyBase : d3EnemyBase
+{
+	Vector2 oldPos;
+	//coords are weird so things look like they're inside the floor, use this to fix
+	float verticalOffset;
+	Vector3 deactivatedVelocity;
+	void init(script@ s, scripttrigger@ self) override
+	{
+		d3EnemyBase::init(s, self);
+		if (@entity == null) { return; }
+		if (@entity.as_controllable() != null)
+		{
+			manager.manager.additionalControllables.insertLast(entity.as_controllable());
+		}
+		else
+		{
+			puts(entity.type_name() + " is not controllable!!!!!!!");
+		}
+
+	}
+	void step() override
+	{
+		d3EnemyBase::step();
+		if (@entity == null) { return; }
+		if (abs(fakeTrigger.ssp.z) < thickness)
+		{
+			ActiveStep();
+		}
+		else
+		{
+			InactiveStep();
+		}
+	}
+
+	void ActiveStep()
+	{
+		Vector2 curPos = Vector2(entity.x(), entity.y());
+		if (oldPos == Vector2())
+		{
+			oldPos = curPos;
+			return;
+		}
+		Vector2 dif = curPos - oldPos;
+		if (dif != Vector2())
+		{
+			oldPos = curPos;
+			fakeTrigger.pos += manager.cam.CamToWorldDir(Vector3(dif.x,dif.y,0));
+			//sorry for this sin but also I don't care fuck you
+			fakeTrigger.UpdateRotation();
+		}
+	}
+
+	void InactiveStep() {}
+
+	void UpdateRotation() override
+	{
+		d3EnemyBase::UpdateRotation();
+		oldPos = Vector2();
+		if (@entity == null) { return; }
+		hittable@ hit = entity.as_hittable();
+		if (entity.destroyed() || @hit == null) { return; }
+		if (abs(depth) > thickness && deactivatedVelocity == Vector3())
+		{
+			deactivatedVelocity = manager.cam.CamToWorldDir(Vector3(hit.x_speed(), hit.y_speed(), 0));
+		}
+		else if (abs(depth) < thickness && deactivatedVelocity != Vector3())
+		{
+			Vector3 vel = manager.cam.WorldToCamDir(deactivatedVelocity);
+			hit.set_speed_xy(vel.x, vel.y);
+			deactivatedVelocity = Vector3();
+		}
+	}
+
+	//idk why but I'm unable to hide apples but this should be better anyways c:
+	void Draw(scene@ s)
+	{
+		if ((@entity != null && entity.destroyed()) || depth < -thickness) { return; }
+		if (depth > thickness || !is_playing())
+		{
+			uint ncolour = script.ApplyFog(colour, depth);
+			sprites.draw_world(layer, sub_layer, sprite, frame, palette, fakeTrigger.ssp.x, 
+					  fakeTrigger.ssp.y+verticalOffset, rotation, scale.x, scale.y, ncolour);
+		}
+	}
+
 }
 
 class d3FakeTrigger

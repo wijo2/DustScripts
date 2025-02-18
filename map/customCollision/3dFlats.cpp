@@ -61,8 +61,9 @@ class d3Prop : d3FlatObjectBase, trigger_base
 	}
 }
 
-//these are the most barebones enemies imaginable, but movement 
-//and stuff is totally possible with a little effort
+//add new enemies by just making a new class following the pattern c:
+//if you want new functionality override something from the chosen base class
+//or add it in the base class as long as it doesn't disturb existing functionality
 class d3ESmallPrism : d3EnemyBase, trigger_base
 {
 	void init(script@ s, scripttrigger@ self)
@@ -78,7 +79,7 @@ class d3ESmallPrism : d3EnemyBase, trigger_base
 
 class d3EBigPrism : d3EnemyBase, trigger_base
 {
-	void init(script@ s, scripttrigger@ self)
+	void init(script@ s, scripttrigger@ self) override
 	{
 		// get_scene().remove_entity(self.as_entity());
 		sprite = "airidle";
@@ -86,5 +87,18 @@ class d3EBigPrism : d3EnemyBase, trigger_base
 		entityName = "enemy_tutorial_hexagon";
 		thickness = 80;
 		d3EnemyBase::init(s, self);
+	}
+}
+
+class d3EApple : d3MovingEnemyBase, trigger_base
+{
+	void init(script@ s, scripttrigger@ self) override
+	{
+		sprite = "fall";
+		spritesName = "apple";
+		entityName = "hittable_apple";
+		thickness = 80;
+		verticalOffset = -20;
+		d3MovingEnemyBase::init(s, self);
 	}
 }

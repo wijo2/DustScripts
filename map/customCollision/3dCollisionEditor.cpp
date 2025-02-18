@@ -258,6 +258,7 @@ class script : script_base
 			UpdateRotation(true);
 			UpdateRotation(true);
 
+			manager.manager.SetCollisionHandlers();
 			manager.UpdateCollision();
 		}
 
@@ -336,6 +337,12 @@ void HandleDeathzone()
 		if (ca.input_taunt() != 0)
 		{
 			co.as_entity().time_warp(0);
+			for(uint i = 0; i < flats.length(); i++)
+			{
+				d3EnemyBase@ e = cast<d3EnemyBase>(flats[i]);
+				if (@e == null || @e.entity == null) { continue; }
+				e.entity.time_warp(0);
+			}
 			co.as_hittable().freeze_frame_timer(0.1);
 			if (turnDelayCounter > 0) { turnDelayCounter--; }
 			if (!wasRotating)
@@ -393,6 +400,12 @@ void HandleDeathzone()
 				manager.UpdateCollision();
 				co.ground(wasGrounded);
 				turnDelayCounter = -1;
+				for(uint i = 0; i < flats.length(); i++)
+				{
+					d3EnemyBase@ e = cast<d3EnemyBase>(flats[i]);
+					if (@e == null || @e.entity == null) { continue; }
+					e.entity.time_warp(1);
+				}
 			}
 		}
 	}

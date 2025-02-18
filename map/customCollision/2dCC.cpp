@@ -378,6 +378,11 @@ class CollisionManager
 		@collisionOverride = @CollisionOverride(this);
 		controllable@ player = controller_controllable(uint(get_active_player()));
 		player.set_collision_handler(collisionOverride, "CollisionCallback", 0);
+		SetCollisionHandlers();
+	}
+
+	void SetCollisionHandlers()
+	{
 		for (uint i = 0; i < additionalControllables.length(); i++)
 		{
 			additionalControllables[i].set_collision_handler(collisionOverride, "CollisionCallback", 0);
