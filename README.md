@@ -14,7 +14,7 @@ Trigger load distance
 Without going into unnecessary detail, being far away from the centre of the map is bad for various reasons. To remedy this I've made a hotkey, ctrl+x, which will warp you to the centre of the 2d coordinate system while keeping your 3d position the same. However because of the same limitation you can't do this too far out from the centre, and thus I've added an indicator to the bottom right that indicates how close to the edge you're getting. As a rule of thumb, whenever you see yellow just ctrl+x. If you're in the red you can't ctrl+x anymore.  
 If you go into play mode too far from the centre you're going to "lose your triggers" and everything will disappear. if this happens you can retrieve your triggers by going back to where you were when you lost them and then going back to the centre, but you should avoid this with this rule: ALWAYS CTRL+X BEFORE SAVING OR PLAYING, AND IF YOU DO LOSE YOUR TRIGGERS, DON'T SAVE BEFORE YOU'VE FOUND THEM AGAIN. Also to note, if you're making a map that mostly goes in 1 direction you might find that when you exit to the editor you're already in the red and finding the collision again is super annoying, so I'd recommend whenever you stop playing press tab 3 times to get back to the centre.  
 
-Lag
+Lag  
 While I spent like 5 days just optimising this script, it will still get laggy if you make your map too big. I will discuss ways to minimise lag later, but for now just know to not expect to make super big maps, as the script just can't handle that many renderable things. A lot of the optimisations are for the mapmaker to utilize, so be sure to read the optimisation section at the end before you start making your map.  
 
 ### Small Glossary
