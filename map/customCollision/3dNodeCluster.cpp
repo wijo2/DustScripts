@@ -451,26 +451,35 @@ class d3NodeCluster : trigger_base
 
 			if (qKey || wKey || eKey)
 			{
+				EnableAllChecks();
 				Vector3 mousePos = Vector3(input.mouse_x_world(21), input.mouse_y_world(21),0);
+				Vector2 mousePos2d = Vector2(input.mouse_x_world(21), input.mouse_y_world(21));
 				int best = -1;
 				for(uint i = 0; i < quads.length(); i++)
 				{
-					if (!quads[i].base.drawn || quads[i].base.behind) { continue; }
-					if (quads[i].base.PointRelation(mousePos) != 0)
+					if (!(quads[i].base.drawn || eKey) || quads[i].base.behind) { continue; }
+					if (quads[i].base.PointOverlaps(mousePos) != 0)
 					{
-						if (best == -1 || quads[i].opCmp(quads[best]) == 1)
+						puts("found one");
+						if (best == -1 || quads[i].opCmpForce(quads[best]) == 1)
 						{
+							if (eKey)
+							{
+								int side = quads[i].base.SideFromPoint(mousePos2d, eKey);
+								if (side == -1) { continue; }
+							}
+							puts("chose one");
 							best = i;
 						}
 					}
 				}
 				if (best != -1)
 				{
-					Vector2 mousePos2d = Vector2(
-						input.mouse_x_world(21), input.mouse_y_world(21));
+					puts("doing something maybe, e: " + eKey);
 					int side = quads[best].base.SideFromPoint(mousePos2d, eKey);
 					if (side != -1)
 					{
+						puts("def doing something");
 						array<uint> n = NodesFromSide(uint(best),uint(side));
 						if (qKey)
 						{
@@ -515,6 +524,7 @@ class d3NodeCluster : trigger_base
 						manager.UpdateLooks(true);
 					}
 				}
+				ResetChecks();
 			}
 
 			//presets
@@ -559,6 +569,26 @@ class d3NodeCluster : trigger_base
 		}
 		else { rotating = false; }
 		fakeTrigger.EditorStep();
+	}
+
+	void EnableAllChecks()
+	{
+		for(uint i = 0; i < quads.length(); i++)
+		{
+			quads[i].base.clusterId = -1;
+			quads[i].base.lineComp = true;
+			quads[i].base.simplerPointRelation = false;
+		}
+	}
+
+	void ResetChecks()
+	{
+		for(uint i = 0; i < quads.length(); i++)
+		{
+			quads[i].base.clusterId = self.id();
+			quads[i].base.lineComp = lineComp;
+			quads[i].base.simplerPointRelation = simplerLayering;
+		}
 	}
 
 	uint GetActiveNodeCount()

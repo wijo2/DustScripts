@@ -449,7 +449,6 @@ class d3Quad
 
 	Vector3 GetNormalVector(int side)
 	{
-		if (!drawnSides[side-1]) { return Vector3(0,0,1); }
 		array<Vector3> points(3);
 		switch (side)
 		{
@@ -479,7 +478,7 @@ class d3Quad
 		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]).Normalised();
 		norm = (norm*norm.Dot(dir)).Normalised();
 
-		//debug
+		// debug
 		// Vector3 c1 = (points[0]+points[1]+points[2])/3;
 		// get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x+norm.x*100,c1.y+norm.y*100,5,0xAA0000FF);
 		// get_scene().draw_rectangle_world(21,1,c1.x-10,c1.y-10,c1.x+10,c1.y+10,0,0xFF00FF00);
@@ -557,15 +556,13 @@ class d3Quad
 		return 0;
 	}
 
-	//which active side is this screen point on?
-	int SideFromPoint(Vector2 pos, bool allowDeactive = false)
+	uint PointOverlaps(Vector3 pos)
 	{
 		if (d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp2.x, csp2.y),
-				Vector2(csp3.x, csp3.y))
-				&& (drawnSides[0] || allowDeactive) && fac1 > 0)
+				Vector2(csp3.x, csp3.y)))
 		{
 			return 1;
 		}
@@ -573,28 +570,82 @@ class d3Quad
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp2.x, csp2.y),
-				Vector2(csp4.x, csp4.y))
-				&& (drawnSides[1] || allowDeactive) && fac2 > 0)
+				Vector2(csp4.x, csp4.y)))
 		{
-			return 2;
+			return 1;
 		}
-			if (d2Math::PointInTriangle(
+		if (d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp1.x, csp1.y),
 				Vector2(csp3.x, csp3.y),
-				Vector2(csp4.x, csp4.y))
-				&& (drawnSides[2] || allowDeactive) && fac3 > 0)
+				Vector2(csp4.x, csp4.y)))
+
 		{
-			return 3;
+			return 1;
 		}
 		if (d2Math::PointInTriangle(
 				Vector2(pos.x, pos.y),
 				Vector2(csp2.x, csp2.y),
 				Vector2(csp3.x, csp3.y),
-				Vector2(csp4.x, csp4.y))
-				&& (drawnSides[3] || allowDeactive) && fac4 > 0)
+				Vector2(csp4.x, csp4.y)))
+
 		{
-			return 4;
+			return 1;
+		}
+		return 0;
+	}
+
+
+	//which active side is this screen point on?
+	int SideFromPoint(Vector2 pos, bool allowDeactive = false)
+	{
+		if (d2Math::PointInTriangle(
+				pos,
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y)))
+		{
+			puts("overlaps 1 " + fac1);
+			if ((drawnSides[0] || allowDeactive) && fac1 > 0)
+			{
+				return 1;
+			}
+		}
+		if (d2Math::PointInTriangle(
+				pos,
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp4.x, csp4.y)))
+		{
+			puts("overlaps 2 " + fac2);
+			if ((drawnSides[1] || allowDeactive) && fac2 > 0)
+			{
+				return 2;
+			}
+		}
+			if (d2Math::PointInTriangle(
+				pos,
+				Vector2(csp1.x, csp1.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y)))
+		{
+			puts("overlaps 3 " + fac3);
+			if ((drawnSides[2] || allowDeactive) && fac3 > 0)
+			{
+				return 3;
+			}
+		}
+		if (d2Math::PointInTriangle(
+				pos,
+				Vector2(csp2.x, csp2.y),
+				Vector2(csp3.x, csp3.y),
+				Vector2(csp4.x, csp4.y)))
+		{
+			puts("overlaps 4 " + fac4);
+			if ((drawnSides[3] || allowDeactive) && fac4 > 0)
+			{
+				return 4;
+			}
 		}
 		return -1;
 	}
@@ -1082,8 +1133,7 @@ class d3CQuad
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		r = o.AnyPointUnder(this);
-		// return r;
-		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
+		if (r != 0) { return r; }
 
 		r = AnyLineUnder(o);
 		if (r != 0) { return -r; }
@@ -1154,7 +1204,7 @@ class d3CQuad
 			}
 		}
 
-		//long checks :c
+		//short checks :c
 		Vector2 cf1 = Vector2(c1.x, c1.y);
 		Vector2 cf2 = Vector2(c2.x, c2.y);
 
@@ -1177,6 +1227,26 @@ class d3CQuad
 		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
 
 		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,5,0xFFFFFFFF);
+
+		r = AnyLineUnder(o);
+		if (r != 0) { return -r; }
+		return o.AnyLineUnder(this);
+	}
+
+	//I hate doing this but I need to for re-enable side in node cluster
+	int opCmpForce(d3CQuad@ o)
+	{
+		Vector3@ c1 = @base.CamSpaceCentre;
+		Vector3@ c2 = @o.base.CamSpaceCentre;
+
+		Vector2 cf1 = Vector2(c1.x, c1.y);
+		Vector2 cf2 = Vector2(c2.x, c2.y);
+
+		int r = AnyPointUnder(o);
+		if (r != 0) { return -r; }
+		r = o.AnyPointUnder(this);
+		// return r;
+		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
 
 		r = AnyLineUnder(o);
 		if (r != 0) { return -r; }
