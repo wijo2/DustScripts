@@ -460,7 +460,7 @@ class d3NodeCluster : trigger_base
 					if (!(quads[i].base.drawn || eKey) || quads[i].base.behind) { continue; }
 					if (quads[i].base.PointOverlaps(mousePos) != 0)
 					{
-						puts("found one");
+						// puts("found one");
 						if (best == -1 || quads[i].opCmpForce(quads[best]) == 1)
 						{
 							if (eKey)
@@ -468,18 +468,18 @@ class d3NodeCluster : trigger_base
 								int side = quads[i].base.SideFromPoint(mousePos2d, eKey);
 								if (side == -1) { continue; }
 							}
-							puts("chose one");
+							// puts("chose one");
 							best = i;
 						}
 					}
 				}
 				if (best != -1)
 				{
-					puts("doing something maybe, e: " + eKey);
+					// puts("doing something maybe, e: " + eKey);
 					int side = quads[best].base.SideFromPoint(mousePos2d, eKey);
 					if (side != -1)
 					{
-						puts("def doing something");
+						// puts("def doing something");
 						array<uint> n = NodesFromSide(uint(best),uint(side));
 						if (qKey)
 						{
@@ -853,7 +853,9 @@ class d3NodeCluster : trigger_base
 	//this one and disable both of the sides
 	void DealWithSharedTrigs(uint quad)
 	{
-		UpdatePositions();
+		//let it be known that once upon a time I had this here for some godforsaken reason
+		//and it caused just so much lag like all of the fucking lag why bad wijo, bad, be ashamed
+		//UpdatePositions();
 		array<uint>@ q = quadNodes[quad];
 
 		array<uint> m1 = FindSharedTrig(q[0], q[1], q[2]);

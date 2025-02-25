@@ -124,6 +124,11 @@ class d3Quad
 	float maxDistanceHorisontal = 0;
 	float maxDistanceUp = 0;
 	float maxDistanceDown = 0;
+	//med dist checks
+	float maxDistanceLeft = 0;
+	float maxDistanceRight = 0;
+	float maxDistanceFront = 0;
+	float maxDistanceBack = 0;
 	//idk for sure if this is a valid optimisation or if something breaks but it sure does save time
 	bool simplerPointRelation;
 	//things in same convex cluster don't need to be sorted
@@ -258,6 +263,7 @@ class d3Quad
 		//where a quad is behind and drawn? and this fixes that, a tiny bit of extra work, unfortunate
 		//but pales in comparison to layer sort so I guess it's fine
 		UpdateDrawn();
+		UpdateMedDist();
 	}
 
 	void UpdateDrawn()
@@ -303,62 +309,55 @@ class d3Quad
 	}
 
 	//med dist checks
-	float MaxDistCamLeft()
+	//these used to be methods that were calculated
+	//each time so that's why the naming is a bit weird
+	void UpdateMedDist()
 	{
 		Vector3@ c = @CamSpaceCentre;
 		float ret = 0;
 		float m = c.x-csp1.x;
 		if (m > ret) { ret = m; }
-		 m = c.x-csp2.x;
+		m = c.x-csp2.x;
 		if (m > ret) { ret = m; }
-		 m = c.x-csp3.x;
+		m = c.x-csp3.x;
 		if (m > ret) { ret = m; }
-		 m = c.x-csp4.x;
+		m = c.x-csp4.x;
 		if (m > ret) { ret = m; }
-		return ret;
-	}
-	float MaxDistCamRight()
-	{
-		Vector3@ c = @CamSpaceCentre;
-		float ret = 0;
-		float m = csp1.x-c.x;
+		maxDistanceLeft = ret;
+
+		ret = 0;
+		m = csp1.x-c.x;
 		if (m > ret) { ret = m; }
-		 m = csp2.x-c.x;
+		m = csp2.x-c.x;
 		if (m > ret) { ret = m; }
-		 m = csp3.x-c.x;
+		m = csp3.x-c.x;
 		if (m > ret) { ret = m; }
-		 m = csp4.x-c.x;
+		m = csp4.x-c.x;
 		if (m > ret) { ret = m; }
-		return ret;
-	}
-	//up = +z, down = -z
-	float MaxDistCamUp()
-	{
-		Vector3@ c = @CamSpaceCentre;
-		float ret = 0;
-		float m = csp1.z-c.z;
+		maxDistanceRight = ret;
+
+		ret = 0;
+		m = csp1.z-c.z;
 		if (m > ret) { ret = m; }
-		 m = csp2.z-c.z;
+		m = csp2.z-c.z;
 		if (m > ret) { ret = m; }
-		 m = csp3.z-c.z;
+		m = csp3.z-c.z;
 		if (m > ret) { ret = m; }
-		 m = csp4.z-c.z;
+		m = csp4.z-c.z;
 		if (m > ret) { ret = m; }
-		return ret;
-	}
-	float MaxDistCamDown()
-	{
-		Vector3@ c = @CamSpaceCentre;
-		float ret = 0;
-		float m = c.z-csp1.z;
+		maxDistanceFront = ret;
+
+
+		ret = 0;
+		m = c.z-csp1.z;
 		if (m > ret) { ret = m; }
-		 m = c.z-csp2.z;
+		m = c.z-csp2.z;
 		if (m > ret) { ret = m; }
-		 m = c.z-csp3.z;
+		m = c.z-csp3.z;
 		if (m > ret) { ret = m; }
-		 m = c.z-csp4.z;
+		m = c.z-csp4.z;
 		if (m > ret) { ret = m; }
-		return ret;
+		maxDistanceBack = ret;
 	}
 
 	//cam coords
@@ -1102,28 +1101,28 @@ class d3CQuad
 		//medium dist checks
 		if (c1.z > c2.z)
 		{
-			if (c1.z-c2.z > base.MaxDistCamDown() + o.base.MaxDistCamUp())
+			if (c1.z-c2.z > base.maxDistanceBack + o.base.maxDistanceFront)
 			{
 				return -1;
 			}
 		}
 		else
 		{
-			if (c2.z-c1.z > base.MaxDistCamUp() + o.base.MaxDistCamDown())
+			if (c2.z-c1.z > base.maxDistanceFront + o.base.maxDistanceBack)
 			{
 				return 1;
 			}
 		}
 		if (c1.x > c2.x)
 		{
-			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
+			if (c1.x-c2.x > base.maxDistanceLeft + o.base.maxDistanceRight)
 			{
 				return 0;
 			}
 		}
 		else
 		{
-			if (c2.x-c1.x > base.MaxDistCamRight() + o.base.MaxDistCamLeft())
+			if (c2.x-c1.x > base.maxDistanceRight + o.base.maxDistanceLeft)
 			{
 				return 0;
 			}
@@ -1136,7 +1135,7 @@ class d3CQuad
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
 		r = o.AnyPointUnder(this);
-		if (r != 0) { return r; }
+		if ((!base.lineComp && !o.base.lineComp) || r != 0) { return r; }
 
 		r = AnyLineUnder(o);
 		if (r != 0) { return -r; }
@@ -1200,28 +1199,28 @@ class d3CQuad
 		//medium dist checks
 		if (c1.z > c2.z)
 		{
-			if (c1.z-c2.z > base.MaxDistCamDown() + o.base.MaxDistCamUp())
+			if (c1.z-c2.z > base.maxDistanceBack + o.base.maxDistanceFront)
 			{
 				return -1;
 			}
 		}
 		else
 		{
-			if (c2.z-c1.z > base.MaxDistCamUp() + o.base.MaxDistCamDown())
+			if (c2.z-c1.z > base.maxDistanceFront + o.base.maxDistanceBack)
 			{
 				return 1;
 			}
 		}
 		if (c1.x > c2.x)
 		{
-			if (c1.x-c2.x > base.MaxDistCamLeft() + o.base.MaxDistCamRight())
+			if (c1.x-c2.x > base.maxDistanceLeft + o.base.maxDistanceRight)
 			{
 				return 0;
 			}
 		}
 		else
 		{
-			if (c2.x-c1.x > base.MaxDistCamRight() + o.base.MaxDistCamLeft())
+			if (c2.x-c1.x > base.maxDistanceRight + o.base.maxDistanceLeft)
 			{
 				return 0;
 			}
@@ -1340,28 +1339,28 @@ class Renderable
 		//med distance checks
 		if (c1.z > c2.z)
 		{
-			if (c1.z-c2.z > o.quad.base.MaxDistCamUp())
+			if (c1.z-c2.z > o.quad.base.maxDistanceFront)
 			{
 				return -1;
 			}
 		}
 		else
 		{
-			if (c2.z-c1.z > o.quad.base.MaxDistCamDown())
+			if (c2.z-c1.z > o.quad.base.maxDistanceBack)
 			{
 				return 1;
 			}
 		}
 		if (c1.x > c2.x)
 		{
-			if (c1.x-c2.x > rmagx + o.quad.base.MaxDistCamRight())
+			if (c1.x-c2.x > rmagx + o.quad.base.maxDistanceRight)
 			{
 				return 0;
 			}
 		}
 		else
 		{
-			if (c2.x-c1.x > rmagx + o.quad.base.MaxDistCamLeft())
+			if (c2.x-c1.x > rmagx + o.quad.base.maxDistanceLeft)
 			{
 				return 0;
 			}
@@ -1431,28 +1430,28 @@ class Renderable
 		//med distance checks
 		if (c1.z > c2.z)
 		{
-			if (c1.z-c2.z > o.quad.base.MaxDistCamUp())
+			if (c1.z-c2.z > o.quad.base.maxDistanceFront)
 			{
 				return -1;
 			}
 		}
 		else
 		{
-			if (c2.z-c1.z > o.quad.base.MaxDistCamDown())
+			if (c2.z-c1.z > o.quad.base.maxDistanceBack)
 			{
 				return 1;
 			}
 		}
 		if (c1.x > c2.x)
 		{
-			if (c1.x-c2.x > rmagx + o.quad.base.MaxDistCamRight())
+			if (c1.x-c2.x > rmagx + o.quad.base.maxDistanceRight)
 			{
 				return 0;
 			}
 		}
 		else
 		{
-			if (c2.x-c1.x > rmagx + o.quad.base.MaxDistCamLeft())
+			if (c2.x-c1.x > rmagx + o.quad.base.maxDistanceLeft)
 			{
 				return 0;
 			}
