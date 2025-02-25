@@ -253,6 +253,11 @@ class d3Quad
 		fac2 = GetSideFacing(2);
 		fac3 = GetSideFacing(3);
 		fac4 = GetSideFacing(4);
+
+		//I'd prefer to not do this here but for whatever reason I'm getting cases
+		//where a quad is behind and drawn? and this fixes that, a tiny bit of extra work, unfortunate
+		//but pales in comparison to layer sort so I guess it's fine
+		UpdateDrawn();
 	}
 
 	void UpdateDrawn()
@@ -1068,10 +1073,8 @@ class d3CQuad
 	//return -1 if behind o
 	int opCmp(d3CQuad@ o)
 	{
-		if (base.behind) { return 1; }
-		if (!base.drawn) { return 0; }
-		if (!o.base.drawn) { return 0; }
-		if (o.base.behind) { return -1; }
+		//I used to check for behind and drawn here but those are filtered out
+		//in construction of nextRender so it's fine
 
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
@@ -1144,10 +1147,8 @@ class d3CQuad
 	//not fuck over fps even more with 5 million useless ifs
 	int opCmpDraw(d3CQuad@ o)
 	{
-		if (base.behind) { return 1; }
-		if (!base.drawn) { return 0; }
-		if (!o.base.drawn) { return 0; }
-		if (o.base.behind) { return -1; }
+		//I used to check for behind and drawn here but those are filtered out
+		//in construction of nextRender so it's fine
 
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
@@ -1172,8 +1173,30 @@ class d3CQuad
 		}
 
 		get_scene().draw_line_world(21,1,c1.x,c1.y,c2.x,c2.y,3,0xAAFFFF00);
-		// get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y+base.maxDistanceDown,3,0xFF0000FF);
-		// get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y-base.maxDistanceUp,3,0xFF0000FF);
+		if (manager.script.extraLayerDebug)
+		{
+			get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y+base.maxDistanceDown,4,0xFF00FFFF);
+			get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x,c1.y-base.maxDistanceUp,4,0xFFFF00FF);
+			get_scene().draw_rectangle_world(21,3,c1.x-10, c1.y-10, c1.x+10,c1.y+10, 0,0xFFFFFF00); 
+			get_scene().draw_rectangle_world(21,3,c2.x-10, c2.y-10, c2.x+10,c2.y+10, 0,0xFFFFFF00); 
+			if (c1.x-c2.x > 0)
+			{
+				get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x-base.maxDistanceHorisontal,c1.y,8,0xFFFF0000);
+			}
+			else
+			{
+				get_scene().draw_line_world(21,1,c1.x,c1.y,c1.x+base.maxDistanceHorisontal,c1.y,8,0xFFFF0000);
+			}
+			if (c2.x-c1.x > 0)
+			{
+				get_scene().draw_line_world(21,1,c2.x,c2.y,c2.x-base.maxDistanceHorisontal,c2.y,8,0xFF00FF00);
+			}
+			else
+			{
+				get_scene().draw_line_world(21,1,c2.x,c2.y,c2.x+base.maxDistanceHorisontal,c2.y,8,0xFF00FF00);
+			}
+		}
+
 		//medium dist checks
 		if (c1.z > c2.z)
 		{
@@ -1209,16 +1232,6 @@ class d3CQuad
 		Vector2 cf2 = Vector2(c2.x, c2.y);
 
 		get_scene().draw_line_world(21,2,c1.x,c1.y,c2.x,c2.y,5,0xAA0000FF);
-		// get_scene().draw_rectangle_world(21,3,c1.x-10, c1.y-10, c1.x+10,c1.y+10, 0,0xFF0000FF); 
-		// get_scene().draw_rectangle_world(21,3,c2.x-10, c2.y-10, c2.x+10,c2.y+10, 0,0xFF0000FF); 
-		// if (c1.x-c2.x > 0)
-		// {
-		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x-base.maxDistanceHorisontal,c1.y,5,0xFFFFFF00);
-		// }
-		// else
-		// {
-		// 	get_scene().draw_line_world(21,2,c1.x,c1.y,c1.x+base.maxDistanceHorisontal,c1.y,5,0xFFFFFF00);
-		// }
 
 		int r = AnyPointUnder(o);
 		if (r != 0) { return -r; }
@@ -1610,6 +1623,7 @@ class d3Manager
 		}
 		else
 		{
+			puts("render list len: " + nextRender.length());
 			BetterInsSortDraw(nextRender);
 		}
 	}

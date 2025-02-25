@@ -98,6 +98,7 @@ class script : script_base
 	[position,mode:world,layer:19,y:debugPosY] int debugPosX;
 	[hidden] int debugPosY;
 	[text|tooltip:"visualises med(yellow)/short(blue)/line(white) checks"] bool layerDebug = false;
+	[text|tooltip:"Visualises why med checks are happening\nby visualising maxDistHorisontal/up/down"] bool extraLayerDebug = false;
 
 	[text|tooltip:"shows 2d play area"] bool showPlayArea = false;
 	[text|tooltip:"shows occupied 2d grid squares"] bool showCacheDebug = false;

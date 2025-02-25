@@ -634,15 +634,19 @@ class d3NodeCluster : trigger_base
 	{
 		UpdateSelf();
 		fakeTrigger.UpdateRotation();
-		if (!force && deactiveFrameCounter < script.layerFrames) { deactiveFrameCounter++; return; }
+		if (!force && deactiveFrameCounter < script.layerFrames) 
+		{ 
+			deactiveFrameCounter++; 
+			return; 
+		}
 		deactiveFrameCounter = 0;
 		SetActiveSidesAll();
 	}
 
 	void editor_var_changed(var_info@ info)
 	{
-		SetActiveSidesAll();
 		UpdateSelf();
+		SetActiveSidesAll();
 		manager.UpdateLooks(true);
 	}
 
