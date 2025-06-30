@@ -24,6 +24,7 @@ class d3NodeCluster : trigger_base
 	[hidden] array<array<uint>> spikes;
 	[hidden] array<array<uint>> dust;
 	[hidden] array<array<uint>> deactivated;
+	[hidden] dictionary knownPairs; //stringy-fied (cause fuck AS) quad-index -> array of indecies of paired quads
 
 	//for dragging nodes
 	Vector2 oldMousePos;
@@ -332,6 +333,7 @@ class d3NodeCluster : trigger_base
 					nodes[selectedNodes[n]] = Vector3();
 				}
 				selectedNodes.resize(0);
+				PopulateKnownPairs();
 				SetActiveSidesAll();
 			}
 			//add quad
@@ -355,6 +357,7 @@ class d3NodeCluster : trigger_base
 				@nq.base.renderable = @r;
 				manager.renderables.insertLast(r);
 				UpdatePositions();
+				PopulateKnownPairs();
 				SetActiveSidesAll();
 				manager.UpdateLooks(true);
 				canPreset = false;
@@ -381,6 +384,7 @@ class d3NodeCluster : trigger_base
 					manager.RemoveRenderable(quads[bq].base.renderable);
 					quads.removeAt(bq);
 					quadNodes.removeAt(bq);
+					PopulateKnownPairs();
 					SetActiveSidesAll();
 					//look I have no idea why but I just really don't care anymore
 					script.UpdateRotation(true);
@@ -736,6 +740,7 @@ class d3NodeCluster : trigger_base
 			manager.allQuads.insertLast(@nq);
 		}
 		UpdatePositions();
+		PopulateKnownPairs();
 		SetActiveSidesAll();
 		ApplyTileEnts();
 		// puts("quads " + quads.length());
@@ -849,6 +854,77 @@ class d3NodeCluster : trigger_base
 		}
 	}
 
+	//took this out since it'd be repeated too much
+	void PlugInTrio(dictionary@ triosToQuads, uint i, string ts)
+	{
+		if (triosToQuads.exists(ts))
+		{
+			array<uint> arr = cast<array<uint>>(triosToQuads[ts]);
+			arr.insertLast(i);
+			triosToQuads[ts] = arr;
+		}
+		else	
+		{
+			array<uint> na = { i };
+			triosToQuads[ts] = na;
+		}
+
+	}
+	void PopulateKnownPairs()
+	{
+		//idk if there's a non-horrid way to do this but I don't care
+		dictionary empty;
+		knownPairs = empty;
+
+		//save quads for each tripplet
+		dictionary triosToQuads;
+		for(uint i = 0; i < quadNodes.length(); i++)
+		{
+			array<uint>@ q = @quadNodes[i];
+			PlugInTrio(@triosToQuads, i, q[0]+","+q[1]+","+q[2]);
+			PlugInTrio(@triosToQuads, i, q[0]+","+q[1]+","+q[3]);
+			PlugInTrio(@triosToQuads, i, q[0]+","+q[2]+","+q[3]);
+			PlugInTrio(@triosToQuads, i, q[1]+","+q[2]+","+q[3]);
+		}
+		//dump the data into known pairs
+		array<string>@ keys = triosToQuads.getKeys();
+		for(uint i = 0; i < keys.length(); i++)
+		{
+			array<uint> qlist = cast<array<uint>>(triosToQuads[keys[i]]);
+			for(uint j = 0; j < qlist.length(); j++)
+			{
+				string qs = ""+qlist[j];
+				array<uint> qstoadd;
+				if (knownPairs.exists(qs))
+				{
+					for(uint l = 0; l < qlist.length(); l++)
+					{
+						if (l == j) { continue; }
+						if (cast<array<uint>>(knownPairs[qs]).find(qlist[l]) < 0)
+						{
+							array<uint> arr = cast<array<uint>>(knownPairs[qs]);
+							arr.insertLast(qlist[l]);
+							knownPairs[qs] = arr;
+						}
+					}
+				}
+				else	
+				{
+					array<uint> nl;
+					for(uint l = 0; l < qlist.length(); l++)
+					{
+						if (l == j) { continue; }
+						if (nl.find(qlist[l]) < 0)
+						{
+							nl.insertLast(qlist[l]);
+						}
+					}
+					knownPairs[qs] = nl;
+				}
+			}
+		}
+	}
+
 	//finds all other quads that share a trig with
 	//this one and disable both of the sides
 	void DealWithSharedTrigs(uint quad)
@@ -856,93 +932,56 @@ class d3NodeCluster : trigger_base
 		//let it be known that once upon a time I had this here for some godforsaken reason
 		//and it caused just so much lag like all of the fucking lag why bad wijo, bad, be ashamed
 		//UpdatePositions();
-		array<uint>@ q = quadNodes[quad];
 
-		array<uint> m1 = FindSharedTrig(q[0], q[1], q[2]);
-		array<uint> m2 = FindSharedTrig(q[0], q[1], q[3]);
-		array<uint> m3 = FindSharedTrig(q[0], q[2], q[3]);
-		array<uint> m4 = FindSharedTrig(q[1], q[2], q[3]);
-		// puts("m1: " + m1.length());
-		// puts("m2: " + m2.length());
-		// puts("m3: " + m3.length());
-		// puts("m4: " + m4.length());
+		//old slow bullshit
+		// array<uint> m1 = FindSharedTrig(q[0], q[1], q[2]);
+		// array<uint> m2 = FindSharedTrig(q[0], q[1], q[3]);
+		// array<uint> m3 = FindSharedTrig(q[0], q[2], q[3]);
+		// array<uint> m4 = FindSharedTrig(q[1], q[2], q[3]);
 
-		if (m1.length() > 1)
+		array<uint> m = cast<array<uint>>(knownPairs[quad+""]);
+		
+		for(uint i = 0; i < m.length(); i++)
 		{
-			bool draw = false;
-			for (uint i = 0; i < m1.length(); i++)
-			{
-				int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
-				if (side < 0) { continue; }
-				quads[m1[i]].activeSides[side-1] = false;
-				if (quads[m1[i]].base.behind) { draw = true; }
-			}
-			if (!draw)
-			{
-				for (uint i = 0; i < m1.length(); i++)
-				{
-					int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
-					quads[m1[i]].base.drawnSides[side-1] = false;
-				}
-			}
+			array<uint> t = SharedTrig(quad, m[i]);
+			int side = SideFromNodes(quad, t[0],t[1],t[2]);
+			if (side < 0) { continue; }
+			quads[quad].activeSides[side-1] = false;
+			if (!quads[m[i]].base.behind) { quads[quad].base.drawnSides[side-1] = false; }
 		}
-		if (m2.length() > 1)
-		{
-			bool draw = false;
-			for (uint i = 0; i < m2.length(); i++)
-			{
-				int side = SideFromNodes(m2[i], q[0], q[1], q[3]);
-				if (side < 0) { continue; }
-				quads[m2[i]].activeSides[side-1] = false;
-				if (quads[m2[i]].base.behind) { draw = true; }
-			}
-			if (!draw)
-			{
-				for (uint i = 0; i < m2.length(); i++)
-				{
-					int side = SideFromNodes(m2[i], q[0], q[1], q[3]);
-					quads[m2[i]].base.drawnSides[side-1] = false;
-				}
-			}
-		}
-		if (m3.length() > 1)
-		{
-			bool draw = false;
-			for (uint i = 0; i < m3.length(); i++)
-			{
-				int side = SideFromNodes(m3[i], q[0], q[2], q[3]);
-				if (side < 0) { continue; }
-				quads[m3[i]].activeSides[side-1] = false;
-				if (quads[m3[i]].base.behind) { draw = true; }
-			}
-			if (!draw)
-			{
-				for (uint i = 0; i < m3.length(); i++)
-				{
-					int side = SideFromNodes(m3[i], q[0], q[2], q[3]);
-					quads[m3[i]].base.drawnSides[side-1] = false;
-				}
-			}
-		}
-		if (m4.length() > 1)
-		{
-			bool draw = false;
-			for (uint i = 0; i < m4.length(); i++)
-			{
-				int side = SideFromNodes(m4[i], q[1], q[2], q[3]);
-				if (side < 0) { continue; }
-				quads[m4[i]].activeSides[side-1] = false;
-				if (quads[m4[i]].base.behind) { draw = true; }
-			}
-			if (!draw)
-			{
-				for (uint i = 0; i < m4.length(); i++)
-				{
-					int side = SideFromNodes(m4[i], q[1], q[2], q[3]);
-					quads[m4[i]].base.drawnSides[side-1] = false;
-				}
-			}
-		}
+
+		//preserving this old piece for debugging purposes (for future reference,
+		//there were 4 of these, 1 for every mx defined above)
+		// bool draw = false;
+		// for (uint i = 0; i < m1.length(); i++)
+		// {
+		// 	int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
+		// 	if (side < 0) { continue; }
+		// 	quads[m1[i]].activeSides[side-1] = false;
+		// 	if (quads[m1[i]].base.behind) { draw = true; }
+		// }
+		// if (!draw)
+		// {
+		// 	for (uint i = 0; i < m1.length(); i++)
+		// 	{
+		// 		int side = SideFromNodes(m1[i], q[0], q[1], q[2]);
+		// 		quads[m1[i]].base.drawnSides[side-1] = false;
+		// 	}
+		// }
+	}
+
+	array<uint> SharedTrig(uint q1, uint q2)
+	{
+		array<uint> trig;
+		array<uint>@ qn1 = @quadNodes[q1];
+		array<uint>@ qn2 = @quadNodes[q2];
+		if (qn2.find(qn1[0]) >= 0) { trig.insertLast(qn1[0]); }
+		if (qn2.find(qn1[1]) >= 0) { trig.insertLast(qn1[1]); }
+		if (qn2.find(qn1[2]) >= 0) { trig.insertLast(qn1[2]); }
+		if (qn2.find(qn1[3]) >= 0) { trig.insertLast(qn1[3]); }
+		array<uint> narr;
+		if (trig.length() != 3) { return narr; }
+		return trig;
 	}
 
 	void ResetAllSides()
@@ -1018,7 +1057,7 @@ class d3NodeCluster : trigger_base
 		}
 		return -1;
 	}
-
+	
 	array<uint> FindSharedTrig(uint n1, uint n2, uint n3)
 	{
 		array<uint> ret;
