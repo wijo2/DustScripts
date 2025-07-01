@@ -1092,8 +1092,8 @@ class d3CQuad
 		}
 
 		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
-			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown
-			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp)
+			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown - 5
+			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp - 5)
 		{
 			return 0;
 		}
@@ -1165,8 +1165,8 @@ class d3CQuad
 		}
 
 		if (abs(c1.x-c2.x) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal
-			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown
-			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp)
+			|| c1.y-c2.y > base.maxDistanceUp + o.base.maxDistanceDown - 5
+			|| c2.y-c1.y > base.maxDistanceDown + o.base.maxDistanceUp - 5)
 		{
 			return 0;
 		}
