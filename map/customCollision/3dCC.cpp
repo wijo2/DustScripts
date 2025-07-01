@@ -102,7 +102,7 @@ class d3Quad
 
 	//centre so that it doesn't have to be recalculated every single time
 	//since it's already calced everywhere I'll just do a reference to this since that's a lot easier
-	Vector3 CamSpaceCentre;
+	Vector3 camSpaceCentre;
 
 	array<bool> drawnSides(4);
 
@@ -252,7 +252,7 @@ class d3Quad
 		// puts("intersecting " + intersecting);
 		intersectionType = (behindc == 2);
 
-		CamSpaceCentre = (csp1+csp2+csp3+csp4)/4;
+		camSpaceCentre = (csp1+csp2+csp3+csp4)/4;
 
 		fac1 = GetSideFacing(1);
 		fac2 = GetSideFacing(2);
@@ -269,7 +269,8 @@ class d3Quad
 	void UpdateDrawn()
 	{
 		drawn = !behind && ((drawnSides[0] && fac1 > 0) || (drawnSides[1] && fac2 > 0) 
-			|| (drawnSides[2] && fac3 > 0) || (drawnSides[3] && fac4 > 0));
+			|| (drawnSides[2] && fac3 > 0) || (drawnSides[3] && fac4 > 0))
+		&& camSpaceCentre.z < 8000;
 	}
 
 	//long dist checks
@@ -313,7 +314,7 @@ class d3Quad
 	//each time so that's why the naming is a bit weird
 	void UpdateMedDist()
 	{
-		Vector3@ c = @CamSpaceCentre;
+		Vector3@ c = @camSpaceCentre;
 		float ret = 0;
 		float m = c.x-csp1.x;
 		if (m > ret) { ret = m; }
@@ -478,7 +479,7 @@ class d3Quad
 			break;
 		}
 		//added some extra normalisation cause the numbers were getting massive -> lots of float impresicion
-		Vector3 dir = ((points[0]+points[1]+points[2])/3 - CamSpaceCentre).Normalised();
+		Vector3 dir = ((points[0]+points[1]+points[2])/3 - camSpaceCentre).Normalised();
 		Vector3 norm = (points[0] - points[1]).Cross(points[2] - points[1]).Normalised();
 		norm = (norm*norm.Dot(dir)).Normalised();
 
@@ -1078,8 +1079,8 @@ class d3CQuad
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
 
-		Vector3@ c1 = @base.CamSpaceCentre;
-		Vector3@ c2 = @o.base.CamSpaceCentre;
+		Vector3@ c1 = @base.camSpaceCentre;
+		Vector3@ c2 = @o.base.camSpaceCentre;
 
 		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
@@ -1152,8 +1153,8 @@ class d3CQuad
 		//I thought I could put 1 there, nope, don't do that c:
 		if (base.clusterId != -1 && base.clusterId == o.base.clusterId) { return 0; }
 
-		Vector3@ c1 = @base.CamSpaceCentre;
-		Vector3@ c2 = @o.base.CamSpaceCentre;
+		Vector3@ c1 = @base.camSpaceCentre;
+		Vector3@ c2 = @o.base.camSpaceCentre;
 		//long dist checks
 		if (abs(c1.z-c2.z) > base.maxDistanceHorisontal + o.base.maxDistanceHorisontal)
 		{
@@ -1248,8 +1249,8 @@ class d3CQuad
 	//I hate doing this but I need to for re-enable side in node cluster
 	int opCmpForce(d3CQuad@ o)
 	{
-		Vector3@ c1 = @base.CamSpaceCentre;
-		Vector3@ c2 = @o.base.CamSpaceCentre;
+		Vector3@ c1 = @base.camSpaceCentre;
+		Vector3@ c2 = @o.base.camSpaceCentre;
 
 		Vector2 cf1 = Vector2(c1.x, c1.y);
 		Vector2 cf2 = Vector2(c2.x, c2.y);
@@ -1318,7 +1319,7 @@ class Renderable
 		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
 		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
 		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
-		Vector3@ c2 = @o.quad.base.CamSpaceCentre;
+		Vector3@ c2 = @o.quad.base.camSpaceCentre;
 
 		//long dist checks
 		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
@@ -1407,7 +1408,7 @@ class Renderable
 		Vector3 c1 = Vector3(rcen2.x, rcen2.y, flat.depth);
 		float rmagx = abs(rcen2.x - flat.drawRect.p1.x);
 		float rmagy = abs(rcen2.y - flat.drawRect.p1.y);
-		Vector3@ c2 = @o.quad.base.CamSpaceCentre;
+		Vector3@ c2 = @o.quad.base.camSpaceCentre;
 
 		//long dist checks
 		if (abs(c1.z-c2.z) > o.quad.base.maxDistanceHorisontal)
