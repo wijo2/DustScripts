@@ -267,6 +267,7 @@ class RankedTrigger : SpeedcheckTrigger
 
 	bool beat = false;
 	bool uiVisible = false;
+	float uiInteractionTimer = 0;
 	int currentMedal = 0;
 
 	void draw(float fuckYouRandomPerson)
@@ -299,6 +300,11 @@ class RankedTrigger : SpeedcheckTrigger
 	void step()
 	{
 		if (!uiVisible) { return; }
+		if (uiInteractionTimer > 0)
+		{
+			uiInteractionTimer -= 1.0/60.0;
+			return;
+		}
 		entity@ e = controller_entity(0);
 		if (@e == null) { return; }
 		dustman@ d;
@@ -339,6 +345,7 @@ class RankedTrigger : SpeedcheckTrigger
 			return;
 		}
 		uiVisible = true;
+		uiInteractionTimer = 0.3;
 		// script.disableUi = true;
 		get_scene().time_warp(0.02);
 		currentMedal = 1;
