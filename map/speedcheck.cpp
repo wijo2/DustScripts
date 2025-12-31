@@ -345,3 +345,48 @@ class RankedTrigger : SpeedcheckTrigger
 		if (speed >= silverSpeed) { currentMedal = 2; }
 	}
 }
+
+class CustomDeathzone : trigger_base, callback_base
+{
+	script@ script;
+	scripttrigger@ self;
+
+	[position,mode:world,layer:21,y:spawnY] float spawnX;
+	[hidden] float spawnY;
+	
+	float spHSize = 20;
+
+	void init(script@ s, scripttrigger@ self)
+	{
+		@script = @s;
+		@this.self = @self;
+		self.editor_show_radius(true);
+	}
+
+	void editor_init(script@ s, scripttrigger@ self)
+	{
+		self.square(true);
+		self.radius(100);
+		self.height(100);
+	}
+
+	void draw(float fuckYouRandomPerson)
+	{
+		scene@ s = get_scene();
+		const float hh = self.height(); //halfheight
+		const float hw = self.radius();
+		const uint colour = 0x50ff0000;
+		s.draw_rectangle_world(21, 1, self.x() - hw, self.y() - hh, self.x() + hw, self.y() + hh, 0, colour);
+	}
+
+	void editor_draw(float lolxd) { 
+		draw(lolxd);
+		get_scene().draw_rectangle_world(21, 1, spawnX-spHSize, spawnY-spHSize, spawnX+spHSize, spawnY+spHSize, 45, 0xffff0000);
+	}
+
+	void activate(controllable@ c)
+	{
+		if (@c.as_dustman() == null) { return; }
+		script.Reset(spawnX, spawnY);
+	}
+}
