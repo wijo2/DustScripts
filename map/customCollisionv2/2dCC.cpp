@@ -1,0 +1,330 @@
+#include "mathHelper.cpp";
+#include "2dCollisionOverride.cpp";
+
+namespace d2
+{
+
+class d2Quad
+{
+	Vector2 p1;
+	Vector2 p2;
+	Vector2 p3;
+	Vector2 p4;
+	uint colour;
+
+	d2Quad()
+	{
+		p1 = Vector2();
+		p2 = Vector2();
+		p3 = Vector2();
+		p4 = Vector2();
+	}
+
+	d2Quad(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, uint colour)
+	{
+		this.p1 = p1;
+		this.p2 = p2;
+		this.p3 = p3;
+		this.p4 = p4;
+		this.colour = colour;
+	}
+
+	void Draw(scene@ s, uint layer, uint sub_layer)
+	{
+		if (colour == 0x00000000) { return; }
+		s.draw_quad_world(layer, sub_layer, false, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, colour, colour, colour, colour);
+	}
+
+	//does not work me dumb
+	bool IsInside(Vector2 pos)
+	{
+		array<float> intersections;
+
+		d2Math::LineFunc l1 = d2Math::LineFunc(p1, p2);
+		l1.SetBounds(p1, p2);
+		if (l1.IsWithinBounds(Vector2(l1.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l1.GetRevValue(pos.y)); }
+		d2Math::LineFunc l2 = d2Math::LineFunc(p2, p3);
+		l2.SetBounds(p2, p3);
+		if (l2.IsWithinBounds(Vector2(l2.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l2.GetRevValue(pos.y)); }
+		d2Math::LineFunc l3 = d2Math::LineFunc(p3, p4);
+		l3.SetBounds(p3, p4);
+		if (l3.IsWithinBounds(Vector2(l3.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l3.GetRevValue(pos.y)); }
+		d2Math::LineFunc l4 = d2Math::LineFunc(p4, p1);
+		l4.SetBounds(p4, p1);
+		if (l4.IsWithinBounds(Vector2(l4.GetRevValue(pos.y), pos.y))) { intersections.insertLast(l4.GetRevValue(pos.y)); }
+		if (intersections.length() < 2) { return false; }
+		return (intersections[0] - pos.x) * (intersections[1] - pos.x) < 0;
+	}
+
+	Vector2@ PointByNumber(int n)
+	{
+		int n2 = n;
+		if (n2 > 4) { n2 -= 4; }
+		if (n2 < 1) { n2 += 4; }
+		switch (n2)
+		{
+			case 1:
+				return @p1;
+			case 2:
+				return @p2;
+			case 3:
+				return @p3;
+			case 4:
+				return @p4;
+		}
+		return Vector2();
+	}
+
+	Vector2 FindCentre()
+	{
+		return Vector2(
+			(p1.x + p2.x + p3.x + p4.x) / 4,
+			(p1.y + p2.y + p3.y + p4.y) / 4);
+	}
+
+	d2Math::LineFunc GetLineFunc(int l)
+	{
+		d2Math::LineFunc r = d2Math::LineFunc(PointByNumber(l), PointByNumber(l+1));
+		r.SetBounds(PointByNumber(l), PointByNumber(l+1));
+		return r;
+	}
+	
+	int GetNodeFromPoint(Vector2 pos)
+	{
+		if (pos == p1) { return 1; }
+		if (pos == p2) { return 2; }
+		if (pos == p3) { return 3; }
+		if (pos == p4) { return 4; }
+		return -1;
+	}
+
+	int GetSideFromNodes(int n1, int n2)
+	{
+		int o1 = int(min(n1, n2));
+		int o2 = int(max(n1, n2));
+		if (o1 == 1 && o2 == 2) { return 1; }
+		if (o1 == 2 && o2 == 3) { return 2; }
+		if (o1 == 3 && o2 == 4) { return 3; }
+		if (o2 == 4 && o1 == 1) { return 4; }
+		return -1;
+	}
+}
+
+class d2CQuad
+{
+	d2Quad@ base;
+	CollisionManager@ manager;
+
+	array<bool> activeLines(4);
+
+	array<bool> spikeLines(4);
+	array<bool> dustLines(4);
+
+	float maxDist = 0;
+
+	//used for 3d stuff
+	bool deactive = false;
+
+	script@ script;
+
+	d2CQuad() { @base = @d2Quad(); @manager = null; }
+	d2CQuad(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, uint colour, CollisionManager@ manager)
+	{
+		@base = @d2Quad(p1, p2, p3, p4, colour);
+		@this.manager = @manager;
+		UpdateCollision();
+	}
+
+	void UpdateCollision()
+	{
+		Vector2 c = base.FindCentre();
+		maxDist = max(max((base.p1 - c).Magnitude(), (base.p2 - c).Magnitude()), max((base.p3 - c).Magnitude(), (base.p4 - c).Magnitude()));
+	}
+
+	array<d2Math::LineFunc> GetSideEdges(int side)
+	{
+		array<d2Math::LineFunc> result;
+		Vector2 centre = base.FindCentre();
+		for (int l = 1; l <= 4; l++)
+		{
+			d2Math::LineFunc f = base.GetLineFunc(l);
+			if (f.nullLine || !activeLines[l-1]) { continue; }
+			switch (side)
+			{
+				case 0:
+					if (centre.x < f.GetRevValue(centre.y)) { result.insertLast(f); }
+				break;
+				case 1:
+					if (centre.x > f.GetRevValue(centre.y)) { result.insertLast(f); }
+				break;
+				case 2:
+					if (centre.y < f.GetValue(centre.x)) { result.insertLast(f); }
+				break;
+				case 3:
+					if (centre.y > f.GetValue(centre.x)) { result.insertLast(f); }
+				break;
+			}
+		}
+		return result;
+	}
+
+	void SideTouched(int side)
+	{
+		dustman@ d = manager.GetDustman();
+		if (d is null) return;
+		int state = d.state();
+		if (state != 5 && state != 7 && state != 8 && state != 19 && dustLines[side-1])
+		{
+			dustLines[side-1] = false;
+			d.combo_count(d.combo_count() + 1);
+			d.combo_timer(1);
+		}
+		if (spikeLines[side-1])
+		{
+			if (!d.dead())
+			{
+				d.kill(true);
+			}
+		}
+	}
+
+	void SideAttacked(int side, dustman@ d)
+	{
+		if (dustLines[side-1])
+		{
+			dustLines[side-1] = false;
+			d.combo_count(d.combo_count() + 1);
+			d.combo_timer(5);
+		}
+	}
+
+	void Draw(scene@ s, uint layer, uint sub_layer)
+	{
+		if (deactive) { return; }
+		base.Draw(s, layer, sub_layer);
+		// DrawDebug(s, layer, sub_layer);
+	   	float hw = 3;
+		for (int side = 0; side < 4; side++)
+		{
+			Vector2 p1 = base.PointByNumber(side + 1);
+			Vector2 p2 = base.PointByNumber(side + 2);
+	   		Vector2 centre = Vector2((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+			float hl = p1.Distance(p2)/2;
+			if (@script == null) { continue; }
+			if (dustLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.dustColour
+				);
+			}
+			
+			if (spikeLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.spikeColour
+				);
+			}
+			if (activeLines[side])
+			{
+				s.draw_rectangle_world(layer, sub_layer,
+						  centre.x - hw, centre.y - hl,
+						  centre.x + hw, centre.y + hl,
+						  57.29578 * atan2(p1.y-p2.y, p1.x-p2.x) + 90, script.edgeColour
+				);
+			}
+		}
+	}
+
+	int GetDustCount() 
+	{
+		int r = 0;
+		if (dustLines[0]) { r+= 1; }
+		if (dustLines[1]) { r+= 1; }
+		if (dustLines[2]) { r+= 1; }
+		if (dustLines[3]) { r+= 1; }
+		return r;
+	}
+}
+
+class CollisionManager
+{
+	array<d2CQuad@> quads;
+
+	script@ s;
+	array<controllable@> additionalControllables;
+	CollisionOverride@ collisionOverride;
+	dustman@ dustman;
+
+	CollisionManager(){}
+
+	void PlayInit(script@ s, d2Math::IntRect playArea)
+	{
+		@this.s = @s;
+		@collisionOverride = @CollisionOverride(this);
+		controllable@ player = controller_controllable(uint(get_active_player()));
+		player.set_collision_handler(collisionOverride, "CollisionCallback", 0);
+		SetCollisionHandlers();
+	}
+
+	void SetCollisionHandlers()
+	{
+		for (uint i = 0; i < additionalControllables.length(); i++)
+		{
+			additionalControllables[i].set_collision_handler(collisionOverride, "CollisionCallback", 0);
+		}
+	}
+
+	dustman@ GetDustman()
+	{
+		if (!(dustman is null)) return dustman;
+		controllable@ c = controller_controllable(uint(get_active_player()));
+		if (@c == null) { return null; }
+		dustman@ d = c.as_dustman();
+		if (@d == null) { return null; }
+		@dustman = @d;
+		return d;
+	}
+
+	array<d2CQuad@> GetCollidersInArea(d2Math::IntRect rect, bool debug = false)
+	{
+		array<d2CQuad@> result;
+
+		uint x1 = (rect.x1 - playArea.x1) >> collisionOrder;
+		uint y1 = (rect.y1 - playArea.y1) >> collisionOrder;
+		uint x2 = (rect.x2 - playArea.x1) >> collisionOrder;
+		uint y2 = (rect.y2 - playArea.y1) >> collisionOrder;
+
+		for (uint x = uint(max(x1, 0)); x <= uint(min(x2, collisionGrid.length()-1)); x++)
+		{
+			for (uint y = uint(max(y1, 0)); y <= uint(min(y2, collisionGrid[x].length()-1)); y++)
+			{
+				if (debug) 
+				{
+					int w = 1 << collisionOrder;
+					s.debugDraw.insertLast(d2Math::Rect((x << collisionOrder) + playArea.x1, (y << collisionOrder) + playArea.y1, (x << collisionOrder) + playArea.x1 + w, (y << collisionOrder) + playArea.y1 + w));
+				}
+				for (uint i = 0; i < collisionGrid[x][y].length(); i++)
+				{
+					if (result.findByRef(collisionGrid[x][y][i]) < 0)
+					{
+						result.insertLast(collisionGrid[x][y][i]);
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	void step()
+	{
+		if (@collisionOverride == null) { return; }
+		collisionOverride.step();
+	}
+}
+
+}
